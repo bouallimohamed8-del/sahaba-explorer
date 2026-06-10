@@ -1,0 +1,480 @@
+/**
+ * @license
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+import React, { useState, useEffect, useMemo } from 'react';
+import { Companion, Relationship, FilterState, TimelineEvent, BattleInfo } from './types';
+import NetworkGraph, { CATEGORY_CONFIG } from './components/NetworkGraph';
+import CompanionDetail from './components/CompanionDetail';
+import FilterControls from './components/FilterControls';
+import AdminDashboard from './components/AdminDashboard';
+import { DEFAULT_COMPANIONS, DEFAULT_RELATIONSHIPS } from './data/defaultDataset';
+import { Globe, Moon, Sun, Search, GitFork, User, ShieldAlert, Sparkles, RefreshCw, Layers, Compass, HelpCircle, ChevronRight, Info } from 'lucide-react';
+
+export default function App() {
+  const [companions, setCompanions] = useState<Companion[]>([]);
+  const [relationships, setRelationships] = useState<Relationship[]>([]);
+  const [filter, setFilter] = useState<FilterState>({
+    searchQuery: '',
+    category: '',
+    tribe: '',
+    city: '',
+    battle: '',
+    relationshipType: ''
+  });
+
+  // UI state
+  const [selectedCompanion, setSelectedCompanion] = useState<Companion | null>(null);
+  const [hoveredCompanion, setHoveredCompanion] = useState<Companion | null>(null);
+  const [isArabic, setIsArabic] = useState<boolean>(true);
+  const [isDarkMode, setIsDarkMode] = useState<boolean>(false);
+  const [viewMode, setViewMode] = useState<'explorer' | 'admin'>('explorer');
+
+  // Pathfinder state
+  const [pathStartId, setPathStartId] = useState<string>('');
+  const [pathEndId, setPathEndId] = useState<string>('');
+  const [highlightedPath, setHighlightedPath] = useState<string[] | null>(null);
+  const [pathError, setPathError] = useState<string>('');
+
+  // Loaded successfully log handler
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+
+  // Fetch from Express fullstack server
+  const loadData = async () => {
+    setIsLoading(true);
+    try {
+      const companionsRes = await fetch('/api/companions');
+      const relationshipsRes = await fetch('/api/relationships');
+      if (companionsRes.ok && relationshipsRes.ok) {
+        const companionsData = await companionsRes.json();
+        const relationshipsData = await relationshipsRes.json();
+        setCompanions(companionsData);
+        setRelationships(relationshipsData);
+      } else {
+        // Fallback to offline defaults
+        setCompanions(DEFAULT_COMPANIONS);
+        setRelationships(DEFAULT_RELATIONSHIPS);
+      }
+    } catch (e) {
+      console.error('Failed to load full-stack data, falling back to client-only baseline.', e);
+      setCompanions(DEFAULT_COMPANIONS);
+      setRelationships(DEFAULT_RELATIONSHIPS);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  // Filtered companions
+  const filteredCompanions = useMemo(() => {
+    return companions.filter(comp => {
+      // 1. Search Query
+      if (filter.searchQuery.trim()) {
+        const q = filter.searchQuery.toLowerCase();
+        const matchesAr = comp.nameAr.toLowerCase().includes(q) || comp.shortBioAr.toLowerCase().includes(q) || (comp.lineageAr && comp.lineageAr.toLowerCase().includes(q));
+        const matchesEn = comp.nameEn.toLowerCase().includes(q) || comp.shortBioEn.toLowerCase().includes(q) || (comp.lineageEn && comp.lineageEn.toLowerCase().includes(q));
+        if (!matchesAr && !matchesEn) return false;
+      }
+
+      // 2. Category
+      if (filter.category && comp.category !== filter.category) {
+        return false;
+      }
+
+      // 3. Tribe
+      if (filter.tribe) {
+        const tribeMatch = (comp.tribeAr === filter.tribe || comp.tribeEn === filter.tribe);
+        if (!tribeMatch) return false;
+      }
+
+      // 4. City
+      if (filter.city) {
+        const cityMatch = (comp.cityAr === filter.city || comp.cityEn === filter.city);
+        if (!cityMatch) return false;
+      }
+
+      // 5. Battle
+      if (filter.battle && !comp.battles.includes(filter.battle)) {
+        return false;
+      }
+
+      return true;
+    });
+  }, [companions, filter]);
+
+  // Handle pathfinding using BFS
+  const findShortestRelationshipPath = () => {
+    setPathError('');
+    setHighlightedPath(null);
+
+    if (!pathStartId || !pathEndId) {
+      setPathError(isArabic ? 'الرجاء اختيار الصحابيين لمعرفة طريق الاتصال.' : 'Please choose both companions to trace their link.');
+      return;
+    }
+    if (pathStartId === pathEndId) {
+      setHighlightedPath([pathStartId]);
+      return;
+    }
+
+    // Graph Construction
+    const adjList: Record<string, string[]> = {};
+    companions.forEach(c => {
+      adjList[c.id] = [];
+    });
+    relationships.forEach(r => {
+      if (adjList[r.sourceId] && adjList[r.targetId]) {
+        adjList[r.sourceId].push(r.targetId);
+        adjList[r.targetId].push(r.sourceId); // Undirected relationship tracing
+      }
+    });
+
+    // BFS Queue
+    const queue: string[] = [pathStartId];
+    const visited: Set<string> = new Set([pathStartId]);
+    const parent: Record<string, string> = {};
+
+    let found = false;
+    while (queue.length > 0) {
+      const current = queue.shift()!;
+      if (current === pathEndId) {
+        found = true;
+        break;
+      }
+
+      const neighbors = adjList[current] || [];
+      for (const neighbor of neighbors) {
+        if (!visited.has(neighbor)) {
+          visited.add(neighbor);
+          parent[neighbor] = current;
+          queue.push(neighbor);
+        }
+      }
+    }
+
+    if (!found) {
+      setPathError(isArabic ? 'لم يتم العثور على سلسلة نسب أو علاقة مباشرة تربط الصحابيين المحددين.' : 'No direct chain found connecting these two companions.');
+      return;
+    }
+
+    // Reconstruct pathway
+    const path: string[] = [];
+    let current = pathEndId;
+    while (current !== pathStartId) {
+      path.push(current);
+      current = parent[current];
+    }
+    path.push(pathStartId);
+    path.reverse();
+
+    setHighlightedPath(path);
+  };
+
+  const clearHighlightedPath = () => {
+    setPathStartId('');
+    setPathEndId('');
+    setHighlightedPath(null);
+    setPathError('');
+  };
+
+  return (
+    <div className={`min-h-screen font-sans ${isDarkMode ? 'bg-natural-dark-bg text-slate-100 natural-dotted-bg-dark' : 'bg-natural-bg text-natural-text natural-dotted-bg'} transition-all duration-300 relative pb-16`}>
+      {/* Decorative Top Islamic Arch Geometric Grid Border */}
+      <div className="h-2 bg-gradient-to-r from-natural-accent via-[#A88849] to-natural-brand opacity-90" />
+
+      {/* Global Navbar */}
+      <header className={`border-b-4 border-natural-accent ${isDarkMode ? 'bg-natural-dark-header text-white' : 'bg-natural-brand text-white'} sticky top-0 z-50 px-4 py-3 shadow-md`}>
+        <div className="max-w-7xl mx-auto flex flex-wrap justify-between items-center gap-4">
+          {/* Logo Identity */}
+          <div className="flex items-center gap-4">
+            <div className="w-10 h-10 bg-natural-accent rounded-sm rotate-45 flex items-center justify-center shadow-md">
+              <div className="w-8 h-8 border border-white/50 rotate-45 flex items-center justify-center font-serif text-lg text-white">
+                ﷺ
+              </div>
+            </div>
+            <div>
+              <h1 className="text-xl font-bold tracking-tight text-white font-serif">
+                {isArabic ? 'مستكشف الصحابة والتابعين ﷺ' : 'Sahaba Explorer'}
+              </h1>
+              <p className="text-[10.5px] text-white/80 capitalize">
+                {isArabic ? 'موسوعة تفاعلية مصورة للعلاقات التاريخية الفاضلة' : 'Interactive Encyclopedia of Companions\' Relationships'}
+              </p>
+            </div>
+          </div>
+
+          {/* Quick Config Toggles */}
+          <div className="flex items-center gap-3">
+            {/* Explorer vs Admin tab toggles */}
+            <div className={`flex p-1 rounded-xl border ${isDarkMode ? 'bg-natural-dark-panel border-natural-accent/15' : 'bg-white/10 border-white/20'}`}>
+              <button
+                id="btn-switch-explorer"
+                onClick={() => setViewMode('explorer')}
+                className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer ${viewMode === 'explorer' ? 'bg-natural-accent text-white shadow' : 'text-white/80 hover:text-white'}`}
+              >
+                {isArabic ? 'المستكشف المرئي' : 'Interactive Graph'}
+              </button>
+              <button
+                id="btn-switch-admin"
+                onClick={() => setViewMode('admin')}
+                className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer ${viewMode === 'admin' ? 'bg-natural-accent text-white shadow' : 'text-white/80 hover:text-white'}`}
+              >
+                {isArabic ? 'المشرف والمراجعة' : 'Admin Console'}
+              </button>
+            </div>
+
+            {/* Language toggle links */}
+            <button
+              onClick={() => setIsArabic(!isArabic)}
+              className={`flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-xl border transition-all cursor-pointer ${isDarkMode ? 'text-slate-200 bg-natural-dark-panel border-natural-accent/20' : 'text-white bg-white/10 border-white/20 hover:bg-white/20'}`}
+            >
+              <Globe className="w-3.5 h-3.5 text-white animate-spin-slow" />
+              <span>{isArabic ? 'English' : 'العربية'}</span>
+            </button>
+
+            {/* Dark mode lights */}
+            <button
+              onClick={() => setIsDarkMode(!isDarkMode)}
+              className={`p-2 rounded-xl border transition cursor-pointer ${isDarkMode ? 'bg-natural-dark-panel border-natural-accent/20 text-natural-accent' : 'bg-white/10 border-white/20 text-white hover:bg-white/25'}`}
+              title={isArabic ? 'تغيير المظهر' : 'Toggle Theme'}
+            >
+              {isDarkMode ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-white" />}
+            </button>
+          </div>
+        </div>
+      </header>
+
+      {/* Primary body view content */}
+      <main className="max-w-7xl mx-auto px-4 mt-6">
+        {isLoading ? (
+          <div className="flex flex-col items-center justify-center py-24 gap-4">
+            <RefreshCw className="w-10 h-10 text-natural-accent animate-spin" />
+            <p className="text-xs text-natural-brand/80 font-serif">{isArabic ? 'يُحمّل سجلاّت التاريخ والفضائل العطرة...' : 'Retrieving prestigious companions histories...'}</p>
+          </div>
+        ) : viewMode === 'explorer' ? (
+          // EXPLORER WORKSPACE
+          <div className="space-y-6 animate-fade-in">
+            {/* Filter controls at top */}
+            <FilterControls
+              companions={companions}
+              filter={filter}
+              onFilterChange={setFilter}
+              isArabic={isArabic}
+              isDarkMode={isDarkMode}
+              onReset={() => {
+                setFilter({ searchQuery: '', category: '', tribe: '', city: '', battle: '', relationshipType: '' });
+                setSelectedCompanion(null);
+                setHoveredCompanion(null);
+                clearHighlightedPath();
+              }}
+            />
+
+            {/* Dual split panel layout */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+              {/* Left Column: Network Graph Board */}
+              <div className="lg:col-span-2 space-y-4">
+                <NetworkGraph
+                  companions={filteredCompanions}
+                  relationships={relationships}
+                  selectedCompanion={selectedCompanion}
+                  onSelectCompanion={setSelectedCompanion}
+                  hoveredCompanion={hoveredCompanion}
+                  onHoverCompanion={setHoveredCompanion}
+                  isArabic={isArabic}
+                  highlightedPath={highlightedPath}
+                  isDarkMode={isDarkMode}
+                />
+
+                {/* Floating Interactive Hover Card beneath/over graph */}
+                {hoveredCompanion && (
+                  <div className={`p-4 rounded-2xl border ${isDarkMode ? 'bg-natural-dark-panel border-neutral-800 text-slate-100' : 'bg-white border-natural-accent/30 text-natural-text'} shadow-xl transition duration-300 flex gap-4 animate-fade-in`}>
+                    <div className="w-12 h-12 rounded-xl bg-natural-brand/10 border border-natural-brand/25 flex items-center justify-center text-3xl font-extrabold font-serif text-natural-brand">
+                      {hoveredCompanion.nameAr.charAt(0)}
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-1.5 mb-1">
+                        <h4 className="text-sm font-bold text-natural-brand font-serif">{isArabic ? hoveredCompanion.nameAr : hoveredCompanion.nameEn}</h4>
+                        <span className="text-[10px] bg-natural-accent/15 border border-natural-accent/30 rounded px-1.5 font-bold text-natural-brand font-mono">
+                          {hoveredCompanion.ageAtDeath} {isArabic ? 'سنة' : 'yrs'}
+                        </span>
+                      </div>
+                      <p className={`text-[11.5px] leading-relaxed line-clamp-2 ${isDarkMode ? 'text-slate-300' : 'text-neutral-700'}`}>
+                        {isArabic ? hoveredCompanion.shortBioAr : hoveredCompanion.shortBioEn}
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Right Column: Pathfinding tool & Node detail preview */}
+              <div className="space-y-6">
+                {/* 1. PATHFINDER TOOL */}
+                <div className={`border rounded-3xl p-5 shadow-lg ${isDarkMode ? 'bg-natural-dark-panel border-neutral-800' : 'bg-white/90 border-natural-accent/30'}`}>
+                  <h3 className="text-xs font-bold border-b pb-2 mb-3 flex items-center gap-1.5 uppercase font-serif text-natural-brand border-natural-accent/25">
+                    <GitFork className="w-4 h-4 text-natural-accent" />
+                    <span>{isArabic ? 'تقصي خطوط ومسارات النسب والصلة' : 'Relationship Path Finder'}</span>
+                  </h3>
+                  <p className={`text-[11px] mb-4 leading-relaxed ${isDarkMode ? 'text-slate-450' : 'text-neutral-600'}`}>
+                    {isArabic
+                      ? 'حدد صحابيين شريفين لمعرفة سلسلة الروابط والعلاقات المباشرة والمركبة التي تجمع بينهما:'
+                      : 'Choose two companions of the Prophet ﷺ to trace their mutual lineage or historic alliance chain:'}
+                  </p>
+
+                  <div className="space-y-3 text-xs">
+                    <div>
+                      <label className="block text-natural-brand/80 mb-1 font-bold">{isArabic ? 'الصحابي الأول (البداية)' : 'Start Companion'}</label>
+                      <select
+                        id="pathfinder-start-select"
+                        value={pathStartId}
+                        onChange={(e) => setPathStartId(e.target.value)}
+                        className={`w-full border rounded-xl p-2.5 focus:outline-none text-xs transition duration-200 ${isDarkMode ? 'bg-natural-dark-bg border-neutral-750 text-slate-200' : 'bg-white border-natural-accent/40 text-natural-text focus:border-natural-brand'}`}
+                      >
+                        <option value="">-- {isArabic ? 'اختر البداية' : 'Select Start Node'} --</option>
+                        {companions.map(c => (
+                          <option key={c.id} value={c.id}>{isArabic ? c.nameAr : c.nameEn}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-natural-brand/80 mb-1 font-bold">{isArabic ? 'الصحابي الثاني (الهدف)' : 'Target Companion'}</label>
+                      <select
+                        id="pathfinder-end-select"
+                        value={pathEndId}
+                        onChange={(e) => setPathEndId(e.target.value)}
+                        className={`w-full border rounded-xl p-2.5 focus:outline-none text-xs transition duration-200 ${isDarkMode ? 'bg-natural-dark-bg border-neutral-750 text-slate-200' : 'bg-white border-natural-accent/40 text-natural-text focus:border-natural-brand'}`}
+                      >
+                        <option value="">-- {isArabic ? 'اختر الهدف' : 'Select Target Node'} --</option>
+                        {companions.map(c => (
+                          <option key={c.id} value={c.id}>{isArabic ? c.nameAr : c.nameEn}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {pathError && (
+                      <p className="text-[10.5px] text-red-500 italic bg-red-500/5 border border-red-500/20 p-2.5 rounded-xl text-center">{pathError}</p>
+                    )}
+
+                    <div className="flex gap-2 pt-1">
+                      <button
+                        id="btn-trace-path"
+                        onClick={findShortestRelationshipPath}
+                        className="flex-1 bg-natural-brand hover:bg-natural-brand/90 text-white font-bold p-2.5 rounded-xl text-xs flex items-center justify-center gap-1.5 cursor-pointer transition active:scale-95 shadow-md"
+                      >
+                        <span>{isArabic ? 'كشف خط الاتصال' : 'Trace Connection Path'}</span>
+                      </button>
+                      {highlightedPath && (
+                        <button
+                          onClick={clearHighlightedPath}
+                          className={`border px-3 py-2 rounded-xl text-xs cursor-pointer ${isDarkMode ? 'bg-natural-dark-bg border-neutral-700 text-slate-300' : 'bg-white border-neutral-300 text-natural-text hover:bg-slate-100'}`}
+                        >
+                          {isArabic ? 'مسح' : 'Clear'}
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Render Highlighted path details chain */}
+                    {highlightedPath && (
+                      <div className={`p-3.5 rounded-2xl space-y-2 mt-4 border ${isDarkMode ? 'bg-natural-dark-bg/60 border-neutral-850' : 'bg-natural-brand/5 border-natural-brand/10'}`}>
+                        <span className="font-bold text-[10px] text-natural-accent uppercase block font-serif">{isArabic ? 'مسار الوصل التاريخي المكتشف' : 'Discovered Historic Hops:'}</span>
+                        <div className="space-y-1">
+                          {highlightedPath.map((nodeId, idx) => {
+                            const node = companions.find(c => c.id === nodeId);
+                            if (!node) return null;
+                            return (
+                              <div key={nodeId} className="flex items-center gap-1.5 text-[11.5px]">
+                                <span className="w-5 h-5 rounded bg-natural-accent/20 text-natural-brand text-[10.5px] font-bold flex items-center justify-center border border-natural-accent/30 font-mono">
+                                  {idx + 1}
+                                </span>
+                                <span className={`font-serif font-bold ${isDarkMode ? 'text-slate-100' : 'text-natural-brand'}`}>{isArabic ? node.nameAr.split(' ')[0] : node.nameEn.split(' ')[0]}</span>
+                                {idx < highlightedPath.length - 1 && (
+                                  <span className="text-natural-accent text-[11px]">&larr;</span>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* 2. COMPANION SELECTION PROFILE SIDEBAR BRIEF */}
+                {selectedCompanion ? (
+                  <div className={`border rounded-3xl p-5 shadow-lg relative ${isDarkMode ? 'bg-natural-dark-panel border-neutral-800' : 'bg-white/90 border-natural-accent/30 animate-fade-in'}`}>
+                    <span className="text-[9px] uppercase font-bold text-natural-accent block mb-1">SELECTED COMPANION</span>
+                    <h2 className="text-lg font-bold text-natural-brand font-serif mb-0.5">{isArabic ? selectedCompanion.nameAr : selectedCompanion.nameEn}</h2>
+                    <p className={`text-[11.5px] leading-relaxed mt-2 italic mb-4 ${isDarkMode ? 'text-slate-300' : 'text-neutral-700 font-serif'}`}>
+                      "{isArabic ? selectedCompanion.shortBioAr : selectedCompanion.shortBioEn}"
+                    </p>
+
+                    <button
+                      id="btn-trigger-explore-detail"
+                      onClick={() => {
+                        // Scroll nicely down to detail board
+                        const t = document.getElementById('sahaba-detail-container-anchor');
+                        if (t) t.scrollIntoView({ behavior: 'smooth' });
+                      }}
+                      className="w-full bg-natural-accent hover:bg-natural-accent/90 text-white font-bold p-2.5 rounded-xl text-xs flex items-center justify-center gap-1.5 transition cursor-pointer active:scale-95 shadow"
+                    >
+                      <Info className="w-3.5 h-3.5" />
+                      <span>{isArabic ? 'فتح السيرة والتفاصيل الكاملة' : 'View Complete Seerah & Legacy'}</span>
+                    </button>
+                  </div>
+                ) : (
+                  <div className={`border border-dashed rounded-3xl p-10 text-center ${isDarkMode ? 'bg-natural-dark-panel/30 border-neutral-800 text-slate-500' : 'bg-white/40 border-natural-accent/30 text-neutral-500'}`}>
+                    <User className="w-8 h-8 text-natural-brand/50 mx-auto mb-2" />
+                    <p className="text-xs leading-relaxed font-serif text-natural-brand/80">{isArabic ? 'انقر على أحد الصحابة في المخطط لقراءة خط النسب والسيرة العطرة الكبرى.' : 'Click any companion node inside the relationship map to read their timeline.'}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Anchor point and details page wrapper */}
+            <div id="sahaba-detail-container-anchor" className="pt-2">
+              {selectedCompanion && (
+                <CompanionDetail
+                  companion={selectedCompanion}
+                  relationships={relationships}
+                  allCompanions={companions}
+                  onSelectCompanion={setSelectedCompanion}
+                  isArabic={isArabic}
+                  isDarkMode={isDarkMode}
+                  onBack={() => {
+                    setSelectedCompanion(null);
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  }}
+                />
+              )}
+            </div>
+          </div>
+        ) : (
+          // ADMIN SECTION
+          <div className="animate-fade-in">
+            <AdminDashboard
+              companions={companions}
+              relationships={relationships}
+              isArabic={isArabic}
+              onRefreshData={loadData}
+            />
+          </div>
+        )}
+      </main>
+
+      {/* Modern footer with Islamic and educational quotes */}
+      <footer className={`mt-20 border-t py-12 ${isDarkMode ? 'bg-natural-dark-header border-neutral-800 text-slate-400' : 'bg-[#E8E4D9] border-natural-accent/20 text-[#5A5A40]'}`}>
+        <p className="font-serif italic leading-relaxed max-w-2xl mx-auto mb-5 text-center px-6 text-sm">
+          {isArabic
+            ? 'قال رسول الله ﷺ: «أَصْحَابِي كَالنُّجُومِ بِأَيِّهِمُ اقْتَدَيْتُمُ اهْتَدَيْتُمْ» - روايات الأثر الشريف هادية لطريق التوحيد والصفاء.'
+            : '"My companions are like stars; whichever of them you follow, you will be rightly guided." — Prophetic tradition regarding the prestigious companions.'}
+        </p>
+        <div className={`pt-6 max-w-7xl mx-auto px-8 border-t flex flex-col sm:flex-row justify-between items-center text-[11px] font-mono gap-3 ${isDarkMode ? 'border-neutral-800/60 text-slate-550' : 'border-[#C5A059]/20 text-[#5A5A40]/60'}`}>
+          <span>{isArabic ? '© مستكشف الصحابة - موسوعة تعليمية تفاعلية' : '© Sahaba Explorer - Interactive Educational Platform'}</span>
+          <span>{isArabic ? 'صُنع بدقة وإخلاص لدعاة المعرفة' : 'Crafted with absolute historical precision'}</span>
+        </div>
+      </footer>
+    </div>
+  );
+}

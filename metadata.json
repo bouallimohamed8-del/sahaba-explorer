@@ -1,0 +1,6 @@
+{
+  "name": "Sahaba Explorer",
+  "description": "An interactive bilingual digital encyclopedia and network relationship graph of the Companions of Prophet Muhammad ﷺ.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
