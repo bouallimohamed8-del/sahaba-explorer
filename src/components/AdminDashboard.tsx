@@ -35,11 +35,13 @@ import AdminProposals from './AdminProposals';
 import AdminMaintenance from './AdminMaintenance';
 import AdminImportExport from './AdminImportExport';
 import AdminUsers from './AdminUsers';
+import FirebaseUsersManager from './FirebaseUsersManager';
 
 interface AdminDashboardProps {
   companions: Companion[];
   relationships: Relationship[];
   isArabic: boolean;
+  isDarkMode?: boolean;
   onRefreshData: () => void;
 }
 
@@ -47,6 +49,7 @@ export default function AdminDashboard({
   companions,
   relationships,
   isArabic,
+  isDarkMode = true,
   onRefreshData
 }: AdminDashboardProps) {
   // Authentication & Persistent State
@@ -58,6 +61,7 @@ export default function AdminDashboard({
 
   // Navigation tab
   const [activeTab, setActiveTab] = useState<'stats' | 'companion_form' | 'relation_form' | 'proposals' | 'maintenance' | 'import_export' | 'users'>('stats');
+  const [usersSubTab, setUsersSubTab] = useState<'firebase' | 'classic'>('firebase');
 
   // Backend Stats
   const [stats, setStats] = useState<{ companionsCount: number; relationshipsCount: number; categoriesCount: Record<string, number> } | null>(null);
@@ -1402,11 +1406,32 @@ export default function AdminDashboard({
         )}
 
         {activeTab === 'users' && (
-          <AdminUsers
-            token={token}
-            userRole={user.role}
-            isArabic={isArabic}
-          />
+          <div className="space-y-6 animate-fade-in">
+            <div className={`p-1 rounded-xl border flex w-fit gap-2 h-fit ${isDarkMode ? 'bg-natural-dark-panel border-natural-accent/15' : 'bg-slate-900 border-slate-800'}`}>
+              <button
+                onClick={() => setUsersSubTab('firebase')}
+                className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer ${usersSubTab === 'firebase' ? 'bg-natural-accent text-white shadow' : 'text-slate-400 hover:text-slate-200'}`}
+              >
+                {isArabic ? 'أعضاء ومقرئي المنصة (فييرستور)' : 'Ecosystem View (Firestore)'}
+              </button>
+              <button
+                onClick={() => setUsersSubTab('classic')}
+                className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer ${usersSubTab === 'classic' ? 'bg-natural-accent text-white shadow' : 'text-slate-400 hover:text-slate-200'}`}
+              >
+                {isArabic ? 'طاقم المشرفين الكلاسيكيين (لوكال)' : 'Classic Team (Local)'}
+              </button>
+            </div>
+
+            {usersSubTab === 'firebase' ? (
+              <FirebaseUsersManager isArabic={isArabic} isDarkMode={isDarkMode} />
+            ) : (
+              <AdminUsers
+                token={token}
+                userRole={user.role}
+                isArabic={isArabic}
+              />
+            )}
+          </div>
         )}
       </div>
     </div>

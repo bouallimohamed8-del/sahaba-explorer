@@ -10,9 +10,13 @@ import CompanionDetail from './components/CompanionDetail';
 import FilterControls from './components/FilterControls';
 import AdminDashboard from './components/AdminDashboard';
 import { DEFAULT_COMPANIONS, DEFAULT_RELATIONSHIPS } from './data/defaultDataset';
-import { Globe, Moon, Sun, Search, GitFork, User, ShieldAlert, Sparkles, RefreshCw, Layers, Compass, HelpCircle, ChevronRight, Info } from 'lucide-react';
+import { Globe, Moon, Sun, Search, GitFork, User, ShieldAlert, Sparkles, RefreshCw, Layers, Compass, HelpCircle, ChevronRight, Info, LogOut, Shield } from 'lucide-react';
+import { useAuth } from './context/AuthContext';
+import AuthPages from './components/AuthPages';
 
 export default function App() {
+  const { user, profile, loading: authLoading, logout } = useAuth();
+  const [showAuthScreen, setShowAuthScreen] = useState<boolean>(false);
   const [companions, setCompanions] = useState<Companion[]>([]);
   const [relationships, setRelationships] = useState<Relationship[]>([]);
   const [filter, setFilter] = useState<FilterState>({
@@ -211,14 +215,20 @@ export default function App() {
             <div className={`flex p-1 rounded-xl border ${isDarkMode ? 'bg-natural-dark-panel border-natural-accent/15' : 'bg-white/10 border-white/20'}`}>
               <button
                 id="btn-switch-explorer"
-                onClick={() => setViewMode('explorer')}
-                className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer ${viewMode === 'explorer' ? 'bg-natural-accent text-white shadow' : 'text-white/80 hover:text-white'}`}
+                onClick={() => {
+                  setViewMode('explorer');
+                  setShowAuthScreen(false);
+                }}
+                className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer ${viewMode === 'explorer' && !showAuthScreen ? 'bg-natural-accent text-white shadow' : 'text-white/80 hover:text-white'}`}
               >
                 {isArabic ? 'المستكشف المرئي' : 'Interactive Graph'}
               </button>
               <button
                 id="btn-switch-admin"
-                onClick={() => setViewMode('admin')}
+                onClick={() => {
+                  setViewMode('admin');
+                  setShowAuthScreen(false);
+                }}
                 className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer ${viewMode === 'admin' ? 'bg-natural-accent text-white shadow' : 'text-white/80 hover:text-white'}`}
               >
                 {isArabic ? 'المشرف والمراجعة' : 'Admin Console'}
@@ -242,6 +252,41 @@ export default function App() {
             >
               {isDarkMode ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-white" />}
             </button>
+
+            {/* User auth state indicators */}
+            {!authLoading && (
+              profile ? (
+                <div className={`flex items-center gap-2 px-2.5 py-1.5 rounded-xl border text-xs text-white max-w-[170px] ${
+                  isDarkMode ? 'bg-natural-dark-panel border-natural-accent/20' : 'bg-white/10 border-white/20'
+                }`}>
+                  <div className="w-5 h-5 rounded-full bg-natural-accent flex items-center justify-center font-bold text-[10px] text-white overflow-hidden shrink-0">
+                    {profile.photoURL ? (
+                      <img src={profile.photoURL} alt={profile.fullName} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                    ) : (
+                      profile.fullName.charAt(0)
+                    )}
+                  </div>
+                  <span className="font-bold truncate max-w-[70px]" title={profile.fullName}>{profile.fullName}</span>
+                  <button onClick={() => logout()} className="p-1 hover:text-red-300 transition cursor-pointer shrink-0" title={isArabic ? 'تسجيل الخروج' : 'Log Out'}>
+                    <LogOut className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => {
+                    setShowAuthScreen(!showAuthScreen);
+                  }}
+                  className={`flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-xl border transition-all cursor-pointer ${
+                    showAuthScreen 
+                      ? 'bg-natural-accent text-white border-natural-accent' 
+                      : 'text-white bg-white/10 border-white/20 hover:bg-white/20'
+                  }`}
+                >
+                  <User className="w-3.5 h-3.5" />
+                  <span>{isArabic ? 'دخول' : 'Login'}</span>
+                </button>
+              )
+            )}
           </div>
         </div>
       </header>
@@ -253,6 +298,8 @@ export default function App() {
             <RefreshCw className="w-10 h-10 text-natural-accent animate-spin" />
             <p className="text-xs text-natural-brand/80 font-serif">{isArabic ? 'يُحمّل سجلاّت التاريخ والفضائل العطرة...' : 'Retrieving prestigious companions histories...'}</p>
           </div>
+        ) : showAuthScreen ? (
+          <AuthPages isArabic={isArabic} isDarkMode={isDarkMode} onSuccess={() => setShowAuthScreen(false)} />
         ) : viewMode === 'explorer' ? (
           // EXPLORER WORKSPACE
           <div className="space-y-6 animate-fade-in">
@@ -308,7 +355,7 @@ export default function App() {
                 )}
               </div>
 
-              {/* Right Column: Pathfinding tool & Node detail preview */}
+              {/* Right Column: Pathfinder tool & Node detail preview */}
               <div className="space-y-6">
                 {/* 1. PATHFINDER TOOL */}
                 <div className={`border rounded-3xl p-5 shadow-lg ${isDarkMode ? 'bg-natural-dark-panel border-neutral-800' : 'bg-white/90 border-natural-accent/30'}`}>
@@ -452,14 +499,49 @@ export default function App() {
           </div>
         ) : (
           // ADMIN SECTION
-          <div className="animate-fade-in">
-            <AdminDashboard
-              companions={companions}
-              relationships={relationships}
-              isArabic={isArabic}
-              onRefreshData={loadData}
-            />
-          </div>
+          !user ? (
+            <div className="space-y-4">
+              <div className="p-4 rounded-2xl border border-amber-500/20 bg-amber-500/5 text-xs text-amber-600 font-sans text-center max-w-sm mx-auto">
+                {isArabic 
+                  ? 'يتطلب دخول هذا القسم تسجيل الدخول بحساب مشرف معتمد.' 
+                  : 'Accessing this environment requires signing in with an authorized collaborator account.'}
+              </div>
+              <AuthPages isArabic={isArabic} isDarkMode={isDarkMode} />
+            </div>
+          ) : !profile || profile.role !== 'admin' ? (
+            <div className="max-w-md mx-auto my-12 animate-fade-in" dir={isArabic ? 'rtl' : 'ltr'}>
+              <div className={`p-8 border rounded-3xl shadow-xl text-center space-y-5 ${
+                isDarkMode ? 'bg-natural-dark-panel border-neutral-800 text-slate-100' : 'bg-white border-natural-accent/30 text-natural-text'
+              }`}>
+                <ShieldAlert className="w-12 h-12 text-rose-500 mx-auto animate-pulse" />
+                <div className="space-y-2">
+                  <h3 className="text-lg font-serif font-bold text-natural-brand">
+                    {isArabic ? 'صلاحيات غير كافية' : 'Restricted Admin Console Access'}
+                  </h3>
+                  <p className="text-xs text-gray-500 font-sans leading-relaxed">
+                    {isArabic 
+                      ? 'عذراً، بروفايل حسابك الحالي لا يمتلك صلاحيات المشرفين. للقيام بعمليات الإدخال والمراجعة، تفضل بالانتقال للمستكشف المرئي أو تسجيل الدخول بحساب مشرف معتمد.' 
+                      : 'Sorry, your registered account profile is not appointed with administrator privileges. Go back to browse the interactive graph explorer or authenticate with an authorized credentials.'}
+                  </p>
+                </div>
+                <button
+                  onClick={() => logout()}
+                  className="w-full bg-natural-brand hover:bg-natural-brand/90 text-white font-bold p-3 rounded-xl cursor-pointer text-xs"
+                >
+                  {isArabic ? 'تسجيل الخروج والتبديل' : 'Sign Out and Switch'}
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="animate-fade-in">
+              <AdminDashboard
+                companions={companions}
+                relationships={relationships}
+                isArabic={isArabic}
+                onRefreshData={loadData}
+              />
+            </div>
+          )
         )}
       </main>
 
