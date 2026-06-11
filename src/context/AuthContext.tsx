@@ -157,6 +157,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setError('الرمز السري ضعيف جداً، يجب أن يتكون من 6 أحرف على الأقل.');
       } else if (err.code === 'auth/invalid-email') {
         setError('صيغة البريد الإلكتروني غير صحيحة.');
+      } else if (err.code === 'auth/operation-not-allowed') {
+        setError('عذراً، خيار التسجيل بالبريد السري الإلكتروني غير مفعل في مشروع Firebase الحالي الخاص بك. يرجى تفعيل (Email/Password) كـ Sign-in provider من لوحة تحكم فيسبوك (Firebase Console) على الرابط التالي: https://console.firebase.google.com/project/gen-lang-client-0066747491/authentication/providers');
       } else {
         setError(err.message || 'فشل إنشاء الحساب، يرجى المحاولة لاحقاً.');
       }
@@ -184,6 +186,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setError('البريد الإلكتروني أو كلمة المرور غير صحيحة.');
       } else if (err.code === 'auth/too-many-requests') {
         setError('تم حظر المحاولات مؤقتاً بسبب تكرار الدخول بشكل خاطئ.');
+      } else if (err.code === 'auth/operation-not-allowed') {
+        setError('عذراً، خيار تسجيل الدخول بالبريد الإلكتروني غير مفعل في مشروع Firebase الحالي. يمكنك تفعيله بسهولة بالانتقال إلى: https://console.firebase.google.com/project/gen-lang-client-0066747491/authentication/providers');
       } else {
         setError(err.message || 'فشل تسجيل الدخول، يرجى المحاولة لاحقاً.');
       }
@@ -219,6 +223,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.error(err);
       if (err.code === 'auth/account-exists-with-different-credential') {
         setError('البريد المعتمد مسجل بالفعل عبر مزود آخر للهوية (جوجل/فيسبوك/البريد السري).');
+      } else if (err.code === 'auth/operation-not-allowed') {
+        setError('عذراً، خيار تسجيل الدخول عبر فيسبوك غير مفعل بعد في مشروع Firebase هذا. يمكنك تفعيله من: https://console.firebase.google.com/project/gen-lang-client-0066747491/authentication/providers');
       } else {
         setError(err.message || 'فشل تسجيل الدخول عبر Facebook.');
       }
