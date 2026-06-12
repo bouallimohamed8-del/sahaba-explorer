@@ -34,6 +34,7 @@ export default function App() {
   const [isArabic, setIsArabic] = useState<boolean>(true);
   const [isDarkMode, setIsDarkMode] = useState<boolean>(false);
   const [viewMode, setViewMode] = useState<'explorer' | 'admin'>('explorer');
+  const [explorerViewType, setExplorerViewType] = useState<'graph' | 'directory'>('directory');
 
   // Pathfinder state
   const [pathStartId, setPathStartId] = useState<string>('');
@@ -320,22 +321,146 @@ export default function App() {
 
             {/* Dual split panel layout */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
-              {/* Left Column: Network Graph Board */}
-              <div className="lg:col-span-2 space-y-4">
-                <NetworkGraph
-                  companions={filteredCompanions}
-                  relationships={relationships}
-                  selectedCompanion={selectedCompanion}
-                  onSelectCompanion={setSelectedCompanion}
-                  hoveredCompanion={hoveredCompanion}
-                  onHoverCompanion={setHoveredCompanion}
-                  isArabic={isArabic}
-                  highlightedPath={highlightedPath}
-                  isDarkMode={isDarkMode}
-                />
+              {/* Left Column: Network Graph Board or Directory Card Grid */}
+              <div id="explorer-main-column" className="lg:col-span-2 space-y-4">
+                {/* Visual Style Selection tab bar */}
+                <div className={`p-1.5 rounded-2xl border flex items-center justify-between ${isDarkMode ? 'bg-natural-dark-panel border-neutral-805' : 'bg-white border-natural-accent/30'} shadow-sm`}>
+                  <div className="flex gap-2 items-center px-2">
+                    <Layers className="w-4 h-4 text-natural-accent" />
+                    <span className="text-xs font-bold font-serif text-natural-brand">{isArabic ? 'طريقة العرض المعتمدة:' : 'Explorer Display Layout:'}</span>
+                  </div>
+                  <div className="flex gap-1" id="view-mode-toggle-group">
+                    <button
+                      id="view-type-grid"
+                      onClick={() => setExplorerViewType('directory')}
+                      className={`px-3 py-1.5 rounded-xl text-xs font-serif font-bold transition flex items-center gap-1.5 cursor-pointer active:scale-95 ${
+                        explorerViewType === 'directory'
+                          ? 'bg-natural-brand text-white shadow'
+                          : isDarkMode
+                            ? 'text-slate-400 hover:bg-neutral-800 hover:text-white'
+                            : 'text-neutral-600 hover:bg-[#F5F2ED] hover:text-natural-accent'
+                      }`}
+                    >
+                      <span>🗂️</span>
+                      <span>{isArabic ? 'بطاقات مبسطة' : 'Simple Cards'}</span>
+                    </button>
+                    <button
+                      id="view-type-graph"
+                      onClick={() => setExplorerViewType('graph')}
+                      className={`px-3 py-1.5 rounded-xl text-xs font-serif font-bold transition flex items-center gap-1.5 cursor-pointer active:scale-95 ${
+                        explorerViewType === 'graph'
+                          ? 'bg-natural-brand text-white shadow'
+                          : isDarkMode
+                            ? 'text-slate-400 hover:bg-neutral-800 hover:text-white'
+                            : 'text-neutral-600 hover:bg-[#F5F2ED] hover:text-natural-accent'
+                      }`}
+                    >
+                      <span>🕸️</span>
+                      <span>{isArabic ? 'مخطط العلاقات' : 'Relationship Map'}</span>
+                    </button>
+                  </div>
+                </div>
+
+                {explorerViewType === 'graph' ? (
+                  <NetworkGraph
+                    companions={filteredCompanions}
+                    relationships={relationships}
+                    selectedCompanion={selectedCompanion}
+                    onSelectCompanion={setSelectedCompanion}
+                    hoveredCompanion={hoveredCompanion}
+                    onHoverCompanion={setHoveredCompanion}
+                    isArabic={isArabic}
+                    highlightedPath={highlightedPath}
+                    isDarkMode={isDarkMode}
+                  />
+                ) : (
+                  /* Directory Card Grid */
+                  <div className="space-y-4">
+                    {filteredCompanions.length === 0 ? (
+                      <div className={`border border-dashed rounded-3xl p-12 text-center ${isDarkMode ? 'bg-natural-dark-panel/20 border-neutral-800 text-slate-500' : 'bg-white/40 border-natural-accent/20 text-neutral-500'}`}>
+                        <Search className="w-8 h-8 text-neutral-400 mx-auto mb-2" />
+                        <p className="text-xs font-serif leading-relaxed text-natural-brand/80">
+                          {isArabic
+                            ? 'عذراً، لم نجد صحابة يتوافقون مع شروط البحث والفلترة المطبقة.'
+                            : 'No companions match your current search/filtering selection.'}
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        {filteredCompanions.map((comp) => {
+                          const cat = CATEGORY_CONFIG[comp.category] || CATEGORY_CONFIG.Other;
+                          const isSelected = selectedCompanion?.id === comp.id;
+
+                          return (
+                            <div
+                              key={comp.id}
+                              id={`companion-card-${comp.id}`}
+                              onClick={() => {
+                                setSelectedCompanion(comp);
+                                // Scroll nicely to companion detail anchor if open
+                                const detailAnchor = document.getElementById('sahaba-detail-container-anchor');
+                                if (detailAnchor) {
+                                  detailAnchor.scrollIntoView({ behavior: 'smooth' });
+                                }
+                              }}
+                              className={`group p-5 rounded-3xl border transition-all duration-300 flex flex-col justify-between cursor-pointer translate-y-0 hover:-translate-y-1 relative overflow-hidden shadow-sm hover:shadow-md ${
+                                isSelected
+                                  ? isDarkMode
+                                    ? 'bg-natural-dark-panel border-natural-accent text-slate-100 ring-1 ring-natural-accent/20'
+                                    : 'bg-[#F9F7F2] border-natural-accent text-natural-text ring-1 ring-natural-accent/25'
+                                  : isDarkMode
+                                    ? 'bg-natural-dark-panel/40 border-neutral-800 hover:border-neutral-700/80 hover:bg-natural-dark-panel/60 text-slate-200'
+                                    : 'bg-white border-natural-accent/15 hover:border-natural-accent/35 hover:bg-[#FDFCF9] text-natural-text'
+                              }`}
+                            >
+                              {/* Left Category Accent Pill */}
+                              <div className="absolute top-0 left-0 right-0 h-1.5" style={{ backgroundColor: cat.color }} />
+
+                              <div className="space-y-3.5">
+                                <div className="flex justify-between items-start pt-1">
+                                  <span className={`text-[9.5px] px-2 py-0.5 rounded-full font-serif font-bold ${
+                                    isDarkMode ? 'bg-neutral-800 text-stone-300' : 'bg-natural-brand/5 border border-natural-brand/10 text-natural-brand/90'
+                                  }`}>
+                                    {isArabic ? cat.labelAr : cat.labelEn}
+                                  </span>
+                                  <span className="text-[10px] font-mono text-stone-500">
+                                    {comp.deathYearAH} AH ({comp.ageAtDeath} {isArabic ? 'عاماً' : 'yrs'})
+                                  </span>
+                                </div>
+
+                                <div className="space-y-1">
+                                  <h4 className="text-base font-serif font-bold text-natural-brand group-hover:text-natural-accent transition-colors">
+                                    {isArabic ? comp.nameAr : comp.nameEn}
+                                  </h4>
+                                  <p className="text-[11px] font-mono text-stone-500 truncate">
+                                    {isArabic ? comp.tribeAr : comp.tribeEn}
+                                  </p>
+                                </div>
+
+                                <p className={`text-[12px] leading-relaxed font-serif ${isDarkMode ? 'text-slate-300' : 'text-neutral-700'} line-clamp-3`}>
+                                  {isArabic ? comp.shortBioAr : comp.shortBioEn}
+                                </p>
+                              </div>
+
+                              <div className="mt-4 pt-3.5 border-t border-stone-205/50 dark:border-stone-850/40 flex justify-between items-center text-[10.5px]">
+                                <span className="font-mono text-stone-500">
+                                  📚 {comp.hadithCount} {isArabic ? 'حديث مروي' : 'narrations'}
+                                </span>
+                                <span className="font-bold text-natural-accent flex items-center gap-0.5 group-hover:underline">
+                                  {isArabic ? 'عرض التفاصيل والنسب' : 'View Seerah'}
+                                  <ChevronRight className={`w-3 h-3 transform transition-transform group-hover:translate-x-0.5 ${isArabic ? 'rotate-180' : ''}`} />
+                                </span>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                )}
 
                 {/* Floating Interactive Hover Card beneath/over graph */}
-                {hoveredCompanion && (
+                {hoveredCompanion && explorerViewType === 'graph' && (
                   <div className={`p-4 rounded-2xl border ${isDarkMode ? 'bg-natural-dark-panel border-neutral-800 text-slate-100' : 'bg-white border-natural-accent/30 text-natural-text'} shadow-xl transition duration-300 flex gap-4 animate-fade-in`}>
                     <div className="w-12 h-12 rounded-xl bg-natural-brand/10 border border-natural-brand/25 flex items-center justify-center text-3xl font-extrabold font-serif text-natural-brand">
                       {hoveredCompanion.nameAr.charAt(0)}

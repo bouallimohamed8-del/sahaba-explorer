@@ -1064,6 +1064,391 @@ During the Battle of Uhud, the Quraish targeted him to avenge their dead. They h
     historicalSignificanceAr: 'شكّل إسلامه الضمان والدرع القيادي لبني هاشم، ومثلت شهادته الملحمة التضحوية الكبرى لغزوة أحد.',
     historicalSignificanceEn: 'His prestige established a defensive shield for the early mission in Mecca, and his demise became the defining tragedy of Uhud.',
     confidenceLevel: 'High'
+  },
+  {
+    id: 'abu_ubaydah_bin_al_jarrah',
+    nameAr: 'أبو عبيدة بن الجراح',
+    nameEn: 'Abu Ubaydah ibn al-Jarrah',
+    kunyaAr: 'أبو عبيدة',
+    kunyaEn: 'Abu Ubaydah',
+    lineageAr: 'عامر بن عبد الله بن الجراح الحارثي الفهري القرشي',
+    lineageEn: 'Aamir ibn Abdullah ibn al-Jarrah al-Fihri al-Qurashi',
+    titlesAr: ['أمين الأمة', 'من العشرة المبشرين بالجنة'],
+    titlesEn: ['Amin al-Ummah (The Trustworthy of the Nation)', 'One of the Ten Promised Paradise'],
+    tribeAr: 'بنو الحارث بن فهر (قريش)',
+    tribeEn: 'Banu al-Harith ibn Fihr (Quraish)',
+    birthYearAH: -40,
+    deathYearAH: 18,
+    ageAtDeath: 58,
+    category: 'Military',
+    cityAr: 'مكة / المدينة المنورة / الشام',
+    cityEn: 'Mecca / Medina / Levant',
+    hadithCount: 15,
+    shortBioAr: 'أمين الأمة الإسلامية، وفاتح الديار الشامية، وأحد العشرة المبشرين بالجنة، وصاحب الزهد والورع العظيم.',
+    shortBioEn: 'The "Trustworthy of this Ummah", conqueror of the Levant, one of the ten promised Paradise, known for extreme asceticism and devotion.',
+    longBioAr: `هو عامر بن عبد الله بن الجراح الفهري القرشي، المشهور بـ أبا عبيدة. ولد في مكة المكرمة في بيت شريف ونبيل. أسلم مبكراً في الأيام الأولى على يد أبي بكر الصديق.
+    كان من المهاجرين الأوائل وثبت مع رسول الله ﷺ في أشد المواقف كغزوة أحد حيث سحب بصلابة الحلقتين المغروستين في وجنته الشريفة ﷺ بأسنانه حتى سقطت ثناياه.
+    عينه عمر بن الخطاب رضي الله عنه قائداً عاماً لجيوش الشام في الفتوحات بدلاً من خالد بن الوليد، وهو ما قبله خالد بصدر رحب وأثنى عليه، وقسم أبو عبيدة الشام ولايات آمنة وعاش زاهداً رافضاً لرفاه الملوك حتى توفي غارقاً في دموع أصحابه إثر إصابته بطاعون عمواس بالشام.`,
+    longBioEn: `He is Aamir ibn Abdullah ibn al-Jarrah al-Fihri al-Qurashi, famously known as Abu Ubaydah. Born to a respected and reputable Quraishi lineage, he responded to Abu Bakr's early call.
+    Being an early veteran who migrated to Abyssinia and Medina, he distinguished himself in combat at Badr and Uhud. At Uhud, he used his own teeth to pluck out the helmet links deeply wedged into the Prophet's cheeks.
+    Caliph Umar appointed him supreme commander of all Syrian invasion sectors, succeeding Khalid ibn al-Walid. This transfer was accepted gracefully by both heroes. Abu Ubaydah set early operational paradigms of religious tolerance, living with minimal properties until he succumbed to the Plague of Amwas.`,
+    conversionAr: 'أسلم في الأيام الأولى للدعوة على يد أبي بكر الصديق، وهاجر للحبشة ثم للمدينة وعاش مدافعاً عن التوحيد.',
+    conversionEn: 'Embraced Islam in its earliest days through Abu Bakr al-Siddiq, and migrated to Abyssinia and then Medina.',
+    achievementsAr: [
+      'تولي القيادة العامة لفتوحات الشام في عهد الفاروق عمر وعصم دماء المحتمين',
+      'الحصول على وسام الأمانة من فم رسول الله ﷺ كأمين هذه الأمة',
+      'إظهار الزهد والنزاهة المطلقة بتفضيل العيش البسيط وخدمة رعايا الشام'
+    ],
+    achievementsEn: [
+      'Served as the supreme commander of Syrian forces under Caliph Umar',
+      'Honored with the exclusive title "Trustworthy of this Nation" by the Prophet',
+      'Demonstrated supreme asceticism, prioritizing public welfare and active duty'
+    ],
+    battles: ['badr', 'uhud', 'khandaq', 'khaybar', 'tabuk'],
+    teachers: ['الرسول محمد ﷺ'],
+    students: ['عمر بن الخطاب', 'عبد الله بن عباس', 'جابر بن عبد الله'],
+    famousHadiths: [
+      {
+        quoteAr: 'قال رسول الله ﷺ: «إنَّ لِكُلِّ أُمَّةٍ أَمِينًا، وَأَمِينُ هذِه الأُمَّةِ أَبُو عُبَيْدَةَ بنُ الجَرَّاحِ»',
+        quoteEn: 'The Prophet ﷺ said: "Every nation has a trustworthy guardian, and the trustworthy guardian of this nation is Abu Ubaydah ibn al-Jarrah."',
+        reference: 'Sahih al-Bukhari 3744'
+      }
+    ],
+    sources: ['صحيح البخاري', 'ابن سعد - الطبقات الكبرى', 'الذهبي - سير أعلام النبلاء'],
+    library: ['أمين الأمة أبو عبيدة بن الجراح لمحمد رضا', 'سير أعلام النبلاء للذهبي'],
+    historicalSignificanceAr: 'قاد قوات الفتح الإسلامي بالشام وأرسى دعائم العدالة والمواساة العظمى ببلاد الشام حتى وافته المنية في طاعون عمواس.',
+    historicalSignificanceEn: 'Led the Islamic conquests of Syria, establishing governance structures of justice until his death during the Plague of Amwas.',
+    confidenceLevel: 'High'
+  },
+  {
+    id: 'abdur_rahman_bin_awf',
+    nameAr: 'عبد الرحمن بن عوف',
+    nameEn: 'Abdur-Rahman ibn Awf',
+    kunyaAr: 'أبو محمد',
+    kunyaEn: 'Abu Muhammad',
+    lineageAr: 'عبد الرحمن بن عوف بن عبد عوف الزهري القرشي',
+    lineageEn: 'Abdur-Rahman ibn Awf ibn Abd Awf al-Zuhri al-Qurashi',
+    titlesAr: ['من العشرة المبشرين بالجنة', 'أحد الستة أصحاب الشورى'],
+    titlesEn: ['One of the Ten Promised Paradise', 'One of the Six Members of Umar\'s Shura Council'],
+    tribeAr: 'بنو زهرة (قريش)',
+    tribeEn: 'Banu Zuhrah (Quraish)',
+    birthYearAH: -43,
+    deathYearAH: 32,
+    ageAtDeath: 75,
+    category: 'Muhajirun',
+    cityAr: 'مكة / المدينة المنورة',
+    cityEn: 'Mecca / Medina',
+    hadithCount: 65,
+    shortBioAr: 'التاجر الصدوق الصابر، وأحد العشرة المبشرين بالجنة، الذي بدأ تجارته بالمدينة من الصفر ووزع ثروته في سبيل الله.',
+    shortBioEn: 'A phenomenally successful merchant-philanthropist, one of the ten promised Paradise, who built his business in Medina from scratch and donated major parts of his wealth.',
+    longBioAr: `هو عبد الرحمن بن عوف الزهري ولد في مكة بعد عام الفيل بعشر سنين. كان تاجراً ذكياً لبيباً، يتميز بالأمانة والخلق الرفيع والشرف والصدق.
+    أسلم في وقت مبكر جداً على يد الصديق، وعانى من ويلات قريش حتى هاجر هجرتين. ولما وصل للمدينة المنورة فخيراً بين تقاسم مال أخيه من الأنصار سعد بن الربيع، شكره قائلاً بحكمة وثقة: «دلوني على السوق».
+    فانطلق وتاجر وبنى إمبراطورية تجارية ضخمة جعلها سبيلاً لخدمة الفقراء وعامة الناس ودعم الغزوات، وتصدق بنصف ماله مراراً وجهز قوافل عملاقة لتأمين المدينة، واختتم حياته المباركة بتفضيل التنحي وإدارة الشورى لاختيار عثمان كطرف محايد وموثوق.`,
+    longBioEn: `He is Abdur-Rahman ibn Awf al-Zuhri, born in Mecca 10 years after the Year of the Elephant. A gifted merchant and visionary who built his commerce on honesty.
+    An early adopter of Islam via Abu Bakr, he migrated first to Abyssinia, then Medina. When proposed a total wealth partition by his Ansar brother Saad ibn al-Rabi, he politely declined with his iconic words: "Just direct me to the marketplace."
+    He built a mercantile empire, utilizing his vast profits for social care, funding expeditions, and setting up massive supply caravans. He steered the critical post-Umar executive vacuum, voluntarily foregoing his own nomination to impartially lead the Shura choosing Uthman.`,
+    conversionAr: 'كان من أول ثمانية دخلوا الإسلام على يد أبي بكر الصديق، معلناً ولاءه لله والرسول الكريم بشكل عظيم.',
+    conversionEn: 'Was among the first eight people to embrace Islam through Abu Bakr al-Siddiq.',
+    achievementsAr: [
+      'تمويل غزوات وجيوش الإسلام وتجهيز قوافل الدعم الكبرى بالكامل من ماله',
+      'عتق مئات العبيد والمستضعفين لتوحيد الله وتأسيس الأوقاف المالية والغذائية',
+      'تولي لجنة الشورى لاختيار الخليفة الثالث بعد استشهاد عمر بن الخطاب بنجاح ونزاهة وسرية'
+    ],
+    achievementsEn: [
+      'Funded military expeditions and equipped major relief caravans',
+      'Emancipated hundreds of slaves and founded financial trusts for charity support',
+      'Successfully facilitated the Shura council to select the third Caliph with absolute neutrality and wisdom'
+    ],
+    battles: ['badr', 'uhud', 'khandaq', 'khaybar', 'tabuk'],
+    teachers: ['الرسول محمد ﷺ'],
+    students: ['ابن مسعود', 'ابن عباس', 'ابن عمر', 'أنس بن مالك'],
+    famousHadiths: [
+      {
+        quoteAr: 'سمعت رسول الله ﷺ يقول: «أَبُو بَكْرٍ فِي الْجَنَّةِ، وَعُمَرُ فِي الْجَنَّةِ، وَعُثْمَانُ فِي الْجَنَّةِ، وَعَلِيٌّ فِي الْجَنَّةِ، وَطَلْحَةُ فِي الْجَنَّةِ، وَالزُّبَيْرُ فِي الْجَنَّةِ، وَعَبْدُ الرَّحْمَنِ بْنُ عَوْفٍ فِي الْجَنَّةِ...»',
+        quoteEn: 'I heard the Prophet ﷺ saying: "Abu Bakr is in Paradise, Umar is in Paradise, Uthman is in Paradise, Ali is in Paradise, Talha is in Paradise, Zubayr is in Paradise, Abdur-Rahman ibn Awf is in Paradise..."',
+        reference: 'Jami` at-Tirmidhi 3747'
+      }
+    ],
+    sources: ['صحيح البخاري', 'ابن كثير - البداية والنهاية', 'ابن سعد - الطبقات الكبرى'],
+    library: ['عبد الرحمن بن عوف لأحمد خليل جمعة', 'سير أعلام النبلاء للذهبي'],
+    historicalSignificanceAr: 'مثّل نموذجاً إسلامياً رائداً في الاقتصاد والتجارة الأخلاقية، وكان وسيط الاستقرار في اختيار الخليفة العثماني.',
+    historicalSignificanceEn: 'Represented a pioneered Islamic model in ethical trade, and served as the key mediator of stability in appointing the third Caliph.',
+    confidenceLevel: 'High'
+  },
+  {
+    id: 'saad_bin_abi_waqqas',
+    nameAr: 'سعد بن أبي وقاص',
+    nameEn: 'Saad ibn Abi Waqqas',
+    kunyaAr: 'أبو إسحاق',
+    kunyaEn: 'Abu Ishaq',
+    lineageAr: 'سعد بن مالك بن وهيب بن عبد مناف الزهري القرشي',
+    lineageEn: 'Saad ibn Malik ibn Wuhayb al-Zuhri al-Qurashi',
+    titlesAr: ['مستجاب الدعوة', 'فارس القادسية', 'خال النبي ﷺ'],
+    titlesEn: ['The One whose Prayers are Answered', 'Knight of al-Qadisiyyah', 'Maternal Uncle of the Prophet'],
+    tribeAr: 'بنو زهرة (قريش)',
+    tribeEn: 'Banu Zuhrah (Quraish)',
+    birthYearAH: -23,
+    deathYearAH: 55,
+    ageAtDeath: 78,
+    category: 'Military',
+    cityAr: 'مكة / المدينة المنورة / الكوفة',
+    cityEn: 'Mecca / Medina / Kufa',
+    hadithCount: 271,
+    shortBioAr: 'بطل معركة القادسية، وفاتح بلاد فارس والعراق، وأحد العشرة المبشرين بالجنة، وأول من رمى بسهم في سبيل الله.',
+    shortBioEn: 'The champion of the Battle of al-Qadisiyyah, conqueror of Persia and Iraq, one of the ten promised Paradise, and the first to fire an arrow for the sake of Islam.',
+    longBioAr: `هو سعد بن مالك بن أهيب الزهري، ولد في مكة ونشأ يتدرب على الرماية وصنع القسي والصيد. كان شجاعاً فخوراً كونه خالاً لرسول الله ﷺ، حتى أن النبي ﷺ كان يداعبه بكل فخر قائلاً: «هذا خالي فليرني امرؤ خاله».
+    أسلم في السابعة عشرة من عمره، وكان يمتلك ميزة عظيمة وهي استجابة دعائه ببركة دعوة النبي ﷺ له: «اللهم سدد رميته، وأجب دعوته».
+    قاد المعركة التاريخية الفاصلة "معركة القادسية" ضد جيش الفرس بقيادة رستم، وحسم النصر للمسلمين، وافتتح المدائن وبنى الكوفة كعاصمة لإقليم الفرات والعراق، وتوفي في قصره بالعقيق كآخر من مات من المهاجرين الشرفاء.`,
+    longBioEn: `He is Saad ibn Malik (Abi Waqqas) al-Zuhri, born in Mecca. He mastered bow-making and hunting during youth. The Prophet ﷺ held him in high esteem, famously boasting: "This is my maternal uncle, let any man show me his maternal uncle!"
+    He converted at seventeen. Due to a specific Prophetic blessing ("O Allah, steady his aim and answer his prayers"), his dues were legendary.
+    He orchestrated the colossal clash of al-Qadisiyyah against Rustum, putting an end to the Sassanid hegemony in Iraq. He went on to build Kufa, passing away near Medina as the last of the Muhajirun in 55 AH.`,
+    conversionAr: 'أسلم وهو شاب في السابعة عشرة من عمره كأحد السابقين للإسلام بروح فتية متوقدة.',
+    conversionEn: 'Embraced Islam as a youth of seventeen, becoming one of the earliest believers.',
+    achievementsAr: [
+      'قيادة جيش المسلمين في معركة القادسية الخالدة وإسقاط الإمبراطورية الساسانية بجدارة وقوة وبصيرة',
+      'تأسيس وبناء مَصر ومدينة الكوفة بالعراق لتكون مركز إشعاع فكري وحضاري وهندسي متقدم',
+      'أول من أراق دماً وأول من رمى بسهم دفاعاً عن بيضة الإسلام بمكة المكرمة في أولى مراحل الضيق'
+    ],
+    achievementsEn: [
+      'Commanded the Muslim forces at the decisive Battle of al-Qadisiyyah, overrunning the Sassanid armies',
+      'Founded and built the hub city of Kufa in Iraq under instructions from Caliph Umar',
+      'First to shed blood and fire an arrow defensively for the Muslim mission in Mecca'
+    ],
+    battles: ['badr', 'uhud', 'khandaq', 'khaybar', 'tabuk'],
+    teachers: ['الرسول محمد ﷺ'],
+    students: ['ابن عباس', 'ابن عمر', 'عائشة بنت أبي بكر', 'سعيد بن المسيب'],
+    famousHadiths: [
+      {
+        quoteAr: 'عن النبي ﷺ قال يوم أُحُدٍ لِسَعْدٍ: «ارْمِ سَعْدُ فِدَاكَ أَبِي وَأُمِّي»',
+        quoteEn: 'On the day of Uhud, the Prophet ﷺ urged him: "Shoot, O Saad! May my father and mother be sacrificed for you!"',
+        reference: 'Sahih al-Bukhari 2901'
+      }
+    ],
+    sources: ['صحيح البخاري', 'تاريخ الطبري', 'ابن كثير - البداية والنهاية'],
+    library: ['سعد بن أبي وقاص بطل القادسية للدكتور الصلابي', 'أسد الغابة في معرفة الصحابة لابن الأثير'],
+    historicalSignificanceAr: 'أنهى النفوذ العسكري والسياسي للإمبراطورية الفارسية الكبرى بالشرق، وبنى صروحاً حضارية كمدينة الكوفة ومساجدها الشريفة.',
+    historicalSignificanceEn: 'Terminated the military power of the Persian Empire, and built Islamic civilization centers such as Kufa.',
+    confidenceLevel: 'High'
+  },
+  {
+    id: 'muadh_bin_jabal',
+    nameAr: 'معاذ بن جبل',
+    nameEn: 'Muadh ibn Jabal',
+    kunyaAr: 'أبو عبد الرحمن',
+    kunyaEn: 'Abu Abd al-Rahman',
+    lineageAr: 'معاذ بن جبل بن عمرو بن أوس الخزرجي الأنصاري',
+    lineageEn: 'Muadh ibn Jabal ibn Amr ibn Aws al-Khazraji al-Ansari',
+    titlesAr: ['أعلم الأمة بالحلال والحرام', 'إمام العلماء يوم القيامة'],
+    titlesEn: ['The Most Knowledgeable of Halal & Haram', 'The Leader of Scholars on Judgement Day'],
+    tribeAr: 'بنو خزرج (الأنصار)',
+    tribeEn: 'Banu Khazraj (Ansar)',
+    birthYearAH: -18,
+    deathYearAH: 18,
+    ageAtDeath: 36,
+    category: 'Scholars',
+    cityAr: 'المدينة المنورة / اليمن / الشام',
+    cityEn: 'Medina / Yemen / Levant',
+    hadithCount: 157,
+    shortBioAr: 'سيد علم الفقه والاجتهاد، الذي أرسله النبي ﷺ قاضياً ومعلماً لليمن، ووصفه بأنه أعلم من في الأمة بالحلال والحرام.',
+    shortBioEn: 'A master jurist of Islam who was sent by the Prophet ﷺ to Yemen as a judge and teacher. Described by the Prophet as the best in the Ummah in knowing Halal and Haram.',
+    longBioAr: `هو معاذ بن جبل الأنصاري الخزرجي، ولد في المدينة المنورة وأسلم وهو ابن ثماني عشرة سنة. كان جميلاً، وضيء الوجه، واسع العينين، وإذا تكلم دهش السامعين بعميق فقهه وعقله المتقد وأدبه السامي.
+    بايع النبي في بيعة العقبة الثانية، وشهد المشاهد كلها بثبات وبلاء باهر. تميز بفهمه الدقيق لمقاصد الدين والترغيب والترهيب، فوصفه النبي ﷺ بأنه أعلم الأمة بالحلال والحرام.
+    أرسله النبي ﷺ إلى اليمن كأول مبعوث ومعلم وموجه ديني وقاضٍ، ورسم معه قواعد الاجتهاد القضائي. ثم وجهه أمير المؤمنين عمر إلى الشام فقهاً ومعلماً حتى مات شهيد الطاعون بعمواس وهو شاب في ريعان العطاء والشباب.`,
+    longBioEn: `He is Muadh ibn Jabal al-Khazraji, born in Medina. Converting at eighteen, he was known for physical grace and mesmerizing eloquence.
+    He attested to the Second Aqabah pledge and survived every major battle. Possessing unique interpretative logic, the Prophet designated him as the ultimate yardstick of lawful (Halal) and forbidden (Haram) actions.
+    The Prophet ﷺ commissioned him to Yemen as chief diplomat, educator, and state representative, endorsing his template of judicial reasoning. Under Caliph Umar, he moved to Syria to supervise education, dying of the plague at thirty-six.`,
+    conversionAr: 'شهد بيعة العقبة الثانية وهو فتى يافع واسلم على يد مصعب بن عمير بالمدينة المنورة المباركة.',
+    conversionEn: 'Participated in the Second Treaty of Aqabah as a youth and accepted Islam through Mus\'ab ibn Umayr.',
+    achievementsAr: [
+      'إرساله كأول مبعوث قضائي وقائد ديني لملوك وقبائل اليمن لتعليم الناس ونشر الإسلام الحنيف وسد فجوات الفتوى',
+      'المشاركة في حفظ وتفسير القرآن الكريم في عهد النبي ﷺ وعرضه على المقرئين بالمدينة المنورة وحل الإشكالات',
+      'إرساء معايير القياس الفقهي والاجتهاد العقلي في غياب النص المباشر بموافقة ودعاء وتزكية الرسول ﷺ'
+    ],
+    achievementsEn: [
+      'Commissioned as the first judicial, economic, and educational diplomat to Yemen to instruct tribes',
+      'Helped compile, read, and explain the Quran during the Prophet\'s lifetime in Medina',
+      'Formulated the crucial basis of analogical reasoning (Ijtihad) with the explicit approval and pleasure of the Prophet'
+    ],
+    battles: ['badr', 'uhud', 'khandaq', 'khaybar', 'tabuk'],
+    teachers: ['الرسول محمد ﷺ'],
+    students: ['عبد الله بن عباس', 'عبد الله بن عمر', 'أبو موسى الأشعري', 'عبد الرحمن بن غنم'],
+    famousHadiths: [
+      {
+        quoteAr: 'قال رسول الله ﷺ: «أَعْلَمُ أُمَّتِي بِالْحَلَالِ وَالْحَرَامِ مُعَاذُ بْنُ جَبَلٍ»',
+        quoteEn: 'The Prophet ﷺ said: "The most knowledgeable of my nation concerning the lawful and the prohibited is Muadh ibn Jabal."',
+        reference: 'Jami` at-Tirmidhi 3790'
+      }
+    ],
+    sources: ['صحيح مسلم', 'الذهبي - سير أعلام النبلاء', 'ابن سعد - الطبقات الكبرى'],
+    library: ['معاذ بن جبل إمام العلماء لأحمد خليل جمعة', 'تراجم رجال السيرة لدار الحديث والمؤلفات التاريخية'],
+    historicalSignificanceAr: 'أرسى أصول البحث والاجتهاد والقياس الفقهي في رسالته القضائية باليمن، واستشهد في طاعون الشام شاباً.',
+    historicalSignificanceEn: 'Laid the early methodology of legal reasoning (Ijtihad) in his judicial manual in Yemen, dying young during the plague in Syria.',
+    confidenceLevel: 'High'
+  },
+  {
+    id: 'abdullah_bin_masood',
+    nameAr: 'عبد الله بن مسعود',
+    nameEn: 'Abdullah ibn Masood',
+    kunyaAr: 'أبو عبد الرحمن',
+    kunyaEn: 'Abu Abd al-Rahman',
+    lineageAr: 'عبد الله بن مسعود بن غافل الهذلي',
+    lineageEn: 'Abdullah ibn Masood ibn Ghafil al-Hudhali',
+    titlesAr: ['صاحب السواد والنعلين', 'فقيه الأمة الكبرى', 'أول من جهر بالقرآن بمكة'],
+    titlesEn: ['Keeper of the Secret & Shoes', 'The Grand Sage of the Nation', 'First to Recite Quran Openly in Mecca'],
+    tribeAr: 'بنو هذيل (حليف قريش)',
+    tribeEn: 'Banu Hudhayl (Allied with Quraish)',
+    birthYearAH: -38,
+    deathYearAH: 32,
+    ageAtDeath: 70,
+    category: 'Scholars',
+    cityAr: 'مكة / المدينة المنورة / الكوفة',
+    cityEn: 'Mecca / Medina / Kufa',
+    hadithCount: 848,
+    shortBioAr: 'الفقيه المفسر وأحد مراجع قراءة القرآن الكريم، وصاحب النعلين والأسرار وصاحب أول مدرسة فقهية كبرى بالكوفة.',
+    shortBioEn: 'A master Quranic authority and jurist, close attendant of the Prophet ﷺ who kept his secrecy, and founded the influential School of Law in Kufa.',
+    longBioAr: `هو عبد الله بن مسعود بن غافل الهذلي، ولد في مكة وكان يرعى الغنم لبعض سادات قريش كعقبة بن أبي معيط. أسلم قديماً بمكة عقب رؤيته معجزة الحليب وحلب الشاة غير الحلوب على يد رسول الله ﷺ.
+    كان من الملازمين الأوفياء للنبي كظله، يلبسه نعليه، ويحمل له سواكه وماء طهوره وأسراره اللصيقة حتى ظنه الناس في البداية من آل البيت لكثرة ملازمته ودخوله.
+    كان أول مسلم يسير لوسط القوم بالمسجد الحرام عند مقام إبراهيم ويصدع بقراءة سورة الرحمن جهاراً، فضربته قريش حتى أدمت وجهه الشريف. هاجر الهجرتين وشهد المشاهد. عينه عمر بن الخطاب مشرفاً وقاضياً ومعلماً لأهل الكوفة بالعراق، حيث بنى أعظم منارة فقهية ومدرسة عقلية انتسب إليها كبار الأئمة وفقه الوفاق الحنفي.`,
+    longBioEn: `He is Abdullah ibn Masood al-Hudhali, born in Mecca, spending his early life shepherding of Quraishi noble flocks. He embraced Islam upon witnessing the Prophet draw milk miraculously from a barren sheep.
+    He became an inseparable domestic companion to the Prophet, serving as his personal assistant carrying his sandals, toothpick, and water.
+    Ibn Masood was the first to publicly recite the Quran near the Kaaba, defying Quraishi physical retaliation. He completed migrations to both Abyssinia and Medina, fighting at Badr (where he slew Abu Jahl). Caliph Umar deployed him to Kufa to act as supreme civil authority and educational head, framing the legal methodologies of Iraq.`,
+    conversionAr: 'أسلم بمكة مبكراً وهو سادس رجل يدخل المعشر الإسلامي حباً ووفاء للرسالة السامية الطاهرة.',
+    conversionEn: 'Accepted Islam early in Mecca as the sixth individual to embrace the faith.',
+    achievementsAr: [
+      'أول صحابي يصدع ويجهر بقراءة القرآن الكريم علانية أمام غطرسة وجبروت قريش الكافرة بمكة عند الكعبة المكرمة',
+      'تأسيس وبناء مدرسة الحديث والتفسير بالكوفة وتخريج أجيال عظام تفردت بفقه الرأي والقياس كعلقمة والنخعي والأسود وعلقمة وبذل الجهد',
+      'نيل شهادة التزكية والبركة من فم النبي ﷺ بقراءة القرآن عذباً ورسولاً كما نزل وملازمته المعتمدة التامة'
+    ],
+    achievementsEn: [
+      'First companion to loudly and publicly recite the Quran before the pagan councils at the Kaaba',
+      'Organized the early juristic school of Kufa, educating prime legal minds of Iraq',
+      'Praised directly by the Prophet ﷺ for his meticulous, authentic transmission and deep recitation'
+    ],
+    battles: ['badr', 'uhud', 'khandaq', 'khaybar', 'tabuk'],
+    teachers: ['الرسول محمد ﷺ'],
+    students: ['الحسن البصري', 'علقمة النخعي', 'مسروق بن الأجدع', 'الأسود بن يزيد'],
+    famousHadiths: [
+      {
+        quoteAr: 'سمعت رسول الله ﷺ يقول: «مَنْ سَرَّهُ أَنْ يَقْرَأَ الْقُرْآنَ رَطْبًا كَمَا أُنْزِلَ، فَلْيَقْرَأْهُ عَلَى قِرَاءَةِ ابْنِ أُمِّ عَبْدٍ»',
+        quoteEn: 'The Prophet ﷺ said: "Whoever loves to read the Quran fresh as it was revealed, let him read it according to the recitation of Ibn Umm Abd (Abdullah ibn Masood)."',
+        reference: 'Musnad Ahmad 175'
+      }
+    ],
+    sources: ['صحيح البخاري', 'ابن سعد - الطبقات الكبرى', 'الذهبي - سير أعلام النبلاء'],
+    library: ['عبد الله بن مسعود عميد مدرسة الكوفة للدكتور عبد الرازق', 'البداية والنهاية لابن كثير من الشروح القديمة'],
+    historicalSignificanceAr: 'وضعت تعاليمه ومروياته بذرة فقه أهل الرأي والمناهج الأثرية الكبرى لمدارس العراق والتبعية الحنفية اللاحقة.',
+    historicalSignificanceEn: 'His detailed teachings and reports became the foundation of modern Islamic jurisprudence of Kufa and Hanifi legal schools.',
+    confidenceLevel: 'High'
+  },
+  {
+    id: 'abdullah_bin_abbas',
+    nameAr: 'عبد الله بن عباس',
+    nameEn: 'Abdullah ibn Abbas',
+    kunyaAr: 'أبو العباس',
+    kunyaEn: 'Abu al-Abbas',
+    lineageAr: 'عبد الله بن عباس بن عبد المطلب بن هاشم الهاشمي القرشي',
+    lineageEn: 'Abdullah ibn Abbas ibn Abd al-Muttalib al-Hashimi al-Qurashi',
+    titlesAr: ['ترجمان القرآن', 'حبر الأمة', 'البحر الزاخر'],
+    titlesEn: ['Translator of the Quran', 'The Scholar of the Nation', 'The Vast Ocean of Knowledge'],
+    tribeAr: 'بنو هاشم (قريش)',
+    tribeEn: 'Banu Hashim (Quraish)',
+    birthYearAH: -3,
+    deathYearAH: 68,
+    ageAtDeath: 71,
+    category: 'Scholars',
+    cityAr: 'مكة / المدينة المنورة / الطائف',
+    cityEn: 'Mecca / Medina / Taif',
+    hadithCount: 1660,
+    shortBioAr: 'ابن عم رسول الله ﷺ، تُرجمان القرآن الكريم وحَبر هذه الأمة الذي نال بركة دعاء المصطفى له بالحكمة والتاويل والفقاهة.',
+    shortBioEn: 'The cousin of the Prophet ﷺ, master commentator of the Quran, and "The Sage of this Ummah" who received the Prophet\'s special prayer for wisdom and exegesis.',
+    longBioAr: `هو عبد الله بن عباس بن عبد المطلب الهاشمي القرشي، ولد في مكة المكرمة في شعب أبي طالب قبل الهجرة بثلاث سنوات. وكان صبياً ذكياً فصيحاً لا يفارق مجالس النبي ﷺ متمسكاً بأهدابه العطرة.
+    دعا له النبي ﷺ بالدعوة التاريخية المباركة الفاصلة: «اللهم فقهه في الدين، وعلمه التأويل»، فصارت مفتاح جعبته المعرفية الزاخرة الفريدة.
+    برغم حداثة سنه عند وفاة النبي الشريف، سعى ابن عباس بنهم شديد وراء كبار الصحابة يجمع السنن والأخبار المنقولة، ويفسر كلام الله بالأشعار العربية وتراكيب اللغة حتى قصده طلاب العلم من الأرض قاطبة وسماه معاصروه بـ "الحبر" و "البحر" لغزارة فقهه وتوفي بالطائف في سلام تام.`,
+    longBioEn: `He is Abdullah ibn Abbas al-Hashimi, cousin of the Prophet, born during the social siege of Banu Hashim. A young boy when the Prophet passed, he devoted himself to absolute scholarship.
+    The Prophet ﷺ embraced him and supplicated: "O Allah, grant him deep comprehension inside religion, and teach him interpretation." This prophetic blessing unlocked an unmatched career in exegesis.
+    He sought out older Companions, querying them on precise Sunnah details and combining this with Arabic poetry and linguistics to parse the legal text. His classes in Mecca drew thousands, earning him titles like 'The Ocean' and 'The Sage'. He died in Taif in 68 AH.`,
+    conversionAr: 'ولد في شعب أبي طالب قبل الهجرة بثلاث سنين ونشأ في طليعة الإيمان والتوحيد مع أهله بني هاشم الكرام وعائلته السامية.',
+    conversionEn: 'Born during the social boycott in Mecca, and grew up in the light of the prophetical household.',
+    achievementsAr: [
+      'تأصيل علوم التفسير واستنباط الأحكام اللغوية والشرعية لآيات القرآن الكريم بدقة لا تضاهى ولا تقارن',
+      'تأسيس مدرسة تفسير القرآن والفقه الكبرى في مكة المكرمة وتخريج التابعين الأجلاء كمجاهد وجبير وعكرمة والقادة الفكريين',
+      'تولي مهام المستشار الفكري والخارجي للفاروق عمر الذي كان يدخله في مجالس الشيوخ وكبار الرواة برغم حداثة سنه وشبابه'
+    ],
+    achievementsEn: [
+      'Formulated the systematic steps of Quranic interpretation (Tafsir) and legal-linguistic derivations',
+      'Founded the premier Quranic studies institute of Mecca, generating leading scholars of the sub-generation',
+      'Served as a key policy advisor to Caliph Umar, who invited him to the senior Shura panels despite his youth'
+    ],
+    battles: ['hunayn'],
+    teachers: ['الرسول محمد ﷺ', 'أبو بكر الصديق', 'عمر بن الخطاب', 'علي بن أبي طالب'],
+    students: ['مجاهد بن جبر', 'سعيد بن جبير', 'عكرمة مولى ابن عباس', 'طاووس بن كيسان'],
+    famousHadiths: [
+      {
+        quoteAr: 'أنَّ النبيَّ ﷺ مَسَحَ رأسَهُ وقالَ: «اللَّهُمَّ فَقِّهْهُ في الدِّينِ، وعَلِّمْهُ التَّأْوِيلَ»',
+        quoteEn: 'The Prophet ﷺ stroked his head and prayed: "O Allah, grant him deep understanding in religion, and teach him the commentary/interpretation (of the Quran)."',
+        reference: 'Sahih al-Bukhari 143'
+      }
+    ],
+    sources: ['صحيح البخاري', 'مستدرك الحاكم', 'الذهبي - سير أعلام النبلاء'],
+    library: ['عبد الله بن عباس حبر الأمة لحلمي الخولي', 'تفسير ابن عباس المأثور ومسنده الفقهي المعرب'],
+    historicalSignificanceAr: 'يمثل المرجعية الأولى والتأسيسية لعلوم القرآن والتقصي اللغوي لآيات القرآن في تاريخ العلوم الإسلامية الممتدة.',
+    historicalSignificanceEn: 'Serves as the foundational reference for Quranic exegesis (Tafsir) and Arabic lexicography in Islamic intellectual history.',
+    confidenceLevel: 'High'
+  },
+  {
+    id: 'abdullah_bin_umar',
+    nameAr: 'عبد الله بن عمر',
+    nameEn: 'Abdullah ibn Umar',
+    kunyaAr: 'أبو عبد الرحمن',
+    kunyaEn: 'Abu Abd al-Rahman',
+    lineageAr: 'عبد الله بن عمر بن الخطاب بن نفيل العدوي القرشي',
+    lineageEn: 'Abdullah ibn Umar ibn al-Khattab al-Adawi al-Qurashi',
+    titlesAr: ['الناسك المتبع', 'صاحب الأثر الشديد', 'راوي الأمة العالي'],
+    titlesEn: ['The Devout Adherent of Sunnah', 'Extremely Meticulous Follower of Prophetic Steps', 'Great Reporter of Medina'],
+    tribeAr: 'بنو عدي (قريش)',
+    tribeEn: 'Banu Adi (Quraish)',
+    birthYearAH: -10,
+    deathYearAH: 73,
+    ageAtDeath: 84,
+    category: 'Hadith_Narrators',
+    cityAr: 'مكة / المدينة المنورة',
+    cityEn: 'Mecca / Medina',
+    hadithCount: 2630,
+    shortBioAr: 'ابن الخليفة الثاني عمر بن الخطاب، والراوي الثاني للأحاديث النبوية، والفقيه الحريص جداً على تتبع خطى وأفعال النبي ﷺ.',
+    shortBioEn: 'The son of Caliph Umar, the second most prolific narrator of Hadith, and a master jurist of Medina recognized for his unmatched adherence to the personal footsteps of the Prophet ﷺ.',
+    longBioAr: `هو عبد الله بن عمر بن الخطاب العدوي القرشي، ولد في مكة وهاجر مع أبيه الفاروق إلى المدينة وهو طفل يافع. نشأ والتوحيد ينضج في قلبه، وبدأت صلته وعشقه للقرآن وسنّة رسول الله منذ الطفولة الباكرة الشريفة.
+    منعه النبي ﷺ من المشاركة في بدْر وأُحُد لصغر سنه وحرصاً عليه، وسمح له يوم الخندق وهو ابن خمس عشرة سنة. اشتهر بورعه الشديد ودقته الأسطورية في محاكاة أفعال وتفاصيل المصطفى ﷺ، حتى كان يركب دابته وينزل تحت الشجرة التي نزل تحتها النبي ويصلي في المواضع نفسها بدقة متناهية.
+    تفرغ بعد وفاة عمر للفتيا والتعليم بالمدينة لأكثر من ستين عاماً، وكان يتجنب المناصب السياسية والقضائية تحرجاً وتورعاً، فظل مرجعاً نقياً ودفن بالمدينة المنورة في سلام تام.`,
+    longBioEn: `He is Abdullah ibn Umar ibn al-Khattab, born in Mecca. He migrated to Medina with his father Umar at a very young age. This upbringing crafted a lifelong pursuit of the Prophetic traditions.
+    The Prophet disallowed him at Badr and Uhud, commissioning him at the Trench at fifteen. He gained universal fame for his extreme, unmatched literal mimicry of the Prophet's physical behavior: traveling where the Prophet traveled, praying exactly under the same branches.
+    Post-Umar, he consecrated over 60 years to teaching in Medina. He steadfastly avoided executive positions or siding in civil strifes, preserving an unblemished traditional jurisprudence that directly influenced future giants.`,
+    conversionAr: 'هاجر مع أبيه الفاروق عمر وغرس الإيمان بقلبه باكراً في كنف عائلة الصدق والتوحيد الخالص الصافي.',
+    conversionEn: 'Migrated to Medina with his father Umar as a young boy and embraced Islam in his early childhood.',
+    achievementsAr: [
+      'ثاني أكثر الصحابة رواية للحديث النبوي الشريف في التاريخ بـ ٢٦٣٠ حديثاً مسجلاً ومدققاً بكل مروية وأمر',
+      'المحافظة على الروح الأثرية لمدينة الرسول ﷺ وتقديم منهج تعليمي امتد لستين عاماً متصلة كمرجع أعلى وهدية علمية',
+      'تأسيس منظومة الفقه الأثرية بالمدينة التي استند عليها الإمام مالك بن أنس في تأسيس وموطأ أهل المدينة النبوي والمناهج الأثرية'
+    ],
+    achievementsEn: [
+      'The second most prolific narrator of Prophetic traditions in history (2,630 authentic narrations)',
+      'Preserved the traditional and instructional legacy of Medina for over sixty years without disruption',
+      'Established the rigorous scriptural framework of Medina which became the core of Imam Malik\'s legal codex'
+    ],
+    battles: ['khandaq', 'khaybar', 'tabuk'],
+    teachers: ['الرسول محمد ﷺ', 'أبو بكر الصديق', 'عمر بن الخطاب', 'عائشة بنت أبي بكر'],
+    students: ['نافع مولى ابن عمر', 'سعيد بن المسيب', 'سالم بن عبد الله بن عمر', 'عروة بن الزبير'],
+    famousHadiths: [
+      {
+        quoteAr: 'سَمِعْتُ رَسُولَ اللَّهِ ﷺ يَقُولُ: «بُنِيَ الْإِسْلَامُ عَلَى خَمْسٍ: شَهَادَةِ أَنْ لَا إِلَهَ إِلَّا اللَّهُ وَأَنَّ مُحَمَّدًا رَسُولُ اللَّهِ، وَإِقَامِ الصَّلَاةِ، وَإِيتَاءِ الزَّكَاةِ، وَحَجِّ الْبَيْتِ، وَصَوْمِ رَمَضَانَ»',
+        quoteEn: 'I heard the Messenger of Allah ﷺ saying: "Islam is built upon five pillars: Testifying that none has the right to be worshipped but Allah and that Muhammad is His Messenger, establishing prayer, giving Zakat, performing Hajj, and fasting Ramadan."',
+        reference: 'Sahih al-Bukhari 8'
+      }
+    ],
+    sources: ['صحيح البخاري', 'ابن سعد - الطبقات الكبرى', 'الذهبي - سير أعلام النبلاء'],
+    library: ['عبد الله بن عمر رائد تتبع السلوك النبوي لمحمد الحسيناوي', 'فتح الباري شرح صحيح البخاري للأئمة'],
+    historicalSignificanceAr: 'مثّل الركن الأقوى للفقه الأثري بالمدينة المنورة وتأثر به كبار أئمة الإسلام كمالك بن أنس والطبقات اللاحقة.',
+    historicalSignificanceEn: 'Represented the absolute pillars of traditional jurisprudence in Medina, directly influencing great Imams like Malik ibn Anas.',
+    confidenceLevel: 'High'
   }
 ];
 
@@ -1198,5 +1583,75 @@ export const DEFAULT_RELATIONSHIPS: Relationship[] = [
     labelEn: 'Medina Defense Consultation',
     descriptionAr: 'علاقة وثيقة لدعم صمود المدينة ورص الصف في اليرموك واليرد.',
     descriptionEn: 'High level strategies to construct the trench securing Medina.'
+  },
+  {
+    id: 'rel_su_al',
+    sourceId: 'saad_bin_abi_waqqas',
+    targetId: 'ali_bin_abi_talib',
+    type: 'battle_comrade',
+    labelAr: 'رفقاء الكفاح الأباة',
+    labelEn: 'Battlefield brothers',
+    descriptionAr: 'برزا معاً ككبار الفرسان المدافعين والمقاتلين الصادقين في صفوف معركة بدر وأحد الكبرى.',
+    descriptionEn: 'Fought shoulder-to-shoulder as elite warriors in early defensive campaigns of Islam.'
+  },
+  {
+    id: 'rel_ol_au',
+    sourceId: 'umar_bin_al_khattab',
+    targetId: 'abu_ubaydah_bin_al_jarrah',
+    type: 'political',
+    labelAr: 'قيادة فتوحات وحملة الشام',
+    labelEn: 'Syrian governance & command',
+    descriptionAr: 'عينه عمر رضي الله عنه معتمداً وقائداً عاماً لبلاد الشام لورعه البالغ وعقله الحكيم لتثبيت العدل.',
+    descriptionEn: 'Umar appointed him as supreme commander of Syria due to his extreme administrative trustworthiness and wisdom.'
+  },
+  {
+    id: 'rel_um_ar',
+    sourceId: 'umar_bin_al_khattab',
+    targetId: 'abdur_rahman_bin_awf',
+    type: 'political',
+    labelAr: 'رئيس الشورى والمستشار الأساسي',
+    labelEn: 'Supreme Shura Consultations',
+    descriptionAr: 'كان أحد الستة الذين أوكل إليهم عمر فقه واختيار من يليه وأدار العملية بنزاهة منقطعة النظير وحكمة بالغة.',
+    descriptionEn: 'Umar appointed him as a lead advisor, placing his confidence in him to run the succession Shura with absolute neutrality.'
+  },
+  {
+    id: 'rel_al_as',
+    sourceId: 'ali_bin_abi_talib',
+    targetId: 'abdullah_bin_abbas',
+    type: 'family',
+    labelAr: 'ابن عمه وتلميذه الروحي الوفير',
+    labelEn: 'Cousin & close theological pupil',
+    descriptionAr: 'ابن عباس كان يحب علياً ويلازمه ويتعلم منه دقة القضاء والتحليل والتفسير ويعينه في الكوفة وإدارة البصرة.',
+    descriptionEn: 'Ibn Abbas was highly devoted to studying under Ali, acquiring his legal techniques and supporting him during his governance.'
+  },
+  {
+    id: 'rel_um_ub',
+    sourceId: 'umar_bin_al_khattab',
+    targetId: 'abdullah_bin_umar',
+    type: 'family',
+    labelAr: 'ابنه النبيل والناسك المتبع للأثر',
+    labelEn: 'His beloved son & scholar',
+    descriptionAr: 'عبد الله هو ابن عمر بن الخطاب، وتربى في مدرسته الفاروقية ذات المهابة والصدق والسامية والالتزام المتناهي.',
+    descriptionEn: 'Abdullah is the eminent son of Caliph Umar, raised in his strict, high-principled household.'
+  },
+  {
+    id: 'rel_as_mu',
+    sourceId: 'abdullah_bin_abbas',
+    targetId: 'muadh_bin_jabal',
+    type: 'teacher_student',
+    labelAr: 'علوم معاذ والاجتهاد الأثري',
+    labelEn: 'Theological consultation links',
+    descriptionAr: 'كان ابن عباس يثني على معاذ ويسأله عن تفاصيل الفتيا ومقاصد الوحي باليمن والمدينة المنورة.',
+    descriptionEn: 'Ibn Abbas consulted Muadh frequently, praising his unprecedented expertise in Halal and Haram.'
+  },
+  {
+    id: 'rel_um_am',
+    sourceId: 'umar_bin_al_khattab',
+    targetId: 'abdullah_bin_masood',
+    type: 'political',
+    labelAr: 'ناصح الخلافة ومعلم أهل الكوفة الأكبر',
+    labelEn: 'Kufa delegate & top legal counsel',
+    descriptionAr: 'أرسله عمر ليكون قاضياً ومعلماً ووزيراً معتمداً للكوفة كاتباً لأهلها: لقد آثرتكم به على نفسي.',
+    descriptionEn: 'Umar sent him as standard-bearer of learning to Kufa, stating: "I have prioritized you over myself by sending him."'
   }
 ];
