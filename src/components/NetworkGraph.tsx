@@ -5,7 +5,22 @@
 
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Companion, Relationship, CompanionCategory, RelationshipType } from '../types';
-import { ZoomIn, ZoomOut, Maximize2, Compass, Move, HelpCircle, LayoutGrid, RotateCcw, Orbit } from 'lucide-react';
+import { 
+  ZoomIn, 
+  ZoomOut, 
+  RotateCcw, 
+  Orbit, 
+  Compass, 
+  HelpCircle, 
+  Layers, 
+  Calendar, 
+  Sparkles, 
+  Eye, 
+  Info, 
+  Play, 
+  Pause, 
+  Maximize2 
+} from 'lucide-react';
 
 interface NetworkGraphProps {
   companions: Companion[];
@@ -15,14 +30,14 @@ interface NetworkGraphProps {
   hoveredCompanion: Companion | null;
   onHoverCompanion: (companion: Companion | null) => void;
   isArabic: boolean;
-  highlightedPath: string[] | null; // list of companion IDs in path
+  highlightedPath: string[] | null;
   isDarkMode?: boolean;
 }
 
-// Category Configuration mapping colors and labels
+// Category design parameters
 export const CATEGORY_CONFIG: Record<CompanionCategory, { color: string; bgClass: string; textClass: string; labelAr: string; labelEn: string }> = {
   Khulafa_Rashidun: {
-    color: '#D4AF37', // Gold
+    color: '#D4AF37', // Pure Gold
     bgClass: 'bg-amber-500/15 border-amber-400',
     textClass: 'text-amber-500',
     labelAr: 'الخلفاء الراشدون',
@@ -36,49 +51,49 @@ export const CATEGORY_CONFIG: Record<CompanionCategory, { color: string; bgClass
     labelEn: 'Ahl al-Bayt'
   },
   Muhajirun: {
-    color: '#3B82F6', // celestial blue
+    color: '#3B82F6', // Celestial blue
     bgClass: 'bg-blue-500/15 border-blue-400',
     textClass: 'text-blue-500',
     labelAr: 'المهاجرون',
     labelEn: 'Muhajirun'
   },
   Ansar: {
-    color: '#22C55E', // Green
+    color: '#22C55E', // Islamic green
     bgClass: 'bg-green-500/15 border-green-400',
     textClass: 'text-green-500',
     labelAr: 'الأنصار',
     labelEn: 'Ansar'
   },
   Wives: {
-    color: '#EC4899', // Pink
+    color: '#EC4899', // Elegant pink
     bgClass: 'bg-pink-500/15 border-pink-400',
     textClass: 'text-pink-500',
     labelAr: 'أمهات المؤمنين',
     labelEn: 'Wives of the Prophet ﷺ'
   },
   Hadith_Narrators: {
-    color: '#8B5CF6', // Purple
+    color: '#8B5CF6', // Royal purple
     bgClass: 'bg-violet-500/15 border-violet-400',
     textClass: 'text-violet-500',
     labelAr: 'رواة الحديث الحفاظ',
     labelEn: 'Hadith Narrators'
   },
   Military: {
-    color: '#EF4444', // Red
+    color: '#EF4444', // Crimson red
     bgClass: 'bg-red-500/15 border-red-400',
     textClass: 'text-red-500',
     labelAr: 'القادة الفاتحون',
     labelEn: 'Military Commanders'
   },
   Scholars: {
-    color: '#06B6D4', // Cyan
+    color: '#06B6D4', // Indigo cyan
     bgClass: 'bg-cyan-500/15 border-cyan-400',
     textClass: 'text-cyan-500',
     labelAr: 'العلماء والفقهاء',
     labelEn: 'Scholars'
   },
   Other: {
-    color: '#6B7280', // Grey
+    color: '#71717A', // Warm slate
     bgClass: 'bg-zinc-500/15 border-zinc-400',
     textClass: 'text-zinc-500',
     labelAr: 'صحابة آخرون',
@@ -86,62 +101,62 @@ export const CATEGORY_CONFIG: Record<CompanionCategory, { color: string; bgClass
   }
 };
 
-// Relationship Visual Config mapping unique styling and markers
+// Relation aesthetic mappings
 export const RELATION_CONFIG: Record<RelationshipType, { color: string; dash?: string; labelAr: string; labelEn: string; icon: string }> = {
   family: {
-    color: '#EAB308', // Amber
+    color: '#F59E0B', 
     dash: 'none',
     labelAr: 'قرابة ونسب عائلي',
     labelEn: 'Family relationship',
     icon: '👥'
   },
   marriage: {
-    color: '#EC4899', // Pink
+    color: '#EC4899', 
     dash: '4,4',
     labelAr: 'رابطة صهر ومصاهرة',
     labelEn: 'Marriage connection',
     icon: '💍'
   },
   teacher_student: {
-    color: '#06B6D4', // Cyan
+    color: '#06B6D4', 
     dash: 'none',
-    labelAr: 'أستاذ وتلميذ/رواية',
-    labelEn: 'Teacher / Student link',
+    labelAr: 'رواية علم وتلمذة',
+    labelEn: 'Teacher & Student',
     icon: '📜'
   },
   friendship: {
-    color: '#3B82F6', // Blue
+    color: '#3B82F6', 
     dash: '2,2',
-    labelAr: 'مؤاخاة وصداقة وثيقة',
-    labelEn: 'Friendship & Brotherhood',
+    labelAr: 'أخوة ومؤاخاة الإسلام',
+    labelEn: 'Brotherhood / Companionship',
     icon: '🤝'
   },
   hijra_partner: {
-    color: '#10B981', // Esmerald
+    color: '#10B981', 
     dash: '6,3',
-    labelAr: 'شراكة هجرة فداء',
-    labelEn: 'Migration Partner',
+    labelAr: 'رفقة الهجرة والبيعة',
+    labelEn: 'Hijra Migration Partner',
     icon: '🐪'
   },
   battle_comrade: {
-    color: '#EF4444', // Red
+    color: '#EF4444', 
     dash: 'none',
-    labelAr: 'رفقة جهاد وغزوات',
+    labelAr: 'رفقة الغزو والجهاد',
     labelEn: 'Battle Comrade',
     icon: '⚔️'
   },
   political: {
-    color: '#8B5CF6', // Purple
+    color: '#8B5CF6', 
     dash: '5,5',
-    labelAr: 'شورى وإدارة وسياسة',
-    labelEn: 'Shura / Alliance',
+    labelAr: 'شورى وإمارة وخلافة',
+    labelEn: 'Alliance / Shura Council',
     icon: '🏛️'
   },
   hadith_transmission: {
-    color: '#F97316', // Orange
+    color: '#F97316', 
     dash: '1,3',
-    labelAr: 'إسناد ورواية أثر',
-    labelEn: 'Hadith transmission chain',
+    labelAr: 'إسناد ونقل مرويات',
+    labelEn: 'Hadith Transmission Chain',
     icon: '✍️'
   }
 };
@@ -158,102 +173,337 @@ export default function NetworkGraph({
   isDarkMode = false
 }: NetworkGraphProps) {
   const containerRef = useRef<HTMLDivElement>(null);
+
+  // 3D Matrix Projection Angles (Pitch = Tilt X, Yaw = Spin Y)
+  const [pitch, setPitch] = useState<number>(0.55); // Default ~31 degrees tilt
+  const [yaw, setYaw] = useState<number>(0.25);   // Default rotation
+  const [zoom, setZoom] = useState<number>(1.05);
+
+  // Layout selection: 'dome' | 'tiers' | 'helix'
+  const [layout, setLayout] = useState<'dome' | 'tiers' | 'helix'>('dome');
   
-  // Interactive View Settings
-  const [zoom, setZoom] = useState<number>(0.9);
-  const [pan, setPan] = useState<{ x: number; y: number }>({ x: 260, y: 190 });
+  // Interactive Controls state
   const [isPanning, setIsPanning] = useState<boolean>(false);
-  const [draggedNodeId, setDraggedNodeId] = useState<string | null>(null);
-  const panStart = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
-  const dragStartPos = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
-
-  // Layout Styles and Custom Positions offsets logic
-  const [layoutStyle, setLayoutStyle] = useState<'concentric' | 'radial'>('concentric');
-  const [dragOffsets, setDragOffsets] = useState<Record<string, { x: number; y: number }>>({});
-
-  // Interactive Legend Highlight / Filtering States
+  const [isAutoSpinning, setIsAutoSpinning] = useState<boolean>(true);
+  const [isLegendOpen, setIsLegendOpen] = useState<boolean>(true);
   const [selectedCategoryKey, setSelectedCategoryKey] = useState<string | null>(null);
   const [hoveredCategoryKey, setHoveredCategoryKey] = useState<string | null>(null);
 
-  // 1. DYNAMIC STABLE DETERMINISTIC CONCENTRIC LAYOUT
-  const concentricPositions = useMemo(() => {
-    const list: Record<string, { x: number; y: number }> = {};
-    const center = { x: 400, y: 300 };
+  // Reference for dragging rotational state
+  const dragStartMouse = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
+  const dragStartAngles = useRef<{ pitch: number; yaw: number }>({ pitch: 0.55, yaw: 0.25 });
 
-    // Grouping by concentric ring ranks
-    const ring0: Companion[] = []; // Centerpiece characters
-    const ring1: Companion[] = []; // Core Prophet family & companions
-    const ring2: Companion[] = []; // Important Migrators/Helpers
-    const ring3: Companion[] = []; // Other historical elites
+  // Slow orbital continuous rotation effect
+  useEffect(() => {
+    if (!isAutoSpinning || isPanning) return;
+    const interval = setInterval(() => {
+      setYaw(prev => (prev + 0.003) % (2 * Math.PI));
+    }, 20); // Smooth fluid rotations
+    return () => clearInterval(interval);
+  }, [isAutoSpinning, isPanning]);
 
-    companions.forEach(c => {
-      if (c.category === 'Khulafa_Rashidun') {
-        ring0.push(c);
-      } else if (c.category === 'Ahl_al_Bayt' || c.category === 'Wives') {
-        ring1.push(c);
-      } else if (c.category === 'Muhajirun' || c.category === 'Ansar') {
-        ring2.push(c);
-      } else {
-        ring3.push(c);
-      }
-    });
+  // Center view on selected companion node triggers
+  useEffect(() => {
+    if (selectedCompanion) {
+      setIsAutoSpinning(false); // Pause so they can read and navigate relations
+    }
+  }, [selectedCompanion]);
 
-    const plotRing = (ringCompanions: Companion[], radius: number) => {
-      const len = ringCompanions.length;
-      ringCompanions.forEach((comp, idx) => {
-        const angle = (idx / (len || 1)) * 2 * Math.PI - Math.PI / 2;
-        list[comp.id] = {
-          x: center.x + Math.cos(angle) * radius,
-          y: center.y + Math.sin(angle) * radius
+  // 3D coordinates system calculations (Calculates raw X, Y, Z coordinates depending on active layout mode)
+  const relativeCoordinates = useMemo(() => {
+    const coords: Record<string, { x: number; y: number; z: number }> = {};
+    const total = companions.length;
+
+    if (layout === 'dome') {
+      // 1. DOME OF LUMINARIES (Spherical coordinates hemisphere distribution sorted by group)
+      const sorted = [...companions].sort((a, b) => a.category.localeCompare(b.category));
+      
+      sorted.forEach((companion, idx) => {
+        // Map as a layered golden dome
+        const angle = idx * 2.39996; // Golden Angle spacing
+        const radius = 230 * Math.sqrt((idx + 0.6) / total); // Uniform area density
+        
+        // Circular coordinates in X-Z plane
+        const x = radius * Math.cos(angle);
+        const z = radius * Math.sin(angle);
+        
+        // Domical curvature: Hemispherical projection (negative Y is upward on screen)
+        const domeHeight = 240;
+        const sphericalY = -Math.sqrt(Math.max(0, domeHeight * domeHeight - x * x - z * z)) * 0.7;
+        
+        coords[companion.id] = { x, y: sphericalY, z };
+      });
+
+    } else if (layout === 'tiers') {
+      // 2. CONCENTRIC ASTROLABE TIERS (Divided horizontally based on historical roles)
+      const tier3 = companions.filter(c => ['Khulafa_Rashidun', 'Ahl_al_Bayt', 'Wives'].includes(c.category));
+      const tier2 = companions.filter(c => ['Muhajirun', 'Ansar'].includes(c.category));
+      const tier1 = companions.filter(c => !['Khulafa_Rashidun', 'Ahl_al_Bayt', 'Wives', 'Muhajirun', 'Ansar'].includes(c.category));
+
+      const assignTier = (comps: Companion[], height: number, outerRadius: number) => {
+        const len = comps.length;
+        comps.forEach((comp, idx) => {
+          // Space evenly around the ring
+          const angle = (idx / (len || 1)) * 2 * Math.PI;
+          coords[comp.id] = {
+            x: outerRadius * Math.cos(angle),
+            y: height,
+            z: outerRadius * Math.sin(angle)
+          };
+        });
+      };
+
+      // Plot the 3 dynamic heights
+      assignTier(tier3, -110, 120); // Top golden tier (closer to focus)
+      assignTier(tier2, 0, 200);   // Middle structural tier
+      assignTier(tier1, 110, 275);  // Bottom foundation scholars and narrative conveyers
+
+    } else if (layout === 'helix') {
+      // 3. GREAT TEMPORAL HELIX SPIRAL (Sorted chronologically by deathYearAH)
+      const sortedChronological = [...companions].sort((a, b) => {
+        // Fallback default years if missing to prevent alignment collapses
+        const yearA = a.deathYearAH !== undefined ? a.deathYearAH : 50;
+        const yearB = b.deathYearAH !== undefined ? b.deathYearAH : 50;
+        return yearA - yearB;
+      });
+
+      sortedChronological.forEach((companion, idx) => {
+        const progress = idx / (total || 1);
+        const angle = idx * 0.42; // Spiral spacing pitch winding around center
+        const radius = 90 + progress * 160; // Slightly funneling outward
+        
+        // Generate winding spiral coordinates up the axis
+        coords[companion.id] = {
+          x: radius * Math.cos(angle),
+          y: -140 + progress * 280, // Winding vertically from top (early death) down to base (late death)
+          z: radius * Math.sin(angle)
         };
       });
+    }
+
+    return coords;
+  }, [companions, layout]);
+
+  // Combined projection transform (Projects dynamic 3D coords onto 2D viewport coordinates)
+  const projectedData = useMemo(() => {
+    const center = { x: 400, y: 260 };
+    const list: Record<string, { id: string; screenX: number; screenY: number; zDepth: number }> = {};
+
+    Object.entries(relativeCoordinates).forEach(([id, coordVal]) => {
+      const coord = coordVal as { x: number; y: number; z: number };
+      // 3D rotation matrix around Y-axis (Yaw)
+      const cosY = Math.cos(yaw);
+      const sinY = Math.sin(yaw);
+      const xRotated = coord.x * cosY - coord.z * sinY;
+      const zRotated = coord.x * sinY + coord.z * cosY;
+
+      // 3D rotation matrix around X-axis (Pitch)
+      const cosP = Math.cos(pitch);
+      const sinP = Math.sin(pitch);
+      const yRotated = coord.y * cosP - zRotated * sinP;
+      const zDepth = coord.y * sinP + zRotated * cosP;
+
+      // Camera focal projection distance model
+      const cameraDistance = 720;
+      const perspectiveScale = cameraDistance / (cameraDistance + zDepth);
+
+      list[id] = {
+        id,
+        screenX: center.x + xRotated * perspectiveScale * zoom,
+        screenY: center.y + yRotated * perspectiveScale * zoom,
+        zDepth
+      };
+    });
+
+    return list;
+  }, [relativeCoordinates, yaw, pitch, zoom]);
+
+  // Project mathematical wireframe auxiliary orbits dynamically in 3D based on visual layout
+  const projectedAstrolabeRings = useMemo(() => {
+    const center = { x: 400, y: 260 };
+    const cameraDistance = 720;
+
+    const projectPoint3D = (x: number, y: number, z: number) => {
+      const cosY = Math.cos(yaw);
+      const sinY = Math.sin(yaw);
+      const xRot = x * cosY - z * sinY;
+      const zRot = x * sinY + z * cosY;
+
+      const cosP = Math.cos(pitch);
+      const sinP = Math.sin(pitch);
+      const yRot = y * cosP - zRot * sinP;
+      const zDepth = y * sinP + zRot * cosP;
+
+      const scale = cameraDistance / (cameraDistance + zDepth);
+      return {
+        x: center.x + xRot * scale * zoom,
+        y: center.y + yRot * scale * zoom,
+        zDepth
+      };
     };
 
-    plotRing(ring0, 75);
-    plotRing(ring1, 155);
-    plotRing(ring2, 235);
-    plotRing(ring3, 315);
+    const ringsPaths: { path: string; labelAr: string; labelEn: string; color: string; style: 'solid' | 'dashed' }[] = [];
 
-    return list;
-  }, [companions]);
+    if (layout === 'tiers') {
+      // Draw 3 dynamic concentric tier tracks
+      const tiersParams = [
+        { h: -110, r: 120, labelAr: 'الفلك الأعلى (الآل والخلفاء)', labelEn: 'Upper Tier: Family & Caliphs', color: '#D4AF37' },
+        { h: 0, r: 200, labelAr: 'المحيط الأوسط (المهاجرون والأنصار)', labelEn: 'Mid Tier: Migrators & Supporters', color: '#3B82F6' },
+        { h: 110, r: 275, labelAr: 'أفق السند والحديث والعلوم', labelEn: 'Base Tier: Narrators & Jurists', color: '#8B5CF6' }
+      ];
 
-  // 2. DYNAMIC STABLE DETERMINISTIC SPIRAL STAR GALAXY LAYOUT
-  const radialPositions = useMemo(() => {
-    const list: Record<string, { x: number; y: number }> = {};
-    const center = { x: 400, y: 300 };
-    const len = companions.length;
+      tiersParams.forEach(t => {
+        let pathString = '';
+        const pointsCount = 48;
+        for (let i = 0; i <= pointsCount; i++) {
+          const angle = (i / pointsCount) * 2 * Math.PI;
+          const x = t.r * Math.cos(angle);
+          const z = t.r * Math.sin(angle);
+          const pt = projectPoint3D(x, t.h, z);
+          
+          if (i === 0) pathString += `M ${pt.x} ${pt.y}`;
+          else pathString += ` L ${pt.x} ${pt.y}`;
+        }
+        ringsPaths.push({
+          path: pathString,
+          labelAr: t.labelAr,
+          labelEn: t.labelEn,
+          color: t.color,
+          style: 'solid'
+        });
+      });
 
-    companions.forEach((comp, idx) => {
-      const angle = idx * 2.39996; // Golden Angle spacing to avoid overlaps
-      const radius = 50 + (idx / (len || 1)) * 270;
-      list[comp.id] = {
-        x: center.x + Math.cos(angle) * radius,
-        y: center.y + Math.sin(angle) * radius
-      };
-    });
+    } else if (layout === 'dome') {
+      // Draw concentric circular orbits detailing latitude parallel bounds on dome of Sahaba
+      const heights = [-180, -115, -45, 0];
+      const radii = [135, 195, 230, 240];
 
-    return list;
-  }, [companions]);
+      radii.forEach((r, idx) => {
+        const h = heights[idx];
+        let pathString = '';
+        const pointsCount = 42;
+        for (let i = 0; i <= pointsCount; i++) {
+          const angle = (i / pointsCount) * 2 * Math.PI;
+          const x = r * Math.cos(angle);
+          const z = r * Math.sin(angle);
+          const pt = projectPoint3D(x, h, z);
+          
+          if (i === 0) pathString += `M ${pt.x} ${pt.y}`;
+          else pathString += ` L ${pt.x} ${pt.y}`;
+        }
+        ringsPaths.push({
+          path: pathString,
+          labelAr: isArabic ? `المدار الفلكي ${idx + 1}` : `Celestial Orbit Ring ${idx + 1}`,
+          labelEn: `Orbital Ring ${idx + 1}`,
+          color: '#CFC5AD',
+          style: 'dashed'
+        });
+      });
 
-  // Combined positions calculated from base layouts and offsets
-  const nodes = useMemo(() => {
-    const base = layoutStyle === 'concentric' ? concentricPositions : radialPositions;
-    const finalNodes: Record<string, { id: string; x: number; y: number }> = {};
+      // Longitude cross meridian arches
+      for (let angleFactor = 0; angleFactor < 4; angleFactor++) {
+        const phiAngle = (angleFactor / 4) * Math.PI;
+        let pathString = '';
+        const stepCount = 20;
+        for (let j = 0; j <= stepCount; j++) {
+          const progress = (j / stepCount) * Math.PI - Math.PI / 2; // sweep hemisphere
+          const r = 230 * Math.cos(progress);
+          const y = -230 * Math.sin(progress) * 0.55;
+          const x = r * Math.cos(phiAngle);
+          const z = r * Math.sin(phiAngle);
+          const pt = projectPoint3D(x, y, z);
+
+          if (j === 0) pathString += `M ${pt.x} ${pt.y}`;
+          else pathString += ` L ${pt.x} ${pt.y}`;
+        }
+        ringsPaths.push({
+          path: pathString,
+          labelAr: '',
+          labelEn: '',
+          color: '#CFC5AD',
+          style: 'dashed'
+        });
+      }
+
+    } else if (layout === 'helix') {
+      // Continuous spiral baseline ribbon matching chronological flow of historical souls
+      let pathString = '';
+      const totalSteps = 80;
+      for (let i = 0; i <= totalSteps; i++) {
+        const progress = i / totalSteps;
+        const angle = progress * totalSteps * 0.42 * (totalSteps / 80);
+        const radius = 90 + progress * 160;
+        const y = -140 + progress * 280;
+        
+        const pt = projectPoint3D(radius * Math.cos(angle), y, radius * Math.sin(angle));
+        
+        if (i === 0) pathString += `M ${pt.x} ${pt.y}`;
+        else pathString += ` L ${pt.x} ${pt.y}`;
+      }
+      ringsPaths.push({
+        path: pathString,
+        labelAr: 'خط تواتر الأثر الزمني',
+        labelEn: 'Time Spiral Chronological Ribbon',
+        color: '#D4AF37',
+        style: 'solid'
+      });
+    }
+
+    return ringsPaths;
+  }, [pitch, yaw, zoom, layout, isArabic]);
+
+  // Compute node relationship matches or dimming parameters in active 3D view
+  const nodeStates = useMemo(() => {
+    const states: Record<string, { isSelected: boolean; isHovered: boolean; isConnected: boolean; isPath: boolean; shouldDim: boolean }> = {};
 
     companions.forEach(c => {
-      const basePos = base[c.id] || { x: 400, y: 300 };
-      const offset = dragOffsets[c.id] || { x: 0, y: 0 };
-      finalNodes[c.id] = {
-        id: c.id,
-        x: basePos.x + offset.x,
-        y: basePos.y + offset.y
+      const isSel = selectedCompanion?.id === c.id;
+      const isHov = hoveredCompanion?.id === c.id;
+      
+      const categoryMatches = !selectedCategoryKey || c.category === selectedCategoryKey;
+      const hoverCategoryMatches = !hoveredCategoryKey || c.category === hoveredCategoryKey;
+      
+      let isPath = highlightedPath?.includes(c.id) || false;
+
+      // Determine connections from links
+      let isConnected = false;
+      if (hoveredCompanion) {
+        isConnected = relationships.some(r => 
+          (r.sourceId === hoveredCompanion.id && r.targetId === c.id) ||
+          (r.targetId === hoveredCompanion.id && r.sourceId === c.id)
+        );
+      } else if (selectedCompanion) {
+        isConnected = relationships.some(r => 
+          (r.sourceId === selectedCompanion.id && r.targetId === c.id) ||
+          (r.targetId === selectedCompanion.id && r.sourceId === c.id)
+        );
+      }
+
+      // Dim criteria
+      let shouldDim = false;
+      if (selectedCompanion && !isSel && !isConnected && !isPath) {
+        shouldDim = true;
+      } else if (hoveredCompanion && !isHov && !isConnected) {
+        shouldDim = true;
+      } else if (selectedCategoryKey && !categoryMatches) {
+        shouldDim = true;
+      } else if (hoveredCategoryKey && !hoverCategoryMatches) {
+        shouldDim = true;
+      }
+
+      states[c.id] = {
+        isSelected: isSel,
+        isHovered: isHov,
+        isConnected,
+        isPath,
+        shouldDim
       };
     });
 
-    return finalNodes;
-  }, [companions, layoutStyle, concentricPositions, radialPositions, dragOffsets]);
+    return states;
+  }, [companions, relationships, selectedCompanion, hoveredCompanion, highlightedPath, selectedCategoryKey, hoveredCategoryKey]);
 
-  // Compile map nodes statistics for legend badges
+  // Compile map categories node count dictionary
   const categoryCounts = useMemo(() => {
     const counts: Record<string, number> = {};
     companions.forEach(c => {
@@ -262,561 +512,600 @@ export default function NetworkGraph({
     return counts;
   }, [companions]);
 
-  // Set optimal panning centering on Selected Companion node
-  useEffect(() => {
-    if (selectedCompanion && nodes[selectedCompanion.id]) {
-      const node = nodes[selectedCompanion.id];
-      if (containerRef.current) {
-        const rect = containerRef.current.getBoundingClientRect();
-        const centerX = rect.width / 2;
-        const centerY = rect.height / 2;
-        setPan({
-          x: centerX - node.x * zoom,
-          y: centerY - node.y * zoom
-        });
-      }
-    }
-  }, [selectedCompanion]);
-
-  // Drag and Pan SVG callbacks
+  // Trackball/Coordinates rotation handlers on dragging canvas workspace
   const handleMouseDown = (e: React.MouseEvent) => {
-    if (draggedNodeId) return;
+    // Start canvas-wide dragging orbit rotation
     setIsPanning(true);
-    panStart.current = { x: e.clientX - pan.x, y: e.clientY - pan.y };
+    dragStartMouse.current = { x: e.clientX, y: e.clientY };
+    dragStartAngles.current = { pitch, yaw };
   };
 
   const handleMouseMove = (e: React.MouseEvent) => {
-    if (isPanning) {
-      setPan({
-        x: e.clientX - panStart.current.x,
-        y: e.clientY - panStart.current.y
-      });
-    } else if (draggedNodeId && containerRef.current) {
-      const rect = containerRef.current.getBoundingClientRect();
-      const localX = (e.clientX - rect.left - pan.x) / zoom;
-      const localY = (e.clientY - rect.top - pan.y) / zoom;
+    if (!isPanning) return;
+    
+    const deltaX = e.clientX - dragStartMouse.current.x;
+    const deltaY = e.clientY - dragStartMouse.current.y;
 
-      setDragOffsets(prev => ({
-        ...prev,
-        [draggedNodeId]: {
-          x: localX - dragStartPos.current.x,
-          y: localY - dragStartPos.current.y
-        }
-      }));
-    }
+    // Convert pixels drag delta to radial angle adjustments
+    const speed = 0.006;
+    let newYaw = dragStartAngles.current.yaw - deltaX * speed;
+    let newPitch = dragStartAngles.current.pitch + deltaY * speed;
+
+    // Clamp pitch to prevent extreme upside down flips
+    newPitch = Math.max(-1.1, Math.min(1.4, newPitch));
+
+    setYaw(newYaw);
+    setPitch(newPitch);
   };
 
   const handleMouseUpOrLeave = () => {
     setIsPanning(false);
-    setDraggedNodeId(null);
   };
 
-  const handleNodeDragStart = (id: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    setDraggedNodeId(id);
+  // Depth-sorting all elements prior to drawing ensures correct visual overlays
+  const sortedDrawOrder = useMemo(() => {
+    const list: { type: 'node'; id: string; zDepth: number; companion: Companion }[] = [];
+    
+    companions.forEach(c => {
+      const proj = projectedData[c.id];
+      if (proj) {
+        list.push({
+          type: 'node',
+          id: c.id,
+          zDepth: proj.zDepth,
+          companion: c
+        });
+      }
+    });
 
-    const base = layoutStyle === 'concentric' ? concentricPositions : radialPositions;
-    const basePos = base[id] || { x: 400, y: 300 };
-    const currentOffset = dragOffsets[id] || { x: 0, y: 0 };
+    // Sort descending by zDepth: largest depth (furthest away) is rendered first (painters algorithm)
+    return list.sort((a, b) => b.zDepth - a.zDepth);
+  }, [companions, projectedData]);
 
-    if (containerRef.current) {
-      const rect = containerRef.current.getBoundingClientRect();
-      const localX = (e.clientX - rect.left - pan.x) / zoom;
-      const localY = (e.clientY - rect.top - pan.y) / zoom;
-
-      // Track the displacement vector
-      dragStartPos.current = {
-        x: localX - currentOffset.x,
-        y: localY - currentOffset.y
-      };
-    }
-  };
-
-  const handleZoomIn = () => setZoom(prev => Math.min(prev + 0.15, 2.3));
+  // Handle zoom changes
+  const handleZoomIn = () => setZoom(prev => Math.min(prev + 0.15, 2.2));
   const handleZoomOut = () => setZoom(prev => Math.max(prev - 0.15, 0.45));
-  const handleResetZoomAndPositions = () => {
-    setZoom(0.9);
-    setPan({ x: 260, y: 190 });
-    setDragOffsets({});
+  
+  // Reset views
+  const handleReset = () => {
+    setPitch(0.55);
+    setYaw(0.25);
+    setZoom(1.05);
+    setIsAutoSpinning(true);
     setSelectedCategoryKey(null);
     setHoveredCategoryKey(null);
   };
 
-  // Determine if a specific node is highlighted or dimmed
-  const checkNodeState = (companion: Companion) => {
-    const isSelected = selectedCompanion?.id === companion.id;
-    const isHovered = hoveredCompanion?.id === companion.id;
-    const isPathMember = highlightedPath?.includes(companion.id);
-    const categoryMatches = !selectedCategoryKey || companion.category === selectedCategoryKey;
-    const hoverCategoryMatches = !hoveredCategoryKey || companion.category === hoveredCategoryKey;
-
-    // Check if neighbors highlighting is happening (hover companion is active)
-    let isConnectedNeighbor = false;
-    let anyNeighborHighlighting = hoveredCompanion !== null;
-    
-    if (hoveredCompanion) {
-      isConnectedNeighbor = relationships.some(r => 
-        (r.sourceId === hoveredCompanion.id && r.targetId === companion.id) ||
-        (r.targetId === hoveredCompanion.id && r.sourceId === companion.id)
-      );
-    }
-
-    // Node is glowing/active
-    const isActive = isSelected || isHovered || isPathMember || 
-                     (selectedCategoryKey && categoryMatches) || 
-                     (hoveredCategoryKey && hoverCategoryMatches) ||
-                     isConnectedNeighbor;
-
-    // Node should be dimmed because other elements are selected/hovered and it does not fit
-    const shouldDim = (selectedCompanion !== null && !isSelected && !isPathMember) || 
-                       (hoveredCompanion !== null && !isHovered && !isConnectedNeighbor) ||
-                       (selectedCategoryKey && !categoryMatches) ||
-                       (hoveredCategoryKey && !hoverCategoryMatches);
-
-    return { isSelected, isHovered, isPathMember, isActive, shouldDim, isConnectedNeighbor };
-  };
-
-  // Minimap layout logic coordinates representation
-  const miniNodes = useMemo(() => {
-    return Object.keys(nodes).map(key => {
-      const node = nodes[key];
-      const companion = companions.find(c => c.id === key);
-      return {
-        id: key,
-        x: (node.x / 800) * 120,
-        y: (node.y / 600) * 85,
-        companion
-      };
-    });
-  }, [nodes, companions]);
-
   return (
     <div
-      id="sahaba-graph-canvas-wrapper"
       ref={containerRef}
-      className={`relative w-full h-[540px] border rounded-[2rem] overflow-hidden transition-all duration-300 shadow-xl ${
+      id="sahaba-celestial-canvas-container"
+      className={`relative w-full h-[580px] border rounded-[2rem] overflow-hidden select-none transition-all duration-550 shadow-2xl ${
         isDarkMode 
-          ? 'bg-[#181914] border-[#2F3124] natural-dotted-bg-dark text-slate-100' 
-          : 'bg-[#F2ECE0] border-[#DCD5C4] natural-dotted-bg text-[#443825]'
+          ? 'bg-[#10110D] border-neutral-850 text-slate-100' 
+          : 'bg-[#F2ECE0] border-[#CFC5AD]/55 text-[#443825]'
       }`}
       onMouseDown={handleMouseDown}
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUpOrLeave}
       onMouseLeave={handleMouseUpOrLeave}
-      style={{ cursor: isPanning ? 'grabbing' : draggedNodeId ? 'grabbing' : 'grab' }}
+      style={{ cursor: isPanning ? 'grabbing' : 'grab' }}
     >
-      {/* Decorative Star Islamic Motif Background */}
-      <div className="absolute inset-0 opacity-10 pointer-events-none flex items-center justify-center">
-        <svg width="420" height="420" viewBox="0 0 100 100" fill="currentColor" className="text-natural-accent">
-          <path d="M50 0L61.2 38.8L100 50L61.2 61.2L50 100L38.8 61.2L0 50L38.8 38.8Z" />
-          <circle cx="50" cy="50" r="13" fill="none" stroke="currentColor" strokeWidth="0.85" />
+      
+      {/* Dynamic starry nebula particle cluster backdrop */}
+      <div className="absolute inset-0 pointer-events-none opacity-20">
+        <div className={`absolute inset-0 bg-gradient-radial from-[#D4AF37]/5 to-transparent`} />
+        {/* Generates ambient vector sparkling particles */}
+        <svg className="w-full h-full">
+          {Array.from({ length: 30 }).map((_, i) => (
+            <circle
+              key={i}
+              cx={`${((i * 197) % 100)}%`}
+              cy={`${((i * 313) % 100)}%`}
+              r={0.6 + (i % 3) * 0.4}
+              fill={isDarkMode ? '#FCF3D7' : '#4E3D25'}
+              opacity={0.3 + (i % 4) * 0.2}
+              className={i % 2 === 0 ? 'animate-pulse' : ''}
+              style={{ animationDuration: `${2 + (i % 5)}s` }}
+            />
+          ))}
         </svg>
       </div>
 
-      {/* Elegant Layout & Navigation Header Controls Ribbons */}
-      <div className="absolute top-4 left-4 right-4 z-10 flex flex-wrap gap-2 items-center justify-between pointer-events-none">
+      {/* Elegant HUD Control Bar Header */}
+      <div className="absolute top-4 left-4 right-4 z-20 flex flex-wrap gap-2 items-center justify-between pointer-events-none">
         
-        {/* Help tooltip pills */}
-        <div className={`px-4 py-2 rounded-full border text-xs flex items-center gap-2 pointer-events-auto shadow-md backdrop-blur-md transition ${
+        {/* Dynamic Instructional Indicator Capsule */}
+        <div className={`px-4 py-2 rounded-full border text-[11px] font-serif font-bold flex items-center gap-2 pointer-events-auto shadow-lg backdrop-blur-xl transition ${
           isDarkMode 
-            ? 'bg-[#1D1E16]/90 border-[#3B3D2C] text-slate-200' 
-            : 'bg-white/90 border-[#D8CEB6] text-[#4E3D25] font-serif font-bold'
+            ? 'bg-[#181914]/90 border-neutral-850 text-slate-200' 
+            : 'bg-white/95 border-[#CFBFA5] text-[#3E311B]'
         }`}>
-          <Compass className="w-3.5 h-3.5 text-natural-accent animate-spin-slow shrink-0" />
-          <span className="text-[11px]">
+          <Compass className="w-4 h-4 text-amber-500 animate-spin-slow shrink-0" />
+          <span>
             {isArabic
-              ? 'تفاعل: اسحب اللوحة • عجلات الفأرة للتكبير والتحجيم • رتب العقد المفضلة بالسحب'
-              : 'Interact: Drag to pan • Scroll to zoom • Drag any hero to space them'}
+              ? 'توجيه ثلاثي الأبعاد: اسحب أي مكان فارغ لتدوير أفلاك الصحابة • استخدم المفاتيح للتحكم'
+              : '3D Tracker: Click & drag anywhere to steer orbits • Hover nodes to inspect ties'}
           </span>
         </div>
 
-        {/* Dynamic controls and layout selector */}
+        {/* Dynamic Controls Hub */}
         <div className="flex items-center gap-2 pointer-events-auto">
-          {/* Layout mode buttons */}
-          <div className={`flex rounded-full p-1 border shadow-md backdrop-blur-md ${
-            isDarkMode ? 'bg-[#1D1E16]/95 border-[#3B3D2C]' : 'bg-white/95 border-[#D8CEB6]'
+          
+          {/* Layout Modifiers Pill */}
+          <div className={`flex rounded-full p-1 border shadow-lg backdrop-blur-xl ${
+            isDarkMode ? 'bg-[#181914]/90 border-neutral-850' : 'bg-white/95 border-[#CFBFA5]'
           }`}>
             <button
-              onClick={() => setLayoutStyle('concentric')}
+              onClick={() => setLayout('dome')}
               className={`p-1.5 px-3 rounded-full text-xs font-serif font-bold flex items-center gap-1 transition ${
-                layoutStyle === 'concentric'
-                  ? 'bg-natural-brand text-white shadow-inner'
-                  : 'text-stone-500 hover:text-natural-accent hover:bg-stone-100 dark:hover:bg-neutral-800'
+                layout === 'dome'
+                  ? 'bg-amber-600 text-white shadow-inner'
+                  : 'text-stone-500 hover:text-amber-600 dark:hover:text-amber-400'
               }`}
-              title={isArabic ? 'تنسيق الحلقات المئوية' : 'Concentric Generation Circles'}
+              title={isArabic ? 'قبة السلف الصالح' : 'Dome of Luminaries'}
             >
               <Orbit className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline text-[10.5px]">{isArabic ? 'التوزيع التاريخي' : 'Generations Ring'}</span>
+              <span className="hidden md:inline text-[10.5px]">{isArabic ? 'القبة السماوية' : 'Aura Dome'}</span>
             </button>
             <button
-              onClick={() => setLayoutStyle('radial')}
-              className={`p-1.5 px-3 rounded-full text-xs font-serif font-bold flex items-center gap-1 transition-all ${
-                layoutStyle === 'radial'
-                  ? 'bg-natural-brand text-white shadow'
-                  : 'text-stone-500 hover:text-natural-accent hover:bg-stone-100 dark:hover:bg-neutral-800'
+              onClick={() => setLayout('tiers')}
+              className={`p-1.5 px-3 rounded-full text-xs font-serif font-bold flex items-center gap-1 transition ${
+                layout === 'tiers'
+                  ? 'bg-amber-600 text-white shadow'
+                  : 'text-stone-500 hover:text-amber-600 dark:hover:text-amber-400'
               }`}
-              title={isArabic ? 'تنسيق المجرة النجمية' : 'Shorthand Spiral Galaxy'}
+              title={isArabic ? 'أفلاك الطبقات' : 'Category Concentric Rings'}
             >
-              <LayoutGrid className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline text-[10.5px]">{isArabic ? 'المجرة النجمية' : 'Spiral Galaxy'}</span>
+              <Layers className="w-3.5 h-3.5" />
+              <span className="hidden md:inline text-[10.5px]">{isArabic ? 'أفلاك الطبقات' : 'Orbital Rings'}</span>
+            </button>
+            <button
+              onClick={() => setLayout('helix')}
+              className={`p-1.5 px-3 rounded-full text-xs font-serif font-bold flex items-center gap-1 transition-all ${
+                layout === 'helix'
+                  ? 'bg-amber-600 text-white shadow'
+                  : 'text-stone-500 hover:text-amber-600 dark:hover:text-amber-400'
+              }`}
+              title={isArabic ? 'اللولب السيري الزمني' : 'Temporal Chronological Spiral'}
+            >
+              <Calendar className="w-3.5 h-3.5" />
+              <span className="hidden md:inline text-[10.5px]">{isArabic ? 'المنحنى الزمني' : 'Helix Timeline'}</span>
             </button>
           </div>
 
-          {/* Zooms configuration panel */}
-          <div className={`flex items-center gap-1 p-1 rounded-full border shadow-md backdrop-blur-md ${
-            isDarkMode ? 'bg-[#1D1E16]/95 border-[#3B3D2C]' : 'bg-white/95 border-[#D8CEB6]'
+          {/* Navigational Utilities */}
+          <div className={`flex items-center p-1 rounded-full border shadow-lg backdrop-blur-xl ${
+            isDarkMode ? 'bg-[#181914]/90 border-neutral-850' : 'bg-white/95 border-[#CFBFA5]'
           }`}>
             <button
-              className="p-2 rounded-full transition hover:bg-stone-150 text-stone-500 hover:text-natural-brand active:scale-90 dark:hover:bg-neutral-800"
+              onClick={() => setIsAutoSpinning(!isAutoSpinning)}
+              className={`p-1.5 rounded-full transition hover:bg-stone-100 dark:hover:bg-neutral-800 ${
+                isAutoSpinning ? 'text-emerald-500' : 'text-neutral-500'
+              }`}
+              title={isAutoSpinning ? (isArabic ? 'إيقاف الدوران' : 'Pause Auto-Spin') : (isArabic ? 'بدء الدوران تلقائياً' : 'Spin Orbits')}
+            >
+              {isAutoSpinning ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
+            </button>
+            <button
               onClick={handleZoomIn}
-              title={isArabic ? 'تقريب' : 'Zoom In'}
+              className="p-1.5 rounded-full transition hover:bg-stone-100 dark:hover:bg-neutral-800 text-stone-500 hover:text-amber-600"
+              title={isArabic ? 'تكبير البؤرة' : 'Perspective Zoom In'}
             >
-              <ZoomIn className="w-4 h-4" />
+              <ZoomIn className="w-3.5 h-3.5" />
             </button>
             <button
-              className="p-2 rounded-full transition hover:bg-stone-150 text-stone-500 hover:text-natural-brand active:scale-90 dark:hover:bg-neutral-800"
               onClick={handleZoomOut}
-              title={isArabic ? 'إبعاد' : 'Zoom Out'}
+              className="p-1.5 rounded-full transition hover:bg-stone-100 dark:hover:bg-neutral-800 text-stone-500 hover:text-amber-600"
+              title={isArabic ? 'تنصيف النطاق' : 'Perspective Zoom Out'}
             >
-              <ZoomOut className="w-4 h-4" />
+              <ZoomOut className="w-3.5 h-3.5" />
             </button>
             <button
-              className="p-2 rounded-full transition hover:bg-stone-150 text-stone-500 hover:text-natural-accent active:scale-90 dark:hover:bg-neutral-800"
-              onClick={handleResetZoomAndPositions}
-              title={isArabic ? 'إعادة ضبط العرض والعقد' : 'Reset Coordinates Layout'}
+              onClick={handleReset}
+              className="p-1.5 rounded-full transition hover:bg-stone-100 dark:hover:bg-neutral-800 text-stone-500 hover:text-amber-605"
+              title={isArabic ? 'إعادة الإحداثيات' : 'Calibrate Astrolabe'}
             >
-              <RotateCcw className="w-4 h-4" />
+              <RotateCcw className="w-3.5 h-3.5" />
             </button>
           </div>
         </div>
       </div>
 
-      {/* Central SVG Graphic Board Workspace */}
-      <svg className="w-full h-full select-none">
-        <g transform={`translate(${pan.x}, ${pan.y}) scale(${zoom})`}>
-          <defs>
-            {/* Arrows Setup */}
-            {Object.keys(RELATION_CONFIG).map(type => {
-              const conf = RELATION_CONFIG[type as RelationshipType];
-              return (
-                <marker
-                  key={`marker-${type}`}
-                  id={`arrow-${type}`}
-                  viewBox="0 0 10 10"
-                  refX="16"
-                  refY="5"
-                  markerWidth="5"
-                  markerHeight="5"
-                  orient="auto"
-                >
-                  <path d="M 0 1.5 L 9 5 L 0 8.5 z" fill={conf.color} />
-                </marker>
-              );
-            })}
-          </defs>
+      {/* Main 3D projected Canvas workspace using standard SVG with painter overlays */}
+      <svg className="w-full h-full select-none" viewBox="0 0 800 520">
+        <defs>
+          {/* Glowing Filters */}
+          <filter id="astrolabe-node-glow" x="-20%" y="-20%" width="140%" height="140%">
+            <feGaussianBlur stdDeviation="4" result="blur" />
+            <feComposite in="SourceGraphic" in2="blur" operator="over" />
+          </filter>
+          
+          <filter id="golden-pulse-glow" x="-30%" y="-30%" width="160%" height="160%">
+            <feGaussianBlur stdDeviation="6" result="blur" />
+            <feComponentTransfer in="blur" result="glow">
+              <feFuncA type="linear" slope="0.8" />
+            </feComponentTransfer>
+            <feMerge>
+              <feMergeNode in="glow" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
 
-          {/* 1. RELATIONS / EDGES DRAFT LINES */}
-          <g id="graph-edges">
-            {relationships.map(rel => {
-              const start = nodes[rel.sourceId];
-              const end = nodes[rel.targetId];
-              if (!start || !end) return null;
+          {/* Connections custom arrows markers */}
+          {Object.entries(RELATION_CONFIG).map(([type, config]) => (
+            <marker
+              key={`arrow-head-${type}`}
+              id={`arrow-cap-${type}`}
+              viewBox="0 0 10 10"
+              refX="18"
+              refY="5"
+              markerWidth="4"
+              markerHeight="4"
+              orient="auto-start-reverse"
+            >
+              <path d="M 0 1 L 10 5 L 0 9 z" fill={config.color} />
+            </marker>
+          ))}
+        </defs>
 
-              const companionStart = companions.find(c => c.id === rel.sourceId);
-              const companionEnd = companions.find(c => c.id === rel.targetId);
-              if (!companionStart || !companionEnd) return null;
+        {/* 1. THREE-DIMENSIONAL ASTROLABE WIREFRAME GEOMETRY AND ORBITS */}
+        <g id="astrolabe-wireframe-lines" opacity={isDarkMode ? 0.35 : 0.5}>
+          {projectedAstrolabeRings.map((ring, idx) => (
+            <g key={`astrolabe-ring-${idx}`}>
+              <path
+                d={ring.path}
+                fill="none"
+                stroke={ring.color}
+                strokeWidth={ring.style === 'solid' ? 1.4 : 0.8}
+                strokeDasharray={ring.style === 'dashed' ? '3,6' : 'none'}
+                className="transition-all duration-300"
+              />
+              {/* Overlay orbital micro annotations */}
+              {ring.labelAr && idx === 0 && (
+                <path d={ring.path} id={`ring-text-${idx}`} fill="none" />
+              )}
+            </g>
+          ))}
+        </g>
 
-              // Check if nodes related to this line are active/hovered/selected
-              const stateStart = checkNodeState(companionStart);
-              const stateEnd = checkNodeState(companionEnd);
+        {/* 2. THREE-DIMENSIONAL CONSTELLATION LINES (RELATIONSHIPS) */}
+        <g id="astrolabe-constellation-lines">
+          {relationships.map(rel => {
+            const ptStart = projectedData[rel.sourceId];
+            const ptEnd = projectedData[rel.targetId];
+            if (!ptStart || !ptEnd) return null;
 
-              const isPathEdge = highlightedPath?.includes(rel.sourceId) && highlightedPath?.includes(rel.targetId);
-              const isDirectlyFocused = (hoveredCompanion?.id === rel.sourceId || hoveredCompanion?.id === rel.targetId) ||
-                                         (selectedCompanion?.id === rel.sourceId || selectedCompanion?.id === rel.targetId);
+            const stateStart = nodeStates[rel.sourceId];
+            const stateEnd = nodeStates[rel.targetId];
+            if (!stateStart || !stateEnd) return null;
 
-              const config = RELATION_CONFIG[rel.type] || { color: '#6B7280', dash: 'none' };
+            const isPathEdge = highlightedPath?.includes(rel.sourceId) && highlightedPath?.includes(rel.targetId);
+            
+            // Highlight connections that involve active nodes
+            const isDirectLink = (hoveredCompanion?.id === rel.sourceId || hoveredCompanion?.id === rel.targetId) ||
+                                 (selectedCompanion?.id === rel.sourceId || selectedCompanion?.id === rel.targetId);
 
-              // Determine visual opacity based on search/filters
-              let strokeOpacity = isDarkMode ? 0.22 : 0.35;
-              let strokeWidth = 1.6;
+            const config = RELATION_CONFIG[rel.type] || { color: '#CFC5AD', dash: '3,3' };
 
-              if (isPathEdge) {
-                strokeOpacity = 1.0;
-                strokeWidth = 3.5;
-              } else if (isDirectlyFocused) {
-                strokeOpacity = 0.9;
-                strokeWidth = 2.4;
-              } else if (selectedCategoryKey) {
-                const matchesCat = companionStart.category === selectedCategoryKey && companionEnd.category === selectedCategoryKey;
-                strokeOpacity = matchesCat ? 0.6 : 0.08;
-              } else if (hoveredCategoryKey) {
-                const matchesCat = companionStart.category === hoveredCategoryKey && companionEnd.category === hoveredCategoryKey;
-                strokeOpacity = matchesCat ? 0.61 : 0.08;
-              } else if (selectedCompanion || hoveredCompanion) {
-                // Dim other inactive relationship edges
-                strokeOpacity = 0.06;
-              }
+            let strokeColor = config.color;
+            let strokeWidth = 1.25;
+            let strokeOpacity = isDarkMode ? 0.14 : 0.22;
+            let displayLabel = false;
 
-              // Arc math coordinates
-              const midX = (start.x + end.x) / 2;
-              const midY = (start.y + end.y) / 2;
+            if (isPathEdge) {
+              strokeColor = '#D4AF37'; // Pure path gold
+              strokeWidth = 3.2;
+              strokeOpacity = 0.95;
+              displayLabel = true;
+            } else if (isDirectLink) {
+              strokeWidth = 2.4;
+              strokeOpacity = 0.9;
+              displayLabel = true;
+            } else if (selectedCategoryKey) {
+              // Dim links if filtered
+              const matchSource = companions.find(x => x.id === rel.sourceId)?.category === selectedCategoryKey;
+              const matchTarget = companions.find(x => x.id === rel.targetId)?.category === selectedCategoryKey;
+              strokeOpacity = matchSource && matchTarget ? 0.45 : 0.04;
+            } else if (selectedCompanion || hoveredCompanion) {
+              // Dim unrelated nodes
+              strokeOpacity = 0.04;
+            }
 
-              return (
-                <g key={rel.id} className="transition-all duration-300">
-                  <line
-                    x1={start.x}
-                    y1={start.y}
-                    x2={end.x}
-                    y2={end.y}
-                    stroke={config.color}
-                    strokeWidth={strokeWidth}
-                    strokeDasharray={config.dash}
-                    opacity={strokeOpacity}
-                    markerEnd={`url(#arrow-${rel.type})`}
-                    className="transition-all duration-300"
-                  />
+            // Curve coordinate offset to avoid overlapping straight lines (giving spatial volume)
+            const dx = ptEnd.screenX - ptStart.screenX;
+            const dy = ptEnd.screenY - ptStart.screenY;
+            const len = Math.sqrt(dx*dx + dy*dy) || 1;
+            
+            // Standard smooth arc bezier coordinates control offset
+            const midX = (ptStart.screenX + ptEnd.screenX) / 2 - (dy / len) * 16;
+            const midY = (ptStart.screenY + ptEnd.screenY) / 2 + (dx / len) * 16;
 
-                  {/* Micro relation label overlay inside curves */}
-                  {(isDirectlyFocused || isPathEdge) && (
-                    <g transform={`translate(${midX}, ${midY - 4})`} className="cursor-help">
-                      <rect
-                        x="-60"
-                        y="-9"
-                        width="120"
-                        height="17"
-                        rx="4"
-                        fill={isDarkMode ? '#22231C' : '#FCFBFA'}
-                        stroke={config.color}
-                        strokeWidth="1"
-                        className="shadow"
-                      />
-                      <text
-                        className={`text-[8.5px] font-bold font-serif ${isDarkMode ? 'fill-slate-350' : 'fill-[#443825]'}`}
-                        textAnchor="middle"
-                        y="2"
-                      >
-                        {isArabic ? rel.labelAr : rel.labelEn}
-                      </text>
-                    </g>
-                  )}
-                </g>
-              );
-            })}
-          </g>
+            return (
+              <g key={rel.id} className="transition-all duration-300">
+                {/* Projected Arch Connection */}
+                <path
+                  d={`M ${ptStart.screenX} ${ptStart.screenY} Q ${midX} ${midY} ${ptEnd.screenX} ${ptEnd.screenY}`}
+                  fill="none"
+                  stroke={strokeColor}
+                  strokeWidth={strokeWidth}
+                  strokeDasharray={config.dash}
+                  opacity={strokeOpacity}
+                  markerEnd={`url(#arrow-cap-${rel.type})`}
+                  className="transition-all duration-300"
+                />
 
-          {/* 2. COMPANION HERO NODES */}
-          <g id="graph-nodes">
-            {companions.map(companion => {
-              const pos = nodes[companion.id];
-              if (!pos) return null;
-
-              const { isSelected, isHovered, isPathMember, isActive, shouldDim, isConnectedNeighbor } = checkNodeState(companion);
-              const cat = CATEGORY_CONFIG[companion.category] || CATEGORY_CONFIG.Other;
-
-              let scale = 1.0;
-              let borderStroke = cat.color;
-              let borderWidth = 2.0;
-              let textWeight = 'font-normal';
-
-              if (isSelected) {
-                scale = 1.35;
-                borderStroke = isDarkMode ? '#FFFFFF' : '#4E3D25';
-                borderWidth = 3.8;
-                textWeight = 'font-bold';
-              } else if (isHovered || isConnectedNeighbor) {
-                scale = 1.2;
-                borderWidth = 2.8;
-                borderStroke = '#D4AF37'; // Golden glow highlights
-              } else if (isActive) {
-                scale = 1.1;
-                borderWidth = 2.5;
-              } else if (shouldDim) {
-                scale = 0.85;
-              }
-
-              return (
-                <g
-                  key={companion.id}
-                  id={`node-${companion.id}`}
-                  transform={`translate(${pos.x}, ${pos.y}) scale(${scale})`}
-                  className="transition-all duration-300 cursor-pointer"
-                  onClick={() => onSelectCompanion(companion)}
-                  onMouseEnter={() => onHoverCompanion(companion)}
-                  onMouseLeave={() => onHoverCompanion(null)}
-                  onMouseDown={(e) => handleNodeDragStart(companion.id, e)}
-                  opacity={shouldDim ? 0.28 : 1.0}
-                >
-                  {/* Dynamic pulse glow ring effect */}
-                  {(isSelected || isHovered) && (
-                    <circle
-                      r="24"
-                      fill="none"
-                      stroke={cat.color}
-                      strokeWidth="2"
-                      className="animate-pulse opacity-40"
+                {/* Interactive floating holographic relation badge */}
+                {displayLabel && (
+                  <g transform={`translate(${midX}, ${midY})`} className="cursor-help">
+                    <rect
+                      x="-55"
+                      y="-8"
+                      width="110"
+                      height="16"
+                      rx="6"
+                      fill={isDarkMode ? '#1B1C16' : '#FAF8F4'}
+                      stroke={strokeColor}
+                      strokeWidth="1.2"
+                      className="shadow-md"
+                      opacity="0.95"
                     />
-                  )}
+                    <text
+                      textAnchor="middle"
+                      y="2.5"
+                      className={`text-[8.5px] font-bold font-serif ${isDarkMode ? 'fill-slate-205' : 'fill-stone-750'}`}
+                    >
+                      {isArabic ? rel.labelAr : rel.labelEn}
+                    </text>
+                  </g>
+                )}
+              </g>
+            );
+          })}
+        </g>
 
-                  {/* Elegant Octagonal Geometrical Border matching Islamic theme */}
+        {/* 3. DEPTH-SORTED RADIAN COMPANION NODES (Preserves genuine spatial alignment overlaps) */}
+        <g id="astrolabe-stars-nodes">
+          {sortedDrawOrder.map(item => {
+            const state = nodeStates[item.id];
+            const proj = projectedData[item.id];
+            if (!proj || !state) return null;
+
+            const categoryConf = CATEGORY_CONFIG[item.companion.category] || CATEGORY_CONFIG.Other;
+
+            let sizeScale = 1.0;
+            let borderStroke = categoryConf.color;
+            let borderWidth = 2.0;
+
+            // Scale nodes dynamically closer vs further
+            const defaultProximityScale = 1.0 - (proj.zDepth / 1400); // 1.2 at front, 0.7 at back
+            
+            if (state.isSelected) {
+              sizeScale = 1.45;
+              borderStroke = '#D4AF37'; // Pure gold selection anchor
+              borderWidth = 3.6;
+            } else if (state.isHovered || state.isConnected) {
+              sizeScale = 1.25;
+              borderWidth = 2.8;
+              borderStroke = '#D4AF37'; // Glow highlights relative peers
+            } else if (state.isPath) {
+              sizeScale = 1.2;
+              borderWidth = 3.0;
+              borderStroke = '#10B981';
+            } else if (state.shouldDim) {
+              sizeScale = 0.75;
+            }
+
+            const scale = sizeScale * defaultProximityScale;
+
+            return (
+              <g
+                key={item.id}
+                transform={`translate(${proj.screenX}, ${proj.screenY}) scale(${scale})`}
+                className="transition-all duration-350 cursor-pointer"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onSelectCompanion(item.companion);
+                }}
+                onMouseEnter={() => onHoverCompanion(item.companion)}
+                onMouseLeave={() => onHoverCompanion(null)}
+                opacity={state.shouldDim ? 0.25 : 1.0}
+              >
+                
+                {/* 3D Drop Projective Line to base plane (Visual suspension string) */}
+                {layout !== 'helix' && (
+                  <line
+                    x1="0"
+                    y1="0"
+                    x2="0"
+                    y2={35 / scale}
+                    stroke={categoryConf.color}
+                    strokeWidth="0.8"
+                    strokeDasharray="2,3"
+                    opacity="0.45"
+                  />
+                )}
+
+                {/* Pulsing selection aura glow ring */}
+                {(state.isSelected || state.isHovered || state.isPath) && (
+                  <circle
+                    r="24"
+                    fill="none"
+                    stroke={categoryConf.color}
+                    strokeWidth="2.5"
+                    className="animate-pulse opacity-40"
+                    filter="url(#astrolabe-node-glow)"
+                  />
+                )}
+
+                {/* Sacred Geometrical Octagram backing plates (Islamic star plate Rub' El Hizb style) */}
+                <g className="transition-all duration-300">
+                  {/* Rotating decorative geometric background */}
                   <path
-                    d="M -15,-6 L -6,-15 L 6,-15 L 15,-6 L 15,6 L 6,15 L -6,15 L -15,6 Z"
-                    fill={isDarkMode ? '#22231C' : '#FCFBFA'}
+                    d="M -13,0 L -9,-9 L 0,-13 L 9,-9 L 13,0 L 9,9 L 0,13 L -9,9 Z"
+                    fill={isDarkMode ? '#1B1C16' : '#FCFAF7'}
                     stroke={borderStroke}
                     strokeWidth={borderWidth}
-                    className="transition-all duration-300 shadow-md"
+                    className="shadow-lg transition-colors"
                   />
-
-                  {/* Ring highlight interior */}
-                  <circle
-                    cx="0"
-                    cy="0"
-                    r="9.5"
-                    fill={cat.color}
-                    className="opacity-25"
+                  {/* Second interlocking plate offset by 45 degrees forming exact 8-pointed star */}
+                  <path
+                    d="M -13,0 L -9,-9 L 0,-13 L 9,-9 L 13,0 L 9,9 L 0,13 L -9,9 Z"
+                    fill="none"
+                    stroke={borderStroke}
+                    strokeWidth={borderWidth - 0.7}
+                    transform="rotate(45)"
+                    className="transition-colors"
                   />
-
-                  {/* Islamic calligraphic initial character key */}
-                  <text
-                    className="text-[9.5px] font-bold font-serif"
-                    textAnchor="middle"
-                    y="3"
-                    fill={cat.color}
-                  >
-                    {companion.nameAr.charAt(0)}
-                  </text>
-
-                  {/* Companions Arabic Title Label Tags */}
-                  <text
-                    className={`text-[10px] select-none ${textWeight} font-serif tracking-tight ${
-                      isDarkMode ? 'fill-slate-150' : 'fill-[#2B2319]'
-                    }`}
-                    textAnchor="middle"
-                    y="25"
-                    style={{ textShadow: isDarkMode ? '0 1px 2px rgba(0,0,0,0.8)' : '0 1px 1px rgba(255,255,255,0.7)' }}
-                  >
-                    {companion.nameAr.split(' ')[0]}
-                  </text>
-
-                  {/* Transliterated English Label */}
-                  <text
-                    className={`text-[7.5px] select-none font-mono ${
-                      isDarkMode ? 'fill-slate-400' : 'fill-stone-500'
-                    }`}
-                    textAnchor="middle"
-                    y="31.5"
-                  >
-                    {companion.nameEn.split(' ')[0]}
-                  </text>
                 </g>
-              );
-            })}
-          </g>
+
+                {/* Core Initial emblem */}
+                <circle cx="0" cy="0" r="7" fill={categoryConf.color} className="opacity-15" />
+                <text
+                  textAnchor="middle"
+                  y="3"
+                  className="text-[9px] font-extrabold font-serif"
+                  fill={categoryConf.color}
+                >
+                  {item.companion.nameAr.charAt(0)}
+                </text>
+
+                {/* Primary Arabic Title label banner */}
+                <text
+                  y="24"
+                  textAnchor="middle"
+                  className={`text-[9.5px] font-bold font-serif filter drop-shadow select-none ${
+                    isDarkMode ? 'fill-slate-150' : 'fill-[#2B2319]'
+                  } ${state.isSelected ? 'fill-amber-500 font-extrabold scale-105' : ''}`}
+                  style={{ textShadow: isDarkMode ? '0 1px 2px #000' : '0 1px 1px #fff' }}
+                >
+                  {item.companion.nameAr.split(' ')[0]}
+                </text>
+
+                {/* Sub-heading Transliterated English text */}
+                <text
+                  y="31.5"
+                  textAnchor="middle"
+                  className={`text-[7px] font-mono tracking-wide ${
+                    isDarkMode ? 'fill-slate-400' : 'fill-stone-500'
+                  }`}
+                >
+                  {item.companion.nameEn.split(' ')[0]}
+                </text>
+              </g>
+            );
+          })}
         </g>
       </svg>
 
-      {/* INTERACTIVE LEGEND BAR PANEL */}
-      <div className={`absolute bottom-4 right-4 z-10 rounded-2xl border p-3 w-[240px] max-h-[220px] overflow-y-auto shadow-xl backdrop-blur-md transition-all ${
+      {/* Floating 3D Navigation Compass Widget (Bottom-Left) */}
+      <div className={`absolute bottom-4 left-4 z-20 rounded-2xl border p-3.5 shadow-xl backdrop-blur-xl transition pointer-events-auto ${
         isDarkMode 
-          ? 'bg-[#181914]/95 border-[#2F3124] text-slate-300' 
-          : 'bg-white/95 border-[#D8CEB6] text-[#4E3D25] font-serif'
+          ? 'bg-[#181914]/95 border-neutral-850 text-slate-300' 
+          : 'bg-white/95 border-[#CFBFA5] text-[#3E311B] font-serif'
       }`}>
-        <div className={`font-bold border-b pb-1.5 mb-2 flex items-center justify-between text-xs ${
-          isDarkMode ? 'text-slate-200 border-neutral-800' : 'border-neutral-200/65'
-        }`}>
-          <div className="flex items-center gap-1.5">
-            <HelpCircle className="w-3.5 h-3.5 text-natural-accent" />
-            <span>{isArabic ? 'تصنيف الفئات والنسب' : 'Interactive Categories'}</span>
-          </div>
-          {(selectedCategoryKey || hoveredCategoryKey) && (
-            <button
-              onClick={() => setSelectedCategoryKey(null)}
-              className="text-[9px] px-1.5 py-0.5 rounded bg-natural-accent/15 hover:bg-natural-accent/30 text-natural-accent font-mono cursor-pointer active:scale-95"
-            >
-              {isArabic ? 'إلغاء الفرز' : 'Clear'}
-            </button>
-          )}
+        <div className="flex items-center gap-2 text-xs font-bold border-b pb-1.5 mb-2">
+          <Eye className="w-4 h-4 text-amber-500 shrink-0" />
+          <span>{isArabic ? 'إحداثيات بوصلة الأسطرلاب' : 'Compass Orientation'}</span>
         </div>
+        
+        {/* Simple interactive dials or radar visualizers */}
+        <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-[10px] font-mono font-bold">
+          <span className="text-stone-500">{isArabic ? 'الميل العمودي:' : 'Vertical Tilt:'}</span>
+          <span className="text-amber-500 text-right">{Math.round((pitch * 180) / Math.PI)}°</span>
 
-        {/* Categories items looping */}
-        <div className="space-y-1">
-          {Object.entries(CATEGORY_CONFIG).slice(0, 8).map(([key, value]) => {
-            const count = categoryCounts[key] || 0;
-            const isFilterSelected = selectedCategoryKey === key;
-            const isFilterHovered = hoveredCategoryKey === key;
+          <span className="text-stone-500">{isArabic ? 'الدوران الأفقي:' : 'Spin Orbit:'}</span>
+          <span className="text-amber-500 text-right">{Math.round((yaw * 180) / Math.PI)}°</span>
 
-            return (
-              <div
-                key={key}
-                onClick={() => setSelectedCategoryKey(isFilterSelected ? null : key)}
-                onMouseEnter={() => setHoveredCategoryKey(key)}
-                onMouseLeave={() => setHoveredCategoryKey(null)}
-                className={`flex items-center justify-between text-[10.5px] p-1 px-1.5 rounded-lg transition-all duration-200 cursor-pointer ${
-                  isFilterSelected
-                    ? 'bg-natural-brand/10 text-natural-brand font-bold ring-1 ring-natural-brand/35'
-                    : isFilterHovered
-                      ? isDarkMode ? 'bg-[#2E3024]/50' : 'bg-stone-100'
-                      : 'hover:bg-natural-brand/5'
-                }`}
-              >
-                <div className="flex items-center gap-1.5 min-w-0">
-                  <span
-                    className="w-2.5 h-2.5 rounded-full inline-block flex-shrink-0 border border-black/10 shadow-sm"
-                    style={{ backgroundColor: value.color }}
-                  />
-                  <span className="truncate pr-1">{isArabic ? value.labelAr : value.labelEn}</span>
-                </div>
-                <span className={`text-[9px] font-mono font-bold px-1.5 py-0.2 rounded-full ${
-                  isDarkMode ? 'bg-neutral-800 text-stone-300' : 'bg-stone-100 border text-stone-600'
-                }`}>
-                  {count}
-                </span>
+          <span className="text-stone-500">{isArabic ? 'نمط التوزيع:' : 'Active Array:'}</span>
+          <span className="text-amber-500 text-right capitalize">{layout}</span>
+        </div>
+      </div>
+
+      {/* INTERACTIVE LEGEND BAR PANEL (Bottom-Right) */}
+      <div className={`absolute bottom-4 right-4 z-20 rounded-2xl border shadow-2xl backdrop-blur-xl transition-all duration-300 pointer-events-auto ${
+        isDarkMode 
+          ? 'bg-[#181914]/95 border-neutral-850 text-slate-300' 
+          : 'bg-white/95 border-[#CFBFA5] text-[#3E311B] font-serif'
+      } ${isLegendOpen ? 'w-[250px] p-3.5' : 'w-[48px] h-[48px] p-0 flex items-center justify-center cursor-pointer'}`}
+      onClick={() => {
+        if (!isLegendOpen) setIsLegendOpen(true);
+      }}
+      >
+        {!isLegendOpen ? (
+          <HelpCircle className="w-5 h-5 text-amber-500 animate-pulse" />
+        ) : (
+          <div>
+            <div className={`font-bold border-b pb-1.5 mb-2.5 flex items-center justify-between text-xs`}>
+              <div className="flex items-center gap-1.5">
+                <HelpCircle className="w-3.5 h-3.5 text-amber-500" />
+                <span>{isArabic ? 'تصنيف الفئات والطبقات' : 'Astronomical Categories'}</span>
               </div>
-            );
-          })}
-        </div>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsLegendOpen(false);
+                }}
+                className="text-[9px] px-1.5 py-0.5 rounded hover:bg-stone-100 dark:hover:bg-neutral-805 cursor-pointer text-stone-500"
+              >
+                {isArabic ? 'إخفاء' : 'Close'}
+              </button>
+            </div>
+
+            {/* Loop categories interactively */}
+            <div className="space-y-1 max-h-[175px] overflow-y-auto pr-1">
+              {Object.entries(CATEGORY_CONFIG).map(([key, config]) => {
+                const count = categoryCounts[key] || 0;
+                const isSelected = selectedCategoryKey === key;
+                const isHovered = hoveredCategoryKey === key;
+
+                return (
+                  <div
+                    key={key}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedCategoryKey(isSelected ? null : key);
+                    }}
+                    onMouseEnter={() => setHoveredCategoryKey(key)}
+                    onMouseLeave={() => setHoveredCategoryKey(null)}
+                    className={`flex items-center justify-between text-[11px] p-1 px-2 rounded-lg transition-all cursor-pointer ${
+                      isSelected
+                        ? 'bg-amber-600/15 text-amber-500 font-bold border border-amber-600/25'
+                        : isHovered
+                          ? 'bg-stone-100 dark:bg-neutral-850 text-amber-500'
+                          : 'hover:bg-amber-600/5'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span
+                        className="w-2.5 h-2.5 rounded-full inline-block shrink-0 border border-black/10"
+                        style={{ backgroundColor: config.color }}
+                      />
+                      <span className="truncate pr-1">{isArabic ? config.labelAr : config.labelEn}</span>
+                    </div>
+                    <span className="text-[9px] font-mono font-bold px-1.5 py-0.2 rounded-full bg-stone-100 dark:bg-neutral-800 text-stone-605">
+                      {count}
+                    </span>
+                  </div>
+                );
+              })}
+
+              {selectedCategoryKey && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSelectedCategoryKey(null);
+                  }}
+                  className="w-full text-center text-[10px] py-1 mt-2 tracking-wide font-bold uppercase rounded-lg bg-red-500/10 text-red-500 hover:bg-red-500/20 cursor-pointer transition"
+                >
+                  {isArabic ? 'إلغاء تصفية الفئات' : 'Reset Category Filters'}
+                </button>
+              )}
+            </div>
+          </div>
+        )}
       </div>
 
-      {/* MINI MAP NAVIGATION */}
-      <div className={`absolute bottom-4 left-4 z-10 rounded-2xl border p-2 h-[110px] w-[140px] shadow-xl backdrop-blur-md select-none transition ${
-        isDarkMode 
-          ? 'bg-[#181914]/95 border-[#2F3124]' 
-          : 'bg-white/95 border-[#D8CEB6]'
-      }`}>
-        <div className={`text-[8.5px] border-b pb-1 mb-1 flex justify-between items-center px-1 ${
-          isDarkMode ? 'text-slate-400 border-neutral-800' : 'text-stone-600 border-neutral-100'
-        }`}>
-          <span>{isArabic ? 'منظور البوصلة' : 'Macro Radar'}</span>
-          <Move className="w-2.5 h-2.5 text-natural-accent" />
-        </div>
-        <div className={`relative w-full h-[73px] border rounded-lg overflow-hidden ${
-          isDarkMode ? 'bg-[#12120C] border-[#22231C]' : 'bg-[#EFEDE6] border-stone-200'
-        }`}>
-          <svg className="w-full h-full">
-            {miniNodes.map(m => (
-              <circle
-                key={`mini-${m.id}`}
-                cx={m.x}
-                cy={m.y}
-                r={hoveredCompanion?.id === m.id || selectedCompanion?.id === m.id ? 2.8 : 1.2}
-                fill={m.companion ? CATEGORY_CONFIG[m.companion.category]?.color || '#888' : '#888'}
-                opacity={selectedCompanion?.id === m.id ? 1.0 : 0.8}
-              />
-            ))}
-            {/* Camera rectangular bounding preview bounds */}
-            <rect
-              x={Math.max(10, 48 - pan.x / 11)}
-              y={Math.max(10, 38 - pan.y / 11)}
-              width={Math.min(105, 120 / zoom)}
-              height={Math.min(65, 75 / zoom)}
-              fill="none"
-              stroke="#D4AF37"
-              strokeWidth="0.8"
-              strokeDasharray="1,2"
-              opacity={0.65}
-            />
-          </svg>
-        </div>
-      </div>
     </div>
   );
 }
