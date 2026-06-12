@@ -38,12 +38,99 @@
         }
       },
       "required": ["uid", "fullName", "email", "createdAt", "role"]
+    },
+    "Note": {
+      "title": "Study Note",
+      "description": "User created study notes about a specific companion or general reflections",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "The unique identifier of the note document"
+        },
+        "userId": {
+          "type": "string",
+          "description": "The unique Firebase Auth identifier of the author"
+        },
+        "companionId": {
+          "type": "string",
+          "description": "Optional associated companion unique ID"
+        },
+        "companionNameAr": {
+          "type": "string",
+          "description": "Optional Arabic name of the associated companion"
+        },
+        "companionNameEn": {
+          "type": "string",
+          "description": "Optional English name of the associated companion"
+        },
+        "title": {
+          "type": "string",
+          "description": "Optional note title/header"
+        },
+        "content": {
+          "type": "string",
+          "description": "Main body text of the study reflection note"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp when note was created"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp of last modification"
+        }
+      },
+      "required": ["id", "userId", "content", "createdAt"]
+    },
+    "History": {
+      "title": "Navigation History",
+      "description": "User navigation history records tracking visited companion screens",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "The unique history log identifier"
+        },
+        "userId": {
+          "type": "string",
+          "description": "The owner of the navigation history record"
+        },
+        "companionId": {
+          "type": "string",
+          "description": "The ID of the visited companion"
+        },
+        "companionNameAr": {
+          "type": "string",
+          "description": "The Arabic name of the visited companion"
+        },
+        "companionNameEn": {
+          "type": "string",
+          "description": "The English name of the visited companion"
+        },
+        "viewedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp of visiting document"
+        }
+      },
+      "required": ["id", "userId", "companionId", "viewedAt"]
     }
   },
   "firestore": {
     "users/{userId}": {
       "schema": "User",
       "description": "The collection of user accounts and profile documents"
+    },
+    "users/{userId}/history/{historyId}": {
+      "schema": "History",
+      "description": "User-isolated browse navigation history records"
+    },
+    "users/{userId}/notes/{noteId}": {
+      "schema": "Note",
+      "description": "User-isolated custom study notes"
     }
   }
 }

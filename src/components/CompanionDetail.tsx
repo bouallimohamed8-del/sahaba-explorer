@@ -3,10 +3,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Companion, Relationship, BattleInfo } from '../types';
 import { DEFAULT_BATTLES } from '../data/defaultDataset';
-import { BookOpen, Calendar, Award, Copy, Check, Users, ShieldAlert, ArrowRight, ArrowLeft, Landmark, History, Library, Compass } from 'lucide-react';
+import { BookOpen, Calendar, Award, Copy, Check, Users, ShieldAlert, ArrowRight, ArrowLeft, Landmark, History, Library, Compass, Save, Trash2, Edit3, Plus, FileText, Lock } from 'lucide-react';
+import { db } from '../lib/firebase';
+import { collection, query, orderBy, getDocs, doc, setDoc, deleteDoc } from 'firebase/firestore';
 
 interface CompanionDetailProps {
   companion: Companion;
@@ -16,6 +18,8 @@ interface CompanionDetailProps {
   isArabic: boolean;
   isDarkMode?: boolean;
   onBack: () => void;
+  user?: any;
+  profile?: any;
 }
 
 export default function CompanionDetail({
@@ -25,10 +29,95 @@ export default function CompanionDetail({
   onSelectCompanion,
   isArabic,
   isDarkMode = false,
-  onBack
+  onBack,
+  user,
+  profile
 }: CompanionDetailProps) {
   const [activeTab, setActiveTab] = useState<'seerah' | 'knowledge' | 'battles' | 'sources'>('seerah');
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
+
+  // Personal study notes state for this specific companion
+  const [localCompanionNotes, setLocalCompanionNotes] = useState<any[]>([]);
+  const [loadingCompanionNotes, setLoadingCompanionNotes] = useState(false);
+  const [newNoteContent, setNewNoteContent] = useState('');
+  const [noteTitleInput, setNoteTitleInput] = useState('');
+  const [noteErrorMessage, setNoteErrorMessage] = useState('');
+
+  // Fetch study notes belonging to this companion
+  const fetchCompanionNotes = async () => {
+    if (!user || !companion) return;
+    setLoadingCompanionNotes(true);
+    try {
+      const q = query(
+        collection(db, 'users', user.uid, 'notes'),
+        orderBy('createdAt', 'desc')
+      );
+      const querySnapshot = await getDocs(q);
+      const list: any[] = [];
+      querySnapshot.forEach((docSnap) => {
+        const data = docSnap.data();
+        if (data.companionId === companion.id) {
+          list.push({ id: docSnap.id, ...data });
+        }
+      });
+      setLocalCompanionNotes(list);
+    } catch (e) {
+      console.error("Error loading companion-specific notes:", e);
+    } finally {
+      setLoadingCompanionNotes(false);
+    }
+  };
+
+  useEffect(() => {
+    if (user && companion) {
+      fetchCompanionNotes();
+    } else {
+      setLocalCompanionNotes([]);
+    }
+  }, [user, companion.id]);
+
+  // Save new note
+  const handleAddCompanionNote = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user || !newNoteContent.trim()) return;
+    setNoteErrorMessage('');
+    try {
+      const notesColRef = collection(db, 'users', user.uid, 'notes');
+      const noteId = doc(notesColRef).id;
+      const newNote = {
+        id: noteId,
+        userId: user.uid,
+        companionId: companion.id,
+        companionNameAr: companion.nameAr,
+        companionNameEn: companion.nameEn,
+        title: noteTitleInput.trim() || '',
+        content: newNoteContent.trim(),
+        createdAt: new Date().toISOString()
+      };
+      await setDoc(doc(db, 'users', user.uid, 'notes', noteId), newNote);
+      setNewNoteContent('');
+      setNoteTitleInput('');
+      fetchCompanionNotes();
+    } catch (err: any) {
+      console.error(err);
+      setNoteErrorMessage(isArabic ? 'حدث خطأ أثناء حفظ التدوينة.' : 'Failed to save study note.');
+    }
+  };
+
+  // Delete note
+  const handleDeleteCompanionNote = async (noteId: string) => {
+    if (!user) return;
+    if (!window.confirm(isArabic ? 'هل تريد بالتأكيد حذف هذه الفائدة؟' : 'Are you sure you want to delete this key summary?')) {
+      return;
+    }
+    try {
+      await deleteDoc(doc(db, 'users', user.uid, 'notes', noteId));
+      fetchCompanionNotes();
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
 
   // Filter relationships for this companion
   const companionRelations = useMemo(() => {
@@ -529,6 +618,106 @@ export default function CompanionDetail({
           </div>
         </div>
       )}
+
+      {/* 4. PRIVATE STUDY REFLECTIONS & NOTES FOR THIS COMPANION BLOCK */}
+      <div className={`mt-8 pt-6 border-t-2 ${isDarkMode ? 'border-neutral-800' : 'border-natural-accent/15'}`} id="companion-private-notes-container">
+        <h3 className="text-sm font-bold mb-3 flex items-center gap-2 font-serif text-natural-brand">
+          <FileText className="w-4.5 h-4.5 text-natural-accent" />
+          <span>{isArabic ? 'خاطرة وفائدة مضافة حول هذا الصحابي الجليل' : 'My Companion Reflections & Notes'}</span>
+        </h3>
+
+        {!user ? (
+          <div className={`p-4 rounded-2xl border border-dashed flex items-center gap-3 ${
+            isDarkMode ? 'bg-[#181914] border-neutral-800 text-slate-400' : 'bg-[#FAF8F5] border-natural-accent/20 text-stone-604'
+          }`}>
+            <Lock className="w-5 h-5 text-natural-accent" />
+            <p className="text-[11px] font-serif">
+              {isArabic
+                ? 'سجِّل الدخول أو أنشئ حساباً مجانياً لتتمكن من كتابة وحفظ فوائدك البحثية وخواطرك حول السيرة العطرة في حسابك.'
+                : 'Sign in or register a free account to compose and secure personal study reflections for this companion.'}
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {/* Form to add note */}
+            <form onSubmit={handleAddCompanionNote} className="space-y-3">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <input
+                  type="text"
+                  value={noteTitleInput}
+                  onChange={(e) => setNoteTitleInput(e.target.value)}
+                  placeholder={isArabic ? 'عنوان الملاحظة الفرعي (مثال: شجاعته يوم اليرموك)...' : 'Sub-heading (e.g. Heroism at Yarmouk)...'}
+                  className={`sm:col-span-1 border rounded-xl p-2.5 focus:outline-none text-xs transition ${
+                    isDarkMode ? 'bg-natural-dark-bg border-neutral-750 text-slate-100' : 'bg-white border-[#CFC5AD]/40 text-[#443825] focus:border-natural-brand'
+                  }`}
+                />
+                <div className="sm:col-span-2 flex gap-2">
+                  <input
+                    type="text"
+                    value={newNoteContent}
+                    required
+                    onChange={(e) => setNewNoteContent(e.target.value)}
+                    placeholder={isArabic ? 'اكتب تدوينتك أو دروسك العبرية هنا ليتم تخزينها بأمان...' : 'Jot down personal research study reflections to store safely...'}
+                    className={`flex-1 border rounded-xl p-2.5 focus:outline-none text-xs transition ${
+                      isDarkMode ? 'bg-natural-dark-bg border-neutral-750 text-slate-100' : 'bg-white border-[#CFC5AD]/40 text-[#443825] focus:border-natural-brand'
+                    }`}
+                  />
+                  <button
+                    type="submit"
+                    className="bg-natural-brand hover:bg-natural-brand/90 text-white font-bold p-2.5 px-4 rounded-xl text-xs flex items-center gap-1.5 cursor-pointer transition shadow"
+                  >
+                    <Plus className="w-3.5 h-3.5 animate-spin-slow" />
+                    <span>{isArabic ? 'إضافة' : 'Add'}</span>
+                  </button>
+                </div>
+              </div>
+              {noteErrorMessage && (
+                <p className="text-[10px] text-red-500 italic">{noteErrorMessage}</p>
+              )}
+            </form>
+
+            {/* List notes added */}
+            {loadingCompanionNotes ? (
+              <p className="text-[10px] text-stone-500 italic">{isArabic ? 'جاري تحميل التدوينات المضافة...' : 'Syncing notes database...'}</p>
+            ) : localCompanionNotes.length === 0 ? (
+              <p className={`text-[10.5px] italic ${isDarkMode ? 'text-slate-500' : 'text-stone-450'} font-serif`}>
+                {isArabic ? 'لا توجد ملاحظات مسجلة حول هذا الصحابي من حسابك حتى الآن.' : 'No notes written for this companion in your notebook.'}
+              </p>
+            ) : (
+              <div className="space-y-2 max-h-[220px] overflow-y-auto pr-1">
+                {localCompanionNotes.map((nt) => (
+                  <div
+                    key={nt.id}
+                    className={`p-3.5 rounded-2xl border flex items-center justify-between gap-4 transition ${
+                      isDarkMode ? 'bg-[#181914] border-neutral-800 text-slate-205' : 'bg-[#FAFBF9] border-[#CFC5AD]/25 text-natural-text font-serif'
+                    }`}
+                  >
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="text-[11px] font-extrabold text-natural-brand">
+                          {nt.title || (isArabic ? 'ملاحظة بحثية' : 'Reflections')}
+                        </span>
+                        <span className="text-[9px] text-stone-500 font-mono">
+                          {new Date(nt.createdAt).toLocaleDateString(isArabic ? 'ar' : 'en-US')}
+                        </span>
+                      </div>
+                      <p className="text-[11.5px] leading-relaxed whitespace-pre-wrap">{nt.content}</p>
+                    </div>
+
+                    <button
+                      onClick={() => handleDeleteCompanionNote(nt.id)}
+                      className="p-1 px-1.5 rounded-lg text-slate-400 hover:text-red-500 cursor-pointer hover:bg-red-50/5 transition shrink-0"
+                      title={isArabic ? 'حذف من الحقيبة' : 'Remove reflection'}
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

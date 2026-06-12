@@ -35,6 +35,33 @@ service cloud.firestore {
              (!data.keys().hasAll(['disabled']) || data.disabled is bool);
     }
 
+    // Validate Navigation History Log
+    function isValidHistory(data) {
+      return data.id is string &&
+             data.userId is string &&
+             data.userId == request.auth.uid &&
+             data.companionId is string &&
+             data.companionNameAr is string &&
+             data.companionNameEn is string &&
+             data.viewedAt is string;
+    }
+
+    // Validate Custom Study Note
+    function isValidNote(data) {
+      return data.id is string &&
+             data.userId is string &&
+             data.userId == request.auth.uid &&
+             data.content is string &&
+             data.content.size() <= 8192 &&
+             (!data.keys().hasAll(['companionId']) || data.companionId is string) &&
+             (!data.keys().hasAll(['companionNameAr']) || data.companionNameAr is string) &&
+             (!data.keys().hasAll(['companionNameEn']) || data.companionNameEn is string) &&
+             (!data.keys().hasAll(['title']) || (data.title is string && data.title.size() <= 200)) &&
+             data.createdAt is string &&
+             (!data.keys().hasAll(['updatedAt']) || data.updatedAt is string);
+    }
+
+    // Users resource authorization
     match /users/{userId} {
       allow read: if isSignedIn() && (request.auth.uid == userId || isAdmin());
       allow create: if isSignedIn() && request.auth.uid == userId && isValidUser(request.resource.data) && request.resource.data.role == 'user' && (!request.resource.data.keys().hasAll(['disabled']) || request.resource.data.disabled == false);
@@ -49,6 +76,21 @@ service cloud.firestore {
         )
       );
       allow delete: if isAdmin();
+
+      // Nested History Log Subcollection
+      match /history/{historyId} {
+        allow read: if isSignedIn() && request.auth.uid == userId;
+        allow create: if isSignedIn() && request.auth.uid == userId && isValidHistory(request.resource.data);
+        allow delete: if isSignedIn() && request.auth.uid == userId;
+      }
+
+      // Nested Personal Notes Subcollection
+      match /notes/{noteId} {
+        allow read: if isSignedIn() && request.auth.uid == userId;
+        allow create: if isSignedIn() && request.auth.uid == userId && isValidNote(request.resource.data);
+        allow update: if isSignedIn() && request.auth.uid == userId && isValidNote(request.resource.data) && request.resource.data.userId == resource.data.userId && request.resource.data.createdAt == resource.data.createdAt;
+        allow delete: if isSignedIn() && request.auth.uid == userId;
+      }
     }
   }
 }

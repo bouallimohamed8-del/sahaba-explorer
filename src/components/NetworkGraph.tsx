@@ -5,7 +5,7 @@
 
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Companion, Relationship, CompanionCategory, RelationshipType } from '../types';
-import { ZoomIn, ZoomOut, Maximize2, Compass, Move, HelpCircle, RefreshCw } from 'lucide-react';
+import { ZoomIn, ZoomOut, Maximize2, Compass, Move, HelpCircle, LayoutGrid, RotateCcw, Orbit } from 'lucide-react';
 
 interface NetworkGraphProps {
   companions: Companion[];
@@ -17,14 +17,6 @@ interface NetworkGraphProps {
   isArabic: boolean;
   highlightedPath: string[] | null; // list of companion IDs in path
   isDarkMode?: boolean;
-}
-
-interface NodeState {
-  id: string;
-  x: number;
-  y: number;
-  vx: number;
-  vy: number;
 }
 
 // Category Configuration mapping colors and labels
@@ -166,211 +158,111 @@ export default function NetworkGraph({
   isDarkMode = false
 }: NetworkGraphProps) {
   const containerRef = useRef<HTMLDivElement>(null);
+  
+  // Interactive View Settings
   const [zoom, setZoom] = useState<number>(0.9);
-  const [pan, setPan] = useState<{ x: number; y: number }>({ x: 300, y: 220 });
+  const [pan, setPan] = useState<{ x: number; y: number }>({ x: 260, y: 190 });
   const [isPanning, setIsPanning] = useState<boolean>(false);
   const [draggedNodeId, setDraggedNodeId] = useState<string | null>(null);
   const panStart = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
+  const dragStartPos = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
 
-  // Physics Simulation Node positions state
-  const [nodes, setNodes] = useState<Record<string, NodeState>>({});
+  // Layout Styles and Custom Positions offsets logic
+  const [layoutStyle, setLayoutStyle] = useState<'concentric' | 'radial'>('concentric');
+  const [dragOffsets, setDragOffsets] = useState<Record<string, { x: number; y: number }>>({});
 
-  // Initialize nodes in circular coordinates around center
-  useEffect(() => {
-    const initialNodes: Record<string, NodeState> = {};
-    const radius = 220;
-    companions.forEach((companion, index) => {
-      // If it already exists, keep or slightly update
-      if (nodes[companion.id]) {
-        initialNodes[companion.id] = nodes[companion.id];
+  // Interactive Legend Highlight / Filtering States
+  const [selectedCategoryKey, setSelectedCategoryKey] = useState<string | null>(null);
+  const [hoveredCategoryKey, setHoveredCategoryKey] = useState<string | null>(null);
+
+  // 1. DYNAMIC STABLE DETERMINISTIC CONCENTRIC LAYOUT
+  const concentricPositions = useMemo(() => {
+    const list: Record<string, { x: number; y: number }> = {};
+    const center = { x: 400, y: 300 };
+
+    // Grouping by concentric ring ranks
+    const ring0: Companion[] = []; // Centerpiece characters
+    const ring1: Companion[] = []; // Core Prophet family & companions
+    const ring2: Companion[] = []; // Important Migrators/Helpers
+    const ring3: Companion[] = []; // Other historical elites
+
+    companions.forEach(c => {
+      if (c.category === 'Khulafa_Rashidun') {
+        ring0.push(c);
+      } else if (c.category === 'Ahl_al_Bayt' || c.category === 'Wives') {
+        ring1.push(c);
+      } else if (c.category === 'Muhajirun' || c.category === 'Ansar') {
+        ring2.push(c);
       } else {
-        const angle = (index / companions.length) * 2 * Math.PI;
-        initialNodes[companion.id] = {
-          id: companion.id,
-          x: 400 + Math.cos(angle) * radius + (Math.random() - 0.5) * 40,
-          y: 300 + Math.sin(angle) * radius + (Math.random() - 0.5) * 40,
-          vx: 0,
-          vy: 0
+        ring3.push(c);
+      }
+    });
+
+    const plotRing = (ringCompanions: Companion[], radius: number) => {
+      const len = ringCompanions.length;
+      ringCompanions.forEach((comp, idx) => {
+        const angle = (idx / (len || 1)) * 2 * Math.PI - Math.PI / 2;
+        list[comp.id] = {
+          x: center.x + Math.cos(angle) * radius,
+          y: center.y + Math.sin(angle) * radius
         };
-      }
-    });
-
-    // Cleanup obsolete nodes
-    Object.keys(nodes).forEach(key => {
-      if (companions.some(c => c.id === key)) {
-        initialNodes[key] = nodes[key];
-      }
-    });
-
-    setNodes(initialNodes);
-  }, [companions]);
-
-  // Run Physics Simulation loop
-  useEffect(() => {
-    let animationFrameId: number;
-
-    const runPhysics = () => {
-      setNodes(prevNodes => {
-        const nextNodes = JSON.parse(JSON.stringify(prevNodes)) as Record<string, NodeState>;
-        const nodeIds = Object.keys(nextNodes);
-        if (nodeIds.length === 0) return prevNodes;
-
-        const kCharge = -1200; // Repulsion strength
-        const kSpring = 0.05;   // Link spring stretch
-        const idealLength = 160; // Ideal link distance
-        const kCenter = 0.015;   // Tendency to return to center
-        const friction = 0.82;  // Deceleration
-
-        // 1. Repulsion force between all node pairs
-        for (let i = 0; i < nodeIds.length; i++) {
-          const idA = nodeIds[i];
-          const nodeA = nextNodes[idA];
-          if (idA === draggedNodeId) continue;
-
-          for (let j = i + 1; j < nodeIds.length; j++) {
-            const idB = nodeIds[j];
-            const nodeB = nextNodes[idB];
-
-            const dx = nodeB.x - nodeA.x;
-            const dy = nodeB.y - nodeA.y;
-            const distSq = dx * dx + dy * dy + 0.1;
-            const dist = Math.sqrt(distSq);
-
-            if (dist < 400) {
-              const force = (kCharge / distSq);
-              const fx = (dx / dist) * force;
-              const fy = (dy / dist) * force;
-
-              if (idA !== draggedNodeId) {
-                nodeA.vx += fx;
-                nodeA.vy += fy;
-              }
-              if (idB !== draggedNodeId) {
-                nodeB.vx -= fx;
-                nodeB.vy -= fy;
-              }
-            }
-          }
-        }
-
-        // 2. Spring force along active connections/relationships
-        relationships.forEach(rel => {
-          const nodeA = nextNodes[rel.sourceId];
-          const nodeB = nextNodes[rel.targetId];
-          if (!nodeA || !nodeB) return;
-
-          const dx = nodeB.x - nodeA.x;
-          const dy = nodeB.y - nodeA.y;
-          const dist = Math.sqrt(dx * dx + dy * dy) + 0.1;
-
-          const displacement = dist - idealLength;
-          const force = kSpring * displacement;
-          const fx = (dx / dist) * force;
-          const fy = (dy / dist) * force;
-
-          if (rel.sourceId !== draggedNodeId) {
-            nodeA.vx += fx;
-            nodeA.vy += fy;
-          }
-          if (rel.targetId !== draggedNodeId) {
-            nodeB.vx -= fx;
-            nodeB.vy -= fy;
-          }
-        });
-
-        // 3. Central gravitational anchor & update coordinates
-        nodeIds.forEach(id => {
-          const node = nextNodes[id];
-          if (id === draggedNodeId) return; // Keep dragged node anchored to mouse
-
-          const dx = 400 - node.x;
-          const dy = 300 - node.y;
-          node.vx += dx * kCenter;
-          node.vy += dy * kCenter;
-
-          node.vx *= friction;
-          node.vy *= friction;
-
-          // Cap velocity
-          const speed = Math.sqrt(node.vx * node.vx + node.vy * node.vy);
-          if (speed > 12) {
-            node.vx = (node.vx / speed) * 12;
-            node.vy = (node.vy / speed) * 12;
-          }
-
-          node.x += node.vx;
-          node.y += node.vy;
-
-          // Dampen boundaries so nodes don't fly off screen
-          if (node.x < 50) { node.x = 55; node.vx *= -0.5; }
-          if (node.x > 750) { node.x = 745; node.vx *= -0.5; }
-          if (node.y < 50) { node.y = 55; node.vy *= -0.5; }
-          if (node.y > 550) { node.y = 545; node.vy *= -0.5; }
-        });
-
-        return nextNodes;
       });
-
-      animationFrameId = requestAnimationFrame(runPhysics);
     };
 
-    animationFrameId = requestAnimationFrame(runPhysics);
-    return () => cancelAnimationFrame(animationFrameId);
-  }, [relationships, draggedNodeId]);
+    plotRing(ring0, 75);
+    plotRing(ring1, 155);
+    plotRing(ring2, 235);
+    plotRing(ring3, 315);
 
-  // Handle Dragging / Panning on SVG Board
-  const handleMouseDown = (e: React.MouseEvent) => {
-    if (draggedNodeId) return; // If clicking a node, don't pan board
-    setIsPanning(true);
-    panStart.current = { x: e.clientX - pan.x, y: e.clientY - pan.y };
-  };
+    return list;
+  }, [companions]);
 
-  const handleMouseMove = (e: React.MouseEvent) => {
-    if (isPanning) {
-      setPan({
-        x: e.clientX - panStart.current.x,
-        y: e.clientY - panStart.current.y
-      });
-    } else if (draggedNodeId && containerRef.current) {
-      const rect = containerRef.current.getBoundingClientRect();
-      // Calculate local mouse points on the scaled board
-      const localX = (e.clientX - rect.left - pan.x) / zoom;
-      const localY = (e.clientY - rect.top - pan.y) / zoom;
+  // 2. DYNAMIC STABLE DETERMINISTIC SPIRAL STAR GALAXY LAYOUT
+  const radialPositions = useMemo(() => {
+    const list: Record<string, { x: number; y: number }> = {};
+    const center = { x: 400, y: 300 };
+    const len = companions.length;
 
-      setNodes(prev => {
-        if (!prev[draggedNodeId]) return prev;
-        const copy = { ...prev };
-        copy[draggedNodeId] = {
-          ...copy[draggedNodeId],
-          x: localX,
-          y: localY,
-          vx: 0,
-          vy: 0
-        };
-        return copy;
-      });
-    }
-  };
+    companions.forEach((comp, idx) => {
+      const angle = idx * 2.39996; // Golden Angle spacing to avoid overlaps
+      const radius = 50 + (idx / (len || 1)) * 270;
+      list[comp.id] = {
+        x: center.x + Math.cos(angle) * radius,
+        y: center.y + Math.sin(angle) * radius
+      };
+    });
 
-  const handleMouseUpOrLeave = () => {
-    setIsPanning(false);
-    setDraggedNodeId(null);
-  };
+    return list;
+  }, [companions]);
 
-  const handleNodeDragStart = (id: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    setDraggedNodeId(id);
-  };
+  // Combined positions calculated from base layouts and offsets
+  const nodes = useMemo(() => {
+    const base = layoutStyle === 'concentric' ? concentricPositions : radialPositions;
+    const finalNodes: Record<string, { id: string; x: number; y: number }> = {};
 
-  // Zoom helpers
-  const handleZoomIn = () => setZoom(prev => Math.min(prev + 0.15, 2.5));
-  const handleZoomOut = () => setZoom(prev => Math.max(prev - 0.15, 0.4));
-  const handleResetZoom = () => {
-    setZoom(1.0);
-    setPan({ x: 220, y: 140 });
-  };
+    companions.forEach(c => {
+      const basePos = base[c.id] || { x: 400, y: 300 };
+      const offset = dragOffsets[c.id] || { x: 0, y: 0 };
+      finalNodes[c.id] = {
+        id: c.id,
+        x: basePos.x + offset.x,
+        y: basePos.y + offset.y
+      };
+    });
 
-  // Auto-set optimal pan on selecting a companion to focus and center on them
+    return finalNodes;
+  }, [companions, layoutStyle, concentricPositions, radialPositions, dragOffsets]);
+
+  // Compile map nodes statistics for legend badges
+  const categoryCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    companions.forEach(c => {
+      counts[c.category] = (counts[c.category] || 0) + 1;
+    });
+    return counts;
+  }, [companions]);
+
+  // Set optimal panning centering on Selected Companion node
   useEffect(() => {
     if (selectedCompanion && nodes[selectedCompanion.id]) {
       const node = nodes[selectedCompanion.id];
@@ -386,328 +278,541 @@ export default function NetworkGraph({
     }
   }, [selectedCompanion]);
 
-  // Minimap layout logic: nodes relative to full dimension
+  // Drag and Pan SVG callbacks
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (draggedNodeId) return;
+    setIsPanning(true);
+    panStart.current = { x: e.clientX - pan.x, y: e.clientY - pan.y };
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (isPanning) {
+      setPan({
+        x: e.clientX - panStart.current.x,
+        y: e.clientY - panStart.current.y
+      });
+    } else if (draggedNodeId && containerRef.current) {
+      const rect = containerRef.current.getBoundingClientRect();
+      const localX = (e.clientX - rect.left - pan.x) / zoom;
+      const localY = (e.clientY - rect.top - pan.y) / zoom;
+
+      setDragOffsets(prev => ({
+        ...prev,
+        [draggedNodeId]: {
+          x: localX - dragStartPos.current.x,
+          y: localY - dragStartPos.current.y
+        }
+      }));
+    }
+  };
+
+  const handleMouseUpOrLeave = () => {
+    setIsPanning(false);
+    setDraggedNodeId(null);
+  };
+
+  const handleNodeDragStart = (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setDraggedNodeId(id);
+
+    const base = layoutStyle === 'concentric' ? concentricPositions : radialPositions;
+    const basePos = base[id] || { x: 400, y: 300 };
+    const currentOffset = dragOffsets[id] || { x: 0, y: 0 };
+
+    if (containerRef.current) {
+      const rect = containerRef.current.getBoundingClientRect();
+      const localX = (e.clientX - rect.left - pan.x) / zoom;
+      const localY = (e.clientY - rect.top - pan.y) / zoom;
+
+      // Track the displacement vector
+      dragStartPos.current = {
+        x: localX - currentOffset.x,
+        y: localY - currentOffset.y
+      };
+    }
+  };
+
+  const handleZoomIn = () => setZoom(prev => Math.min(prev + 0.15, 2.3));
+  const handleZoomOut = () => setZoom(prev => Math.max(prev - 0.15, 0.45));
+  const handleResetZoomAndPositions = () => {
+    setZoom(0.9);
+    setPan({ x: 260, y: 190 });
+    setDragOffsets({});
+    setSelectedCategoryKey(null);
+    setHoveredCategoryKey(null);
+  };
+
+  // Determine if a specific node is highlighted or dimmed
+  const checkNodeState = (companion: Companion) => {
+    const isSelected = selectedCompanion?.id === companion.id;
+    const isHovered = hoveredCompanion?.id === companion.id;
+    const isPathMember = highlightedPath?.includes(companion.id);
+    const categoryMatches = !selectedCategoryKey || companion.category === selectedCategoryKey;
+    const hoverCategoryMatches = !hoveredCategoryKey || companion.category === hoveredCategoryKey;
+
+    // Check if neighbors highlighting is happening (hover companion is active)
+    let isConnectedNeighbor = false;
+    let anyNeighborHighlighting = hoveredCompanion !== null;
+    
+    if (hoveredCompanion) {
+      isConnectedNeighbor = relationships.some(r => 
+        (r.sourceId === hoveredCompanion.id && r.targetId === companion.id) ||
+        (r.targetId === hoveredCompanion.id && r.sourceId === companion.id)
+      );
+    }
+
+    // Node is glowing/active
+    const isActive = isSelected || isHovered || isPathMember || 
+                     (selectedCategoryKey && categoryMatches) || 
+                     (hoveredCategoryKey && hoverCategoryMatches) ||
+                     isConnectedNeighbor;
+
+    // Node should be dimmed because other elements are selected/hovered and it does not fit
+    const shouldDim = (selectedCompanion !== null && !isSelected && !isPathMember) || 
+                       (hoveredCompanion !== null && !isHovered && !isConnectedNeighbor) ||
+                       (selectedCategoryKey && !categoryMatches) ||
+                       (hoveredCategoryKey && !hoverCategoryMatches);
+
+    return { isSelected, isHovered, isPathMember, isActive, shouldDim, isConnectedNeighbor };
+  };
+
+  // Minimap layout logic coordinates representation
   const miniNodes = useMemo(() => {
-    return (Object.values(nodes) as NodeState[]).map(n => ({
-      id: n.id,
-      x: (n.x / 800) * 120,
-      y: (n.y / 600) * 90,
-      companion: companions.find(c => c.id === n.id)
-    }));
+    return Object.keys(nodes).map(key => {
+      const node = nodes[key];
+      const companion = companions.find(c => c.id === key);
+      return {
+        id: key,
+        x: (node.x / 800) * 120,
+        y: (node.y / 600) * 85,
+        companion
+      };
+    });
   }, [nodes, companions]);
 
   return (
     <div
       id="sahaba-graph-canvas-wrapper"
       ref={containerRef}
-      className={`relative w-full h-[520px] ${isDarkMode ? 'bg-[#22231C] border-[#2E3024] natural-dotted-bg-dark' : 'bg-[#EDE8DF] border-natural-accent/35 natural-dotted-bg'} overflow-hidden border rounded-3xl transition duration-300 shadow-inner`}
+      className={`relative w-full h-[540px] border rounded-[2rem] overflow-hidden transition-all duration-300 shadow-xl ${
+        isDarkMode 
+          ? 'bg-[#181914] border-[#2F3124] natural-dotted-bg-dark text-slate-100' 
+          : 'bg-[#F2ECE0] border-[#DCD5C4] natural-dotted-bg text-[#443825]'
+      }`}
       onMouseDown={handleMouseDown}
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUpOrLeave}
       onMouseLeave={handleMouseUpOrLeave}
       style={{ cursor: isPanning ? 'grabbing' : draggedNodeId ? 'grabbing' : 'grab' }}
     >
-      {/* Background Star/Pattern Motif */}
-      <div className="absolute inset-0 opacity-5 pointer-events-none flex items-center justify-center">
-        <svg width="400" height="400" viewBox="0 0 100 100" fill="currentColor" className="text-natural-accent">
+      {/* Decorative Star Islamic Motif Background */}
+      <div className="absolute inset-0 opacity-10 pointer-events-none flex items-center justify-center">
+        <svg width="420" height="420" viewBox="0 0 100 100" fill="currentColor" className="text-natural-accent">
           <path d="M50 0L61.2 38.8L100 50L61.2 61.2L50 100L38.8 61.2L0 50L38.8 38.8Z" />
-          <circle cx="50" cy="50" r="10" fill="none" stroke="currentColor" strokeWidth="1" />
+          <circle cx="50" cy="50" r="13" fill="none" stroke="currentColor" strokeWidth="0.85" />
         </svg>
       </div>
 
-      {/* Floating Instructions Banner */}
+      {/* Elegant Layout & Navigation Header Controls Ribbons */}
       <div className="absolute top-4 left-4 right-4 z-10 flex flex-wrap gap-2 items-center justify-between pointer-events-none">
-        <div className={`px-4 py-2 rounded-full border text-xs flex items-center gap-2 pointer-events-auto shadow-md ${isDarkMode ? 'bg-natural-dark-panel/90 border-[#3E4032] text-slate-200' : 'bg-white/95 border-natural-accent/25 text-natural-brand font-serif font-bold'}`}>
-          <Compass className="w-3.5 h-3.5 text-natural-accent animate-spin-slow" />
-          <span>
+        
+        {/* Help tooltip pills */}
+        <div className={`px-4 py-2 rounded-full border text-xs flex items-center gap-2 pointer-events-auto shadow-md backdrop-blur-md transition ${
+          isDarkMode 
+            ? 'bg-[#1D1E16]/90 border-[#3B3D2C] text-slate-200' 
+            : 'bg-white/90 border-[#D8CEB6] text-[#4E3D25] font-serif font-bold'
+        }`}>
+          <Compass className="w-3.5 h-3.5 text-natural-accent animate-spin-slow shrink-0" />
+          <span className="text-[11px]">
             {isArabic
-              ? 'اسحب اللوحة للتحريك • عجلات الفأرة للتكبير • اسحب العقد لإعادة الترتيب'
-              : 'Drag canvas to pan • Scroll to zoom • Drag nodes to reposition'}
+              ? 'تفاعل: اسحب اللوحة • عجلات الفأرة للتكبير والتحجيم • رتب العقد المفضلة بالسحب'
+              : 'Interact: Drag to pan • Scroll to zoom • Drag any hero to space them'}
           </span>
         </div>
 
-        {/* Action Zoom Controls */}
-        <div className={`flex items-center gap-1 p-1 rounded-full border shadow-md pointer-events-auto ${isDarkMode ? 'bg-natural-dark-panel border-[#3E4032]' : 'bg-white border-natural-accent/20'}`}>
-          <button
-            id="btn-zoom-in"
-            className={`p-1.5 rounded-full transition-all active:scale-95 ${isDarkMode ? 'text-slate-300 hover:bg-[#1E1F1A]/80 hover:text-white' : 'text-natural-brand hover:bg-[#F5F2ED] hover:text-natural-accent'}`}
-            onClick={handleZoomIn}
-            title={isArabic ? 'تكبير' : 'Zoom In'}
-          >
-            <ZoomIn className="w-4 h-4" />
-          </button>
-          <button
-            id="btn-zoom-out"
-            className={`p-1.5 rounded-full transition-all active:scale-95 ${isDarkMode ? 'text-slate-300 hover:bg-[#1E1F1A]/80 hover:text-white' : 'text-natural-brand hover:bg-[#F5F2ED] hover:text-natural-accent'}`}
-            onClick={handleZoomOut}
-            title={isArabic ? 'تصغير' : 'Zoom Out'}
-          >
-            <ZoomOut className="w-4 h-4" />
-          </button>
-          <button
-            id="btn-reset-zoom"
-            className={`p-1.5 rounded-full transition-all active:scale-95 ${isDarkMode ? 'text-slate-300 hover:bg-[#1E1F1A]/80 hover:text-white' : 'text-natural-brand hover:bg-[#F5F2ED] hover:text-natural-accent'}`}
-            onClick={handleResetZoom}
-            title={isArabic ? 'إعادة تعيين المشهد' : 'Reset View'}
-          >
-            <Maximize2 className="w-4 h-4" />
-          </button>
+        {/* Dynamic controls and layout selector */}
+        <div className="flex items-center gap-2 pointer-events-auto">
+          {/* Layout mode buttons */}
+          <div className={`flex rounded-full p-1 border shadow-md backdrop-blur-md ${
+            isDarkMode ? 'bg-[#1D1E16]/95 border-[#3B3D2C]' : 'bg-white/95 border-[#D8CEB6]'
+          }`}>
+            <button
+              onClick={() => setLayoutStyle('concentric')}
+              className={`p-1.5 px-3 rounded-full text-xs font-serif font-bold flex items-center gap-1 transition ${
+                layoutStyle === 'concentric'
+                  ? 'bg-natural-brand text-white shadow-inner'
+                  : 'text-stone-500 hover:text-natural-accent hover:bg-stone-100 dark:hover:bg-neutral-800'
+              }`}
+              title={isArabic ? 'تنسيق الحلقات المئوية' : 'Concentric Generation Circles'}
+            >
+              <Orbit className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline text-[10.5px]">{isArabic ? 'التوزيع التاريخي' : 'Generations Ring'}</span>
+            </button>
+            <button
+              onClick={() => setLayoutStyle('radial')}
+              className={`p-1.5 px-3 rounded-full text-xs font-serif font-bold flex items-center gap-1 transition-all ${
+                layoutStyle === 'radial'
+                  ? 'bg-natural-brand text-white shadow'
+                  : 'text-stone-500 hover:text-natural-accent hover:bg-stone-100 dark:hover:bg-neutral-800'
+              }`}
+              title={isArabic ? 'تنسيق المجرة النجمية' : 'Shorthand Spiral Galaxy'}
+            >
+              <LayoutGrid className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline text-[10.5px]">{isArabic ? 'المجرة النجمية' : 'Spiral Galaxy'}</span>
+            </button>
+          </div>
+
+          {/* Zooms configuration panel */}
+          <div className={`flex items-center gap-1 p-1 rounded-full border shadow-md backdrop-blur-md ${
+            isDarkMode ? 'bg-[#1D1E16]/95 border-[#3B3D2C]' : 'bg-white/95 border-[#D8CEB6]'
+          }`}>
+            <button
+              className="p-2 rounded-full transition hover:bg-stone-150 text-stone-500 hover:text-natural-brand active:scale-90 dark:hover:bg-neutral-800"
+              onClick={handleZoomIn}
+              title={isArabic ? 'تقريب' : 'Zoom In'}
+            >
+              <ZoomIn className="w-4 h-4" />
+            </button>
+            <button
+              className="p-2 rounded-full transition hover:bg-stone-150 text-stone-500 hover:text-natural-brand active:scale-90 dark:hover:bg-neutral-800"
+              onClick={handleZoomOut}
+              title={isArabic ? 'إبعاد' : 'Zoom Out'}
+            >
+              <ZoomOut className="w-4 h-4" />
+            </button>
+            <button
+              className="p-2 rounded-full transition hover:bg-stone-150 text-stone-500 hover:text-natural-accent active:scale-90 dark:hover:bg-neutral-800"
+              onClick={handleResetZoomAndPositions}
+              title={isArabic ? 'إعادة ضبط العرض والعقد' : 'Reset Coordinates Layout'}
+            >
+              <RotateCcw className="w-4 h-4" />
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* The Central Interactive SVG Workspace */}
+      {/* Central SVG Graphic Board Workspace */}
       <svg className="w-full h-full select-none">
         <g transform={`translate(${pan.x}, ${pan.y}) scale(${zoom})`}>
-          {/* DEFINITIONS – Unique connection arrowheads and line ends */}
           <defs>
+            {/* Arrows Setup */}
             {Object.keys(RELATION_CONFIG).map(type => {
-              const config = RELATION_CONFIG[type as RelationshipType];
+              const conf = RELATION_CONFIG[type as RelationshipType];
               return (
                 <marker
                   key={`marker-${type}`}
                   id={`arrow-${type}`}
                   viewBox="0 0 10 10"
-                  refX="18"
+                  refX="16"
                   refY="5"
                   markerWidth="5"
                   markerHeight="5"
-                  orient="auto-start-reverse"
+                  orient="auto"
                 >
-                  <path d="M 0 1 L 10 5 L 0 9 z" fill={config.color} />
+                  <path d="M 0 1.5 L 9 5 L 0 8.5 z" fill={conf.color} />
                 </marker>
               );
             })}
           </defs>
 
-          {/* 1. Connections / Relationship Paths */}
-          {relationships.map(rel => {
-            const start = nodes[rel.sourceId];
-            const end = nodes[rel.targetId];
-            if (!start || !end) return null;
+          {/* 1. RELATIONS / EDGES DRAFT LINES */}
+          <g id="graph-edges">
+            {relationships.map(rel => {
+              const start = nodes[rel.sourceId];
+              const end = nodes[rel.targetId];
+              if (!start || !end) return null;
 
-            const isHovered = hoveredCompanion?.id === rel.sourceId || hoveredCompanion?.id === rel.targetId;
-            const isClickSelected = selectedCompanion?.id === rel.sourceId || selectedCompanion?.id === rel.targetId;
-            const isRouteHighlighted = highlightedPath?.includes(rel.sourceId) && highlightedPath?.includes(rel.targetId);
+              const companionStart = companions.find(c => c.id === rel.sourceId);
+              const companionEnd = companions.find(c => c.id === rel.targetId);
+              if (!companionStart || !companionEnd) return null;
 
-            const config = RELATION_CONFIG[rel.type] || { color: '#6B7280', dash: 'none' };
+              // Check if nodes related to this line are active/hovered/selected
+              const stateStart = checkNodeState(companionStart);
+              const stateEnd = checkNodeState(companionEnd);
 
-            // Determine line opacity and thickness based on focus
-            let opacity = isDarkMode ? 0.22 : 0.35;
-            let strokeWidth = 1.5;
-            if (isRouteHighlighted) {
-              opacity = 1.0;
-              strokeWidth = 3;
-            } else if (isClickSelected || isHovered) {
-              opacity = 0.88;
-              strokeWidth = 2.5;
-            } else if (selectedCompanion || hoveredCompanion) {
-              // Dim other lines when focus exists
-              opacity = isDarkMode ? 0.06 : 0.1;
-            }
+              const isPathEdge = highlightedPath?.includes(rel.sourceId) && highlightedPath?.includes(rel.targetId);
+              const isDirectlyFocused = (hoveredCompanion?.id === rel.sourceId || hoveredCompanion?.id === rel.targetId) ||
+                                         (selectedCompanion?.id === rel.sourceId || selectedCompanion?.id === rel.targetId);
 
-            // Draw link curves (smooth arcs) or straight lines
-            const dx = end.x - start.x;
-            const dy = end.y - start.y;
-            const dist = Math.sqrt(dx * dx + dy * dy);
-            // Draw direct line
-            return (
-              <g key={rel.id} className="transition-all duration-300">
-                <line
-                  id={`link-line-${rel.id}`}
-                  x1={start.x}
-                  y1={start.y}
-                  x2={end.x}
-                  y2={end.y}
-                  stroke={config.color}
-                  strokeWidth={strokeWidth}
-                  strokeDasharray={config.dash}
-                  opacity={opacity}
-                  markerEnd={`url(#arrow-${rel.type})`}
-                  className="transition-all duration-300"
-                />
+              const config = RELATION_CONFIG[rel.type] || { color: '#6B7280', dash: 'none' };
 
-                {/* Micro-label floating over relation line when selected / hovered */}
-                {(isHovered || isRouteHighlighted || isClickSelected) && dist > 110 && (
-                  <g transform={`translate(${(start.x + end.x) / 2}, ${(start.y + end.y) / 2 - 4})`}>
-                    <rect
-                      x="-55"
-                      y="-10"
-                      width="110"
-                      height="16"
-                      rx="4"
-                      fill={isDarkMode ? "#282922" : "#FAF9F5"}
-                      stroke={config.color}
-                      strokeWidth="1"
-                      className="opacity-95"
-                    />
-                    <text
-                      className={`text-[8px] ${isDarkMode ? 'fill-slate-200' : 'fill-natural-brand'} font-serif font-bold tracking-tight`}
-                      textAnchor="middle"
-                      y="1"
-                    >
-                      {isArabic ? rel.labelAr : rel.labelEn}
-                    </text>
-                  </g>
-                )}
-              </g>
-            );
-          })}
+              // Determine visual opacity based on search/filters
+              let strokeOpacity = isDarkMode ? 0.22 : 0.35;
+              let strokeWidth = 1.6;
 
-          {/* 2. Companions Nodes / Circles and Decorative Geometric Frames */}
-          {companions.map(companion => {
-            const pos = nodes[companion.id];
-            if (!pos) return null;
+              if (isPathEdge) {
+                strokeOpacity = 1.0;
+                strokeWidth = 3.5;
+              } else if (isDirectlyFocused) {
+                strokeOpacity = 0.9;
+                strokeWidth = 2.4;
+              } else if (selectedCategoryKey) {
+                const matchesCat = companionStart.category === selectedCategoryKey && companionEnd.category === selectedCategoryKey;
+                strokeOpacity = matchesCat ? 0.6 : 0.08;
+              } else if (hoveredCategoryKey) {
+                const matchesCat = companionStart.category === hoveredCategoryKey && companionEnd.category === hoveredCategoryKey;
+                strokeOpacity = matchesCat ? 0.61 : 0.08;
+              } else if (selectedCompanion || hoveredCompanion) {
+                // Dim other inactive relationship edges
+                strokeOpacity = 0.06;
+              }
 
-            const isSelected = selectedCompanion?.id === companion.id;
-            const isHovered = hoveredCompanion?.id === companion.id;
-            const isRouteMember = highlightedPath?.includes(companion.id);
+              // Arc math coordinates
+              const midX = (start.x + end.x) / 2;
+              const midY = (start.y + end.y) / 2;
 
-            const cat = CATEGORY_CONFIG[companion.category] || CATEGORY_CONFIG.Other;
-
-            let scale = 1.0;
-            let strokeColor = cat.color;
-            let strokeWidth = 2;
-            let textWeight = 'font-normal';
-
-            if (isSelected) {
-              scale = 1.25;
-              strokeColor = isDarkMode ? '#FFFFFF' : '#5A5A40';
-              strokeWidth = 3.5;
-              textWeight = 'font-bold';
-            } else if (isHovered) {
-              scale = 1.15;
-              strokeWidth = 3;
-            } else if (isRouteMember) {
-              scale = 1.12;
-              strokeColor = '#C5A059'; // Gold for route paths
-              strokeWidth = 2.5;
-            } else if (selectedCompanion || hoveredCompanion) {
-              // Dim unrelated nodes
-              scale = 0.85;
-            }
-
-            return (
-              <g
-                key={companion.id}
-                id={`node-${companion.id}`}
-                transform={`translate(${pos.x}, ${pos.y}) scale(${scale})`}
-                className="transition-all duration-300 cursor-pointer"
-                onClick={() => onSelectCompanion(companion)}
-                onMouseEnter={() => onHoverCompanion(companion)}
-                onMouseLeave={() => onHoverCompanion(null)}
-                onMouseDown={(e) => handleMouseDown && handleNodeDragStart(companion.id, e)}
-              >
-                {/* Visual pulse glow for selected companion */}
-                {isSelected && (
-                  <circle
-                    r="25"
-                    fill="none"
-                    stroke={cat.color}
-                    strokeWidth="2"
-                    className="animate-ping opacity-35"
+              return (
+                <g key={rel.id} className="transition-all duration-300">
+                  <line
+                    x1={start.x}
+                    y1={start.y}
+                    x2={end.x}
+                    y2={end.y}
+                    stroke={config.color}
+                    strokeWidth={strokeWidth}
+                    strokeDasharray={config.dash}
+                    opacity={strokeOpacity}
+                    markerEnd={`url(#arrow-${rel.type})`}
+                    className="transition-all duration-300"
                   />
-                )}
 
-                {/* Beautiful Islamic Geometric Octagonal frame for Node border */}
-                <path
-                  d="M -15,-6 L -6,-15 L 6,-15 L 15,-6 L 15,6 L 6,15 L -6,15 L -15,6 Z"
-                  fill={isDarkMode ? "#282922" : "#FAF9F5"}
-                  stroke={strokeColor}
-                  strokeWidth={strokeWidth}
-                  className="transition-all duration-300 shadow-md"
-                />
+                  {/* Micro relation label overlay inside curves */}
+                  {(isDirectlyFocused || isPathEdge) && (
+                    <g transform={`translate(${midX}, ${midY - 4})`} className="cursor-help">
+                      <rect
+                        x="-60"
+                        y="-9"
+                        width="120"
+                        height="17"
+                        rx="4"
+                        fill={isDarkMode ? '#22231C' : '#FCFBFA'}
+                        stroke={config.color}
+                        strokeWidth="1"
+                        className="shadow"
+                      />
+                      <text
+                        className={`text-[8.5px] font-bold font-serif ${isDarkMode ? 'fill-slate-350' : 'fill-[#443825]'}`}
+                        textAnchor="middle"
+                        y="2"
+                      >
+                        {isArabic ? rel.labelAr : rel.labelEn}
+                      </text>
+                    </g>
+                  )}
+                </g>
+              );
+            })}
+          </g>
 
-                {/* Category circle inside Octagon */}
-                <circle
-                  cx="0"
-                  cy="0"
-                  r="10"
-                  fill={cat.color}
-                  className="opacity-25"
-                />
+          {/* 2. COMPANION HERO NODES */}
+          <g id="graph-nodes">
+            {companions.map(companion => {
+              const pos = nodes[companion.id];
+              if (!pos) return null;
 
-                {/* Miniature calligraphic icon or first letter of Arabic Name */}
-                <text
-                  className="text-[9px] font-bold select-none text-center font-serif"
-                  textAnchor="middle"
-                  y="3"
-                  fill={cat.color}
+              const { isSelected, isHovered, isPathMember, isActive, shouldDim, isConnectedNeighbor } = checkNodeState(companion);
+              const cat = CATEGORY_CONFIG[companion.category] || CATEGORY_CONFIG.Other;
+
+              let scale = 1.0;
+              let borderStroke = cat.color;
+              let borderWidth = 2.0;
+              let textWeight = 'font-normal';
+
+              if (isSelected) {
+                scale = 1.35;
+                borderStroke = isDarkMode ? '#FFFFFF' : '#4E3D25';
+                borderWidth = 3.8;
+                textWeight = 'font-bold';
+              } else if (isHovered || isConnectedNeighbor) {
+                scale = 1.2;
+                borderWidth = 2.8;
+                borderStroke = '#D4AF37'; // Golden glow highlights
+              } else if (isActive) {
+                scale = 1.1;
+                borderWidth = 2.5;
+              } else if (shouldDim) {
+                scale = 0.85;
+              }
+
+              return (
+                <g
+                  key={companion.id}
+                  id={`node-${companion.id}`}
+                  transform={`translate(${pos.x}, ${pos.y}) scale(${scale})`}
+                  className="transition-all duration-300 cursor-pointer"
+                  onClick={() => onSelectCompanion(companion)}
+                  onMouseEnter={() => onHoverCompanion(companion)}
+                  onMouseLeave={() => onHoverCompanion(null)}
+                  onMouseDown={(e) => handleNodeDragStart(companion.id, e)}
+                  opacity={shouldDim ? 0.28 : 1.0}
                 >
-                  {companion.nameAr.charAt(0)}
-                </text>
+                  {/* Dynamic pulse glow ring effect */}
+                  {(isSelected || isHovered) && (
+                    <circle
+                      r="24"
+                      fill="none"
+                      stroke={cat.color}
+                      strokeWidth="2"
+                      className="animate-pulse opacity-40"
+                    />
+                  )}
 
-                {/* Node Tags - Companion Arabic name underneath */}
-                <text
-                  id={`label-name-${companion.id}`}
-                  className={`text-[10px] select-none ${textWeight} ${isDarkMode ? 'fill-slate-100' : 'fill-natural-brand'} font-serif tracking-tight`}
-                  textAnchor="middle"
-                  y="26"
-                  style={isDarkMode ? { textShadow: '0 1px 2px rgba(0,0,0,0.8)' } : { textShadow: '0 1px 1px rgba(255,255,255,0.7)' }}
-                >
-                  {companion.nameAr}
-                </text>
+                  {/* Elegant Octagonal Geometrical Border matching Islamic theme */}
+                  <path
+                    d="M -15,-6 L -6,-15 L 6,-15 L 15,-6 L 15,6 L 6,15 L -6,15 L -15,6 Z"
+                    fill={isDarkMode ? '#22231C' : '#FCFBFA'}
+                    stroke={borderStroke}
+                    strokeWidth={borderWidth}
+                    className="transition-all duration-300 shadow-md"
+                  />
 
-                {/* Secondary English Transliteration Tag */}
-                <text
-                  className={`text-[7.5px] select-none ${isDarkMode ? 'fill-slate-400' : 'fill-natural-accent'} font-mono`}
-                  textAnchor="middle"
-                  y="34"
-                  style={isDarkMode ? { textShadow: '0 1px 2px rgba(0,0,0,0.8)' } : { textShadow: '0 1px 1px rgba(255,255,255,0.7)' }}
-                >
-                  {companion.nameEn.split(' ')[0]}
-                </text>
-              </g>
-            );
-          })}
+                  {/* Ring highlight interior */}
+                  <circle
+                    cx="0"
+                    cy="0"
+                    r="9.5"
+                    fill={cat.color}
+                    className="opacity-25"
+                  />
+
+                  {/* Islamic calligraphic initial character key */}
+                  <text
+                    className="text-[9.5px] font-bold font-serif"
+                    textAnchor="middle"
+                    y="3"
+                    fill={cat.color}
+                  >
+                    {companion.nameAr.charAt(0)}
+                  </text>
+
+                  {/* Companions Arabic Title Label Tags */}
+                  <text
+                    className={`text-[10px] select-none ${textWeight} font-serif tracking-tight ${
+                      isDarkMode ? 'fill-slate-150' : 'fill-[#2B2319]'
+                    }`}
+                    textAnchor="middle"
+                    y="25"
+                    style={{ textShadow: isDarkMode ? '0 1px 2px rgba(0,0,0,0.8)' : '0 1px 1px rgba(255,255,255,0.7)' }}
+                  >
+                    {companion.nameAr.split(' ')[0]}
+                  </text>
+
+                  {/* Transliterated English Label */}
+                  <text
+                    className={`text-[7.5px] select-none font-mono ${
+                      isDarkMode ? 'fill-slate-400' : 'fill-stone-500'
+                    }`}
+                    textAnchor="middle"
+                    y="31.5"
+                  >
+                    {companion.nameEn.split(' ')[0]}
+                  </text>
+                </g>
+              );
+            })}
+          </g>
         </g>
       </svg>
 
-      {/* Floating Legend / Key Panel */}
-      <div className={`absolute bottom-4 right-4 z-10 rounded-2xl border p-2.5 max-w-[215px] text-[10.5px] max-h-[170px] overflow-y-auto shadow-lg ${isDarkMode ? 'bg-natural-dark-panel/90 border-[#3E4032] text-slate-300' : 'bg-white/95 border-natural-accent/35 text-natural-text font-serif'}`}>
-        <div className={`font-bold border-b pb-1 mb-1.5 flex items-center gap-1 ${isDarkMode ? 'text-slate-200 border-neutral-800' : 'text-natural-brand border-natural-accent/20'}`}>
-          <HelpCircle className="w-3.5 h-3.5 text-natural-accent" />
-          <span>{isArabic ? 'دليل الألوان والرموز' : 'Color & Legend keys'}</span>
+      {/* INTERACTIVE LEGEND BAR PANEL */}
+      <div className={`absolute bottom-4 right-4 z-10 rounded-2xl border p-3 w-[240px] max-h-[220px] overflow-y-auto shadow-xl backdrop-blur-md transition-all ${
+        isDarkMode 
+          ? 'bg-[#181914]/95 border-[#2F3124] text-slate-300' 
+          : 'bg-white/95 border-[#D8CEB6] text-[#4E3D25] font-serif'
+      }`}>
+        <div className={`font-bold border-b pb-1.5 mb-2 flex items-center justify-between text-xs ${
+          isDarkMode ? 'text-slate-200 border-neutral-800' : 'border-neutral-200/65'
+        }`}>
+          <div className="flex items-center gap-1.5">
+            <HelpCircle className="w-3.5 h-3.5 text-natural-accent" />
+            <span>{isArabic ? 'تصنيف الفئات والنسب' : 'Interactive Categories'}</span>
+          </div>
+          {(selectedCategoryKey || hoveredCategoryKey) && (
+            <button
+              onClick={() => setSelectedCategoryKey(null)}
+              className="text-[9px] px-1.5 py-0.5 rounded bg-natural-accent/15 hover:bg-natural-accent/30 text-natural-accent font-mono cursor-pointer active:scale-95"
+            >
+              {isArabic ? 'إلغاء الفرز' : 'Clear'}
+            </button>
+          )}
         </div>
-        <div className="space-y-1.5">
-          {Object.entries(CATEGORY_CONFIG).slice(0, 8).map(([key, value]) => (
-            <div key={key} className="flex items-center gap-1.5">
-              <span className="w-2.5 h-2.5 rounded-full inline-block flex-shrink-0 border border-black/10" style={{ backgroundColor: value.color }} />
-              <span className="truncate">{isArabic ? value.labelAr : value.labelEn}</span>
-            </div>
-          ))}
+
+        {/* Categories items looping */}
+        <div className="space-y-1">
+          {Object.entries(CATEGORY_CONFIG).slice(0, 8).map(([key, value]) => {
+            const count = categoryCounts[key] || 0;
+            const isFilterSelected = selectedCategoryKey === key;
+            const isFilterHovered = hoveredCategoryKey === key;
+
+            return (
+              <div
+                key={key}
+                onClick={() => setSelectedCategoryKey(isFilterSelected ? null : key)}
+                onMouseEnter={() => setHoveredCategoryKey(key)}
+                onMouseLeave={() => setHoveredCategoryKey(null)}
+                className={`flex items-center justify-between text-[10.5px] p-1 px-1.5 rounded-lg transition-all duration-200 cursor-pointer ${
+                  isFilterSelected
+                    ? 'bg-natural-brand/10 text-natural-brand font-bold ring-1 ring-natural-brand/35'
+                    : isFilterHovered
+                      ? isDarkMode ? 'bg-[#2E3024]/50' : 'bg-stone-100'
+                      : 'hover:bg-natural-brand/5'
+                }`}
+              >
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <span
+                    className="w-2.5 h-2.5 rounded-full inline-block flex-shrink-0 border border-black/10 shadow-sm"
+                    style={{ backgroundColor: value.color }}
+                  />
+                  <span className="truncate pr-1">{isArabic ? value.labelAr : value.labelEn}</span>
+                </div>
+                <span className={`text-[9px] font-mono font-bold px-1.5 py-0.2 rounded-full ${
+                  isDarkMode ? 'bg-neutral-800 text-stone-300' : 'bg-stone-100 border text-stone-600'
+                }`}>
+                  {count}
+                </span>
+              </div>
+            );
+          })}
         </div>
       </div>
 
-      {/* FLOATING NAVIGATION MINIMAP */}
-      <div className={`absolute bottom-4 left-4 z-10 rounded-2xl border p-2 h-[105px] w-[135px] pointer-events-auto flex flex-col justify-between shadow-lg select-none ${isDarkMode ? 'bg-natural-dark-panel/90 border-[#3E4032]' : 'bg-white/95 border-natural-accent/35'}`}>
-        <div className={`text-[8.5px] border-b pb-1 flex justify-between items-center px-1 ${isDarkMode ? 'text-slate-400 border-neutral-850' : 'text-natural-brand border-natural-accent/15 font-bold font-serif'}`}>
-          <span>{isArabic ? 'خرائط مصغرة' : 'Minimap Navigation'}</span>
+      {/* MINI MAP NAVIGATION */}
+      <div className={`absolute bottom-4 left-4 z-10 rounded-2xl border p-2 h-[110px] w-[140px] shadow-xl backdrop-blur-md select-none transition ${
+        isDarkMode 
+          ? 'bg-[#181914]/95 border-[#2F3124]' 
+          : 'bg-white/95 border-[#D8CEB6]'
+      }`}>
+        <div className={`text-[8.5px] border-b pb-1 mb-1 flex justify-between items-center px-1 ${
+          isDarkMode ? 'text-slate-400 border-neutral-800' : 'text-stone-600 border-neutral-100'
+        }`}>
+          <span>{isArabic ? 'منظور البوصلة' : 'Macro Radar'}</span>
           <Move className="w-2.5 h-2.5 text-natural-accent" />
         </div>
-        <div className={`relative w-full h-[71px] border rounded-lg overflow-hidden ${isDarkMode ? 'bg-[#1E1F1A] border-neutral-800' : 'bg-[#EFEDE6] border-natural-accent/15'}`}>
-          {/* Miniature nodes representing positioning on coordinate planes */}
+        <div className={`relative w-full h-[73px] border rounded-lg overflow-hidden ${
+          isDarkMode ? 'bg-[#12120C] border-[#22231C]' : 'bg-[#EFEDE6] border-stone-200'
+        }`}>
           <svg className="w-full h-full">
             {miniNodes.map(m => (
               <circle
                 key={`mini-${m.id}`}
                 cx={m.x}
                 cy={m.y}
-                r={hoveredCompanion?.id === m.id || selectedCompanion?.id === m.id ? 2.5 : 1}
-                fill={m.companion ? CATEGORY_CONFIG[m.companion.category]?.color || '#ffffff' : '#ffffff'}
-                opacity={0.8}
+                r={hoveredCompanion?.id === m.id || selectedCompanion?.id === m.id ? 2.8 : 1.2}
+                fill={m.companion ? CATEGORY_CONFIG[m.companion.category]?.color || '#888' : '#888'}
+                opacity={selectedCompanion?.id === m.id ? 1.0 : 0.8}
               />
             ))}
-            {/* Viewport Overlay bounds box showing current camera */}
+            {/* Camera rectangular bounding preview bounds */}
             <rect
-              x={Math.max(10, 50 - pan.x / 14)}
-              y={Math.max(10, 40 - pan.y / 14)}
-              width={Math.min(100, 110 / zoom)}
+              x={Math.max(10, 48 - pan.x / 11)}
+              y={Math.max(10, 38 - pan.y / 11)}
+              width={Math.min(105, 120 / zoom)}
               height={Math.min(65, 75 / zoom)}
               fill="none"
-              stroke="#C5A059"
+              stroke="#D4AF37"
               strokeWidth="0.8"
               strokeDasharray="1,2"
-              opacity={0.6}
+              opacity={0.65}
             />
           </svg>
         </div>

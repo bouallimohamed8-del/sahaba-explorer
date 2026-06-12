@@ -9,10 +9,13 @@ import NetworkGraph, { CATEGORY_CONFIG } from './components/NetworkGraph';
 import CompanionDetail from './components/CompanionDetail';
 import FilterControls from './components/FilterControls';
 import AdminDashboard from './components/AdminDashboard';
+import UserProfilePage from './components/UserProfilePage';
 import { DEFAULT_COMPANIONS, DEFAULT_RELATIONSHIPS } from './data/defaultDataset';
 import { Globe, Moon, Sun, Search, GitFork, User, ShieldAlert, Sparkles, RefreshCw, Layers, Compass, HelpCircle, ChevronRight, Info, LogOut, Shield } from 'lucide-react';
 import { useAuth } from './context/AuthContext';
 import AuthPages from './components/AuthPages';
+import { db } from './lib/firebase';
+import { doc, setDoc } from 'firebase/firestore';
 
 export default function App() {
   const { user, profile, loading: authLoading, logout } = useAuth();
@@ -33,8 +36,31 @@ export default function App() {
   const [hoveredCompanion, setHoveredCompanion] = useState<Companion | null>(null);
   const [isArabic, setIsArabic] = useState<boolean>(true);
   const [isDarkMode, setIsDarkMode] = useState<boolean>(false);
-  const [viewMode, setViewMode] = useState<'explorer' | 'admin'>('explorer');
-  const [explorerViewType, setExplorerViewType] = useState<'graph' | 'directory'>('directory');
+  const [viewMode, setViewMode] = useState<'explorer' | 'admin' | 'profile'>('explorer');
+  const [explorerViewType, setExplorerViewType] = useState<'graph' | 'directory'>('graph');
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState<boolean>(false);
+
+  // Record browsed history in Firestore
+  useEffect(() => {
+    if (user && selectedCompanion) {
+      const logBrowsed = async () => {
+        try {
+          const docRef = doc(db, 'users', user.uid, 'history', selectedCompanion.id);
+          await setDoc(docRef, {
+            id: selectedCompanion.id,
+            userId: user.uid,
+            companionId: selectedCompanion.id,
+            companionNameAr: selectedCompanion.nameAr,
+            companionNameEn: selectedCompanion.nameEn,
+            viewedAt: new Date().toISOString()
+          });
+        } catch (err) {
+          console.error("Failed recording history log:", err);
+        }
+      };
+      logBrowsed();
+    }
+  }, [selectedCompanion, user]);
 
   // Pathfinder state
   const [pathStartId, setPathStartId] = useState<string>('');
@@ -257,9 +283,18 @@ export default function App() {
             {/* User auth state indicators */}
             {!authLoading && (
               profile ? (
-                <div className={`flex items-center gap-2 px-2.5 py-1.5 rounded-xl border text-xs text-white max-w-[170px] ${
-                  isDarkMode ? 'bg-natural-dark-panel border-natural-accent/20' : 'bg-white/10 border-white/20'
-                }`}>
+                <div
+                  onClick={() => {
+                    setViewMode('profile');
+                    setShowAuthScreen(false);
+                  }}
+                  className={`flex items-center gap-2 px-2.5 py-1.5 rounded-xl border text-xs text-white max-w-[170px] cursor-pointer hover:bg-white/10 transition-all ${
+                    viewMode === 'profile'
+                      ? 'bg-natural-accent border-natural-accent shadow-inner'
+                      : isDarkMode ? 'bg-natural-dark-panel border-natural-accent/20' : 'bg-white/10 border-white/20'
+                  }`}
+                  title={isArabic ? 'عرض سجل القراءة الفخيم ومذكرات المذاكرة' : 'Open study log and notes'}
+                >
                   <div className="w-5 h-5 rounded-full bg-natural-accent flex items-center justify-center font-bold text-[10px] text-white overflow-hidden shrink-0">
                     {profile.photoURL ? (
                       <img src={profile.photoURL} alt={profile.fullName} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
@@ -267,8 +302,16 @@ export default function App() {
                       profile.fullName.charAt(0)
                     )}
                   </div>
-                  <span className="font-bold truncate max-w-[70px]" title={profile.fullName}>{profile.fullName}</span>
-                  <button onClick={() => logout()} className="p-1 hover:text-red-300 transition cursor-pointer shrink-0" title={isArabic ? 'تسجيل الخروج' : 'Log Out'}>
+                  <span className="font-bold truncate max-w-[70px] text-white" title={profile.fullName}>{profile.fullName}</span>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      logout();
+                      setViewMode('explorer');
+                    }}
+                    className="p-1 hover:text-red-350 transition cursor-pointer shrink-0"
+                    title={isArabic ? 'تسجيل الخروج' : 'Log Out'}
+                  >
                     <LogOut className="w-3.5 h-3.5" />
                   </button>
                 </div>
@@ -304,20 +347,84 @@ export default function App() {
         ) : viewMode === 'explorer' ? (
           // EXPLORER WORKSPACE
           <div className="space-y-6 animate-fade-in">
-            {/* Filter controls at top */}
-            <FilterControls
-              companions={companions}
-              filter={filter}
-              onFilterChange={setFilter}
-              isArabic={isArabic}
-              isDarkMode={isDarkMode}
-              onReset={() => {
-                setFilter({ searchQuery: '', category: '', tribe: '', city: '', battle: '', relationshipType: '' });
-                setSelectedCompanion(null);
-                setHoveredCompanion(null);
-                clearHighlightedPath();
-              }}
-            />
+            {/* Slim Header & Filter Toggles */}
+            <div className={`p-4 rounded-3xl border flex flex-col md:flex-row gap-4 items-center justify-between ${
+              isDarkMode ? 'bg-natural-dark-panel border-neutral-800' : 'bg-white border-natural-accent/30'
+            } shadow`}>
+              {/* Left search bar */}
+              <div className="relative w-full md:w-96">
+                <input
+                  type="text"
+                  value={filter.searchQuery}
+                  onChange={(e) => setFilter(prev => ({ ...prev, searchQuery: e.target.value }))}
+                  placeholder={isArabic ? 'بحث سريع باسم الصحابي...' : 'Search sahaba instantly by name...'}
+                  className={`w-full border rounded-2xl py-2.5 pl-3.5 pr-10 focus:outline-none text-xs transition duration-150 ${
+                    isDarkMode 
+                      ? 'bg-natural-dark-bg border-neutral-750 text-slate-100 focus:border-natural-accent' 
+                      : 'bg-white border-natural-accent/30 text-natural-text focus:border-natural-brand'
+                  }`}
+                />
+                <Search className={`w-4 h-4 text-natural-accent absolute top-3 ${isArabic ? 'left-3' : 'right-3'}`} />
+              </div>
+
+              {/* Right buttons row */}
+              <div className="flex flex-wrap gap-2 items-center w-full md:w-auto justify-end">
+                {/* Advanced filter toggle */}
+                <button
+                  id="btn-toggle-filters"
+                  onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
+                  className={`px-4 py-2.5 rounded-2xl text-xs font-serif font-bold cursor-pointer transition flex items-center gap-2 active:scale-95 border ${
+                    showAdvancedFilters
+                      ? 'bg-natural-accent text-white border-natural-accent shadow-sm'
+                      : isDarkMode
+                        ? 'bg-natural-dark-bg/40 border-neutral-850 hover:bg-[#20211B] text-slate-300'
+                        : 'bg-[#FDFCFB] border-natural-accent/25 hover:bg-[#F5F2ED] text-natural-brand'
+                  }`}
+                >
+                  <span>🎛️</span>
+                  <span>{isArabic ? 'خيارات الفرز والبحث المتقدم' : 'Advanced Search Criteria'}</span>
+                </button>
+
+                {/* Reset button */}
+                {(filter.category || filter.tribe || filter.city || filter.battle || filter.relationshipType || filter.searchQuery) && (
+                  <button
+                    onClick={() => {
+                      setFilter({ searchQuery: '', category: '', tribe: '', city: '', battle: '', relationshipType: '' });
+                      setSelectedCompanion(null);
+                      setHoveredCompanion(null);
+                      clearHighlightedPath();
+                    }}
+                    className={`px-3 py-2.5 rounded-2xl text-xs font-serif font-bold transition flex items-center gap-1.5 cursor-pointer active:scale-95 border ${
+                      isDarkMode
+                        ? 'bg-neutral-800 text-stone-300 hover:bg-neutral-700/80'
+                        : 'bg-stone-100 hover:bg-stone-200 text-stone-700'
+                    }`}
+                  >
+                    <span>🔄</span>
+                    <span>{isArabic ? 'إعادة تعيين' : 'ResetAll'}</span>
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Collapsed Advanced Filters panel container drawer */}
+            {showAdvancedFilters && (
+              <div className="animate-fade-in">
+                <FilterControls
+                  companions={companions}
+                  filter={filter}
+                  onFilterChange={setFilter}
+                  isArabic={isArabic}
+                  isDarkMode={isDarkMode}
+                  onReset={() => {
+                    setFilter({ searchQuery: '', category: '', tribe: '', city: '', battle: '', relationshipType: '' });
+                    setSelectedCompanion(null);
+                    setHoveredCompanion(null);
+                    clearHighlightedPath();
+                  }}
+                />
+              </div>
+            )}
 
             {/* Dual split panel layout */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
@@ -618,10 +725,30 @@ export default function App() {
                     setSelectedCompanion(null);
                     window.scrollTo({ top: 0, behavior: 'smooth' });
                   }}
+                  user={user}
+                  profile={profile}
                 />
               )}
             </div>
           </div>
+        ) : viewMode === 'profile' ? (
+          <UserProfilePage
+            allCompanions={companions}
+            onSelectCompanion={(comp) => {
+              setSelectedCompanion(comp);
+              setViewMode('explorer');
+              // Wait for render layout, then smoothly target anchor
+              setTimeout(() => {
+                const detailAnchor = document.getElementById('sahaba-detail-container-anchor');
+                if (detailAnchor) {
+                  detailAnchor.scrollIntoView({ behavior: 'smooth' });
+                }
+              }, 150);
+            }}
+            isArabic={isArabic}
+            isDarkMode={isDarkMode}
+            onNavigateHome={() => setViewMode('explorer')}
+          />
         ) : (
           // ADMIN SECTION
           !user ? (
