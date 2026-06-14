@@ -89,16 +89,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (firebaseUser) {
         setUser(firebaseUser);
 
-        // Enforce Email Verification for Password Provider before activating account
-        const isPasswordProvider = firebaseUser.providerData.some(p => p.providerId === 'password');
-        if (isPasswordProvider && !firebaseUser.emailVerified) {
-          // Keep loading false, let component render email verification screen
-          setProfile(null);
-          setLoading(false);
-          return;
-        }
-
-        // For Google/Facebook or block verified email, listen to public profile
+        // Email Verification is optional to prevent registration blockages in development/embed environments
         const userDocRef = doc(db, 'users', firebaseUser.uid);
         const path = `users/${firebaseUser.uid}`;
 
@@ -146,11 +137,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Update name inside firebase auth profile
       await updateProfile(createdUser, { displayName: fullName });
 
-      // Send verification link
-      await sendEmailVerification(createdUser);
-      setIsEmailSent(true);
-      // Explicitly sign out until they activate email
-      await signOut(auth);
+      // Send verification link in background (fails silently if Firebase template is unconfigured)
+      try {
+        await sendEmailVerification(createdUser);
+        setIsEmailSent(true);
+      } catch (vErr) {
+        console.warn("Verification email dispatch failed silently:", vErr);
+      }
+      
+      // Auto synchronize / create user profile directly
+      await syncUserProfile(createdUser);
     } catch (err: any) {
       console.error(err);
       if (err.code === 'auth/email-already-in-use') {
@@ -173,15 +169,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setError(null);
     setLoading(true);
     try {
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      const loggedUser = userCredential.user;
-
-      if (!loggedUser.emailVerified) {
-        // Trigger verification email and sign out
-        await sendEmailVerification(loggedUser);
-        await signOut(auth);
-        setError('يرجى تفعيل حسابك أولاً عن طريق النقر على الرابط المرسل لبريدك الإلكتروني، لقد أعدنا إرسال رسالة التفعيل.');
-      }
+      await signInWithEmailAndPassword(auth, email, password);
     } catch (err: any) {
       console.error(err);
       if (err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') {
