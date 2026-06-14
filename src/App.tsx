@@ -349,7 +349,7 @@ export default function App() {
                   }`}
                 >
                   <User className="w-3.5 h-3.5" />
-                  <span>{isArabic ? 'دخول' : 'Login'}</span>
+                  <span>{lang === 'fr' ? 'Connexion' : (isArabic ? 'دخول' : 'Login')}</span>
                 </button>
               )
             )}
@@ -365,7 +365,7 @@ export default function App() {
             <p className="text-xs text-natural-brand/80 font-serif">{isArabic ? 'يُحمّل سجلاّت التاريخ والفضائل العطرة...' : 'Retrieving prestigious companions histories...'}</p>
           </div>
         ) : showAuthScreen ? (
-          <AuthPages isArabic={isArabic} isDarkMode={isDarkMode} onSuccess={() => setShowAuthScreen(false)} />
+          <AuthPages isArabic={isArabic} isDarkMode={isDarkMode} lang={lang} onSuccess={() => setShowAuthScreen(false)} />
         ) : viewMode === 'explorer' ? (
           // EXPLORER WORKSPACE
           <div className="space-y-6 animate-fade-in">
@@ -522,6 +522,7 @@ export default function App() {
                     hoveredCompanion={hoveredCompanion}
                     onHoverCompanion={setHoveredCompanion}
                     isArabic={isArabic}
+                    lang={lang}
                     highlightedPath={highlightedPath}
                     isDarkMode={isDarkMode}
                   />

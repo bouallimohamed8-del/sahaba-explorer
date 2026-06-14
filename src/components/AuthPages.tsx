@@ -5,15 +5,17 @@
 
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { Globe, Shield, Mail, Lock, User, KeyRound, Sparkles, RefreshCw, AlertCircle, CheckCircle2, ChevronLeft, ChevronRight, Facebook } from 'lucide-react';
+import { Globe, Shield, Mail, Lock, User, UserPlus, KeyRound, Sparkles, RefreshCw, AlertCircle, CheckCircle2, ChevronLeft, ChevronRight, Facebook } from 'lucide-react';
+import { LanguageCode } from '../lib/i18n';
 
 interface AuthPagesProps {
   isArabic: boolean;
   isDarkMode: boolean;
+  lang?: LanguageCode;
   onSuccess?: () => void;
 }
 
-export default function AuthPages({ isArabic, isDarkMode, onSuccess }: AuthPagesProps) {
+export default function AuthPages({ isArabic, isDarkMode, lang = 'fr', onSuccess }: AuthPagesProps) {
   const {
     loading,
     error,
@@ -250,16 +252,16 @@ export default function AuthPages({ isArabic, isDarkMode, onSuccess }: AuthPages
           </div>
           
           <h2 className="text-2xl font-serif font-bold text-natural-brand">
-            {mode === 'login' && (isArabic ? 'تسجيل الدخول للموسوعة' : 'Lexicon Access Login')}
-            {mode === 'register' && (isArabic ? 'إنشاء حساب جديد' : 'Register New Account')}
-            {mode === 'forgot_password' && (isArabic ? 'استعادة كلمة المرور' : 'Retrieve Credentials')}
-            {mode === 'email_sent' && (isArabic ? 'تفعيل البريد الإلكتروني' : 'Verify Email Account')}
+            {mode === 'login' && (lang === 'fr' ? 'Connexion à l\'Encyclopédie' : (isArabic ? 'تسجيل الدخول للموسوعة' : 'Lexicon Access Login'))}
+            {mode === 'register' && (lang === 'fr' ? 'Inscription' : (isArabic ? 'إنشاء حساب جديد' : 'Register New Account'))}
+            {mode === 'forgot_password' && (lang === 'fr' ? 'Récupérer mot de passe' : (isArabic ? 'استعادة كلمة المرور' : 'Retrieve Credentials'))}
+            {mode === 'email_sent' && (lang === 'fr' ? 'Validation e-mail' : (isArabic ? 'تفعيل البريد الإلكتروني' : 'Verify Email Account'))}
           </h2>
           <p className="text-xs text-natural-accent mt-1.5 font-sans">
-            {mode === 'login' && (isArabic ? 'مرحباً بك مجدداً في رحاب سيرة الصحابة الفضلاء' : 'Welcome back to the sanctuary of Prophet\'s companions')}
-            {mode === 'register' && (isArabic ? 'انضم إلينا لتدوين وبحث التراث الإسلامي الشريف' : 'Join us to document and explore the honorable Islamic heritage')}
-            {mode === 'forgot_password' && (isArabic ? 'أدخل بريدك الإلكتروني وسنرسل لك رابط الاستعادة' : 'Enter registered email to recover account')}
-            {mode === 'email_sent' && (isArabic ? 'خطوة أخيرة لتأكيد حيازة الحساب والتفعيل' : 'One last step to confirm and activate your account')}
+            {mode === 'login' && (lang === 'fr' ? 'Bon retour dans la demeure des vertueux compagnons de la Prophétie' : (isArabic ? 'مرحباً بك مجدداً في رحاب سيرة الصحابة الفضلاء' : 'Welcome back to the sanctuary of Prophet\'s companions'))}
+            {mode === 'register' && (lang === 'fr' ? 'Rejoignez-nous pour documenter et explorer l\'honorable patrimoine' : (isArabic ? 'انضم إلينا لتدوين وبحث التراث الإسلامي الشريف' : 'Join us to document and explore the honorable Islamic heritage'))}
+            {mode === 'forgot_password' && (lang === 'fr' ? 'Entrez votre adresse e-mail pour réinitialiser les crédentials d\'accès' : (isArabic ? 'أدخل بريدك الإلكتروني وسنرسل لك رابط الاستعادة' : 'Enter registered email to recover account'))}
+            {mode === 'email_sent' && (lang === 'fr' ? 'Une dernière étape pour confirmer et activer votre compte' : (isArabic ? 'خطوة أخيرة لتأكيد حيازة الحساب والتفعيل' : 'One last step to confirm and activate your account'))}
           </p>
         </div>
 
@@ -286,7 +288,7 @@ export default function AuthPages({ isArabic, isDarkMode, onSuccess }: AuthPages
           <form onSubmit={handleLogin} className="space-y-4 text-xs font-sans">
             <div>
               <label className="block text-natural-brand/80 font-bold mb-1.5">
-                {isArabic ? 'البريد السري الإلكتروني' : 'Secure Email Address'}
+                {lang === 'fr' ? 'Adresse e-mail sécurisée' : (isArabic ? 'البريد السري الإلكتروني' : 'Secure Email Address')}
               </label>
               <div className="relative">
                 <input
@@ -307,14 +309,14 @@ export default function AuthPages({ isArabic, isDarkMode, onSuccess }: AuthPages
             <div>
               <div className="flex justify-between items-center mb-1.5">
                 <label className="text-natural-brand/80 font-bold">
-                  {isArabic ? 'كلمة المرور' : 'Password'}
+                  {lang === 'fr' ? 'Mot de passe' : (isArabic ? 'كلمة المرور' : 'Password')}
                 </label>
                 <button
                   type="button"
                   onClick={() => changeMode('forgot_password')}
                   className="text-[10px] text-natural-accent hover:underline hover:text-natural-brand cursor-pointer font-bold"
                 >
-                  {isArabic ? 'نسيت كلمة المرور؟' : 'Forgot Password?'}
+                  {lang === 'fr' ? 'Mot de passe oublié ?' : (isArabic ? 'نسيت كلمة المرور؟' : 'Forgot Password?')}
                 </button>
               </div>
               <div className="relative">
@@ -341,14 +343,14 @@ export default function AuthPages({ isArabic, isDarkMode, onSuccess }: AuthPages
               {loading ? (
                 <RefreshCw className="w-4 h-4 animate-spin" />
               ) : (
-                <span>{isArabic ? 'تسجيل الدخول شفهياً' : 'Sign In Log'}</span>
+                <span>{lang === 'fr' ? 'Se connecter' : (isArabic ? 'تسجيل الدخول شفهياً' : 'Sign In Log')}</span>
               )}
             </button>
 
             {/* Social credentials split */}
             <div className="flex items-center gap-3 my-5 py-1">
               <div className="h-px bg-natural-accent/20 flex-1" />
-              <span className="text-[10px] text-natural-accent/80 uppercase font-bold tracking-wider">{isArabic ? 'أو الدخول عبر' : 'Or enter via'}</span>
+              <span className="text-[10px] text-natural-accent/80 uppercase font-bold tracking-wider">{lang === 'fr' ? 'Ou se connecter via' : (isArabic ? 'أو الدخول عبر' : 'Or enter via')}</span>
               <div className="h-px bg-natural-accent/20 flex-1" />
             </div>
 
@@ -378,14 +380,19 @@ export default function AuthPages({ isArabic, isDarkMode, onSuccess }: AuthPages
               </button>
             </div>
 
-            <p className="text-center text-[10.5px] text-gray-500 pt-3">
-              {isArabic ? 'ليس لديك حساب؟ ' : 'Don\'t have an account? '}
+            <p className="text-center text-[10.5px] text-gray-500 pt-3 flex items-center justify-center gap-1.5 flex-wrap">
+              <span>
+                {lang === 'fr' ? 'Pas encore de compte ?' : (isArabic ? 'ليس لديك حساب؟ ' : 'Don\'t have an account? ')}
+              </span>
               <button
                 type="button"
                 onClick={() => changeMode('register')}
-                className="text-natural-accent hover:underline font-bold font-serif text-[11px] cursor-pointer"
+                className="text-natural-accent hover:underline font-bold flex items-center gap-1 cursor-pointer"
               >
-                {isArabic ? 'سجل حسابك مجاناً هنا' : 'Sign Up Free Here'}
+                <UserPlus className="w-3.5 h-3.5 text-natural-accent shrink-0" />
+                <span>
+                  {lang === 'fr' ? "S'inscrire gratuitement" : (isArabic ? 'سجل حسابك مجاناً هنا' : 'Sign Up Free Here')}
+                </span>
               </button>
             </p>
           </form>
@@ -396,7 +403,7 @@ export default function AuthPages({ isArabic, isDarkMode, onSuccess }: AuthPages
           <form onSubmit={handleRegister} className="space-y-4 text-xs font-sans">
             <div>
               <label className="block text-natural-brand/80 font-bold mb-1.5">
-                {isArabic ? 'الاسم الكامل اللائق' : 'Full Professional Name'}
+                {lang === 'fr' ? 'Nom complet' : (isArabic ? 'الاسم الكامل اللائق' : 'Full Professional Name')}
               </label>
               <div className="relative">
                 <input
@@ -404,7 +411,7 @@ export default function AuthPages({ isArabic, isDarkMode, onSuccess }: AuthPages
                   required
                   value={registerName}
                   onChange={(e) => setRegisterName(e.target.value)}
-                  placeholder={isArabic ? 'عبد الرحمن المكي' : 'Abdul Rahman Al-Makki'}
+                  placeholder={lang === 'fr' ? 'Abdul Rahman' : (isArabic ? 'عبد الرحمن المكي' : 'Abdul Rahman Al-Makki')}
                   className={`w-full border rounded-xl p-3 pl-10 pr-4 focus:outline-none focus:border-natural-brand transition ${
                     isDarkMode ? 'bg-natural-dark-bg border-neutral-750 text-slate-200' : 'bg-white border-natural-accent/40 text-natural-text'
                   }`}
@@ -415,7 +422,7 @@ export default function AuthPages({ isArabic, isDarkMode, onSuccess }: AuthPages
 
             <div>
               <label className="block text-natural-brand/80 font-bold mb-1.5">
-                {isArabic ? 'البريد الإلكتروني' : 'Your Email Address'}
+                {lang === 'fr' ? 'Votre adresse e-mail' : (isArabic ? 'البريد الإلكتروني' : 'Your Email Address')}
               </label>
               <div className="relative">
                 <input
@@ -435,7 +442,7 @@ export default function AuthPages({ isArabic, isDarkMode, onSuccess }: AuthPages
 
             <div>
               <label className="block text-natural-brand/80 font-bold mb-1.5">
-                {isArabic ? 'رمز المرور الجديد' : 'Secure New Password'}
+                {lang === 'fr' ? 'Nouveau mot de passe' : (isArabic ? 'رمز المرور الجديد' : 'Secure New Password')}
               </label>
               <div className="relative">
                 <input
@@ -455,7 +462,7 @@ export default function AuthPages({ isArabic, isDarkMode, onSuccess }: AuthPages
 
             <div>
               <label className="block text-natural-brand/80 font-bold mb-1.5">
-                {isArabic ? 'تأكيد الرمز السري' : 'Confirm Your Password'}
+                {lang === 'fr' ? 'Confirmer le mot de passe' : (isArabic ? 'تأكيد الرمز السري' : 'Confirm Your Password')}
               </label>
               <div className="relative">
                 <input
@@ -481,18 +488,23 @@ export default function AuthPages({ isArabic, isDarkMode, onSuccess }: AuthPages
               {loading ? (
                 <RefreshCw className="w-4 h-4 animate-spin" />
               ) : (
-                <span>{isArabic ? 'سجل واحصل على التفعيل' : 'Sign Up & Verify'}</span>
+                <>
+                  <UserPlus className="w-4 h-4 text-white shrink-0" />
+                  <span>{lang === 'fr' ? "S'inscrire et Activer" : (isArabic ? 'سجل واحصل على التفعيل' : 'Sign Up & Verify')}</span>
+                </>
               )}
             </button>
 
-            <p className="text-center text-[10.5px] text-gray-500 pt-3">
-              {isArabic ? 'لديك بالفعل حساب مسجل؟ ' : 'Already have an account? '}
+            <p className="text-center text-[10.5px] text-gray-500 pt-3 flex items-center justify-center gap-1.5 flex-wrap">
+              <span>
+                {lang === 'fr' ? 'Vous avez déjà un compte ?' : (isArabic ? 'لديك بالفعل حساب مسجل؟ ' : 'Already have an account? ')}
+              </span>
               <button
                 type="button"
                 onClick={() => changeMode('login')}
-                className="text-natural-accent hover:underline font-bold font-serif text-[11px] cursor-pointer"
+                className="text-natural-accent hover:underline font-bold cursor-pointer"
               >
-                {isArabic ? 'ادخل من هنا مباشرة' : 'Sign In Direct Here'}
+                {lang === 'fr' ? 'Se connecter directement' : (isArabic ? 'ادخل من هنا مباشرة' : 'Sign In Direct Here')}
               </button>
             </p>
           </form>
@@ -503,7 +515,7 @@ export default function AuthPages({ isArabic, isDarkMode, onSuccess }: AuthPages
           <form onSubmit={handleResetPassword} className="space-y-4 text-xs font-sans">
             <div>
               <label className="block text-natural-brand/80 font-bold mb-1.5">
-                {isArabic ? 'البريد الإلكتروني للبحث' : 'Register Email for Query'}
+                {lang === 'fr' ? 'Adresse e-mail enregistrée' : (isArabic ? 'البريد الإلكتروني للبحث' : 'Register Email for Query')}
               </label>
               <div className="relative">
                 <input
@@ -529,7 +541,7 @@ export default function AuthPages({ isArabic, isDarkMode, onSuccess }: AuthPages
               {loading ? (
                 <RefreshCw className="w-4 h-4 animate-spin" />
               ) : (
-                <span>{isArabic ? 'أرسل رابط الاسترداد' : 'Send Reset credentials'}</span>
+                <span>{lang === 'fr' ? 'Envoyer le lien de réinitialisation' : (isArabic ? 'أرسل رابط الاسترداد' : 'Send Reset credentials')}</span>
               )}
             </button>
 
@@ -547,7 +559,7 @@ export default function AuthPages({ isArabic, isDarkMode, onSuccess }: AuthPages
                 ) : (
                   <>
                     <ChevronRight className="w-3.5 h-3.5" />
-                    <span>Back to Login Screen</span>
+                    <span>{lang === 'fr' ? 'Retour à la connexion' : 'Back to Login Screen'}</span>
                   </>
                 )}
               </button>
@@ -564,12 +576,14 @@ export default function AuthPages({ isArabic, isDarkMode, onSuccess }: AuthPages
 
             <div className="space-y-2">
               <h3 className="font-serif text-lg font-bold text-natural-brand">
-                {isArabic ? 'قم بتأكيد صندوق بريدك السري!' : 'Activate Your Password Account'}
+                {lang === 'fr' ? 'Vérifiez votre boîte de réception !' : (isArabic ? 'قم بتأكيد صندوق بريدك السري!' : 'Activate Your Password Account')}
               </h3>
               <p className={`text-xs leading-relaxed ${isDarkMode ? 'text-slate-350' : 'text-neutral-600'}`}>
-                {isArabic
-                  ? 'لقد أرسلنا رسالة تفويض وتحقق إلى عنوان بريدك الإلكتروني الشريف لإثبات هويتك. تفضل بفتح صندوق الوارد والضغط على الرابط المرفق لتفعيل الحساب.'
-                  : 'We have dispatched a verification query directly to your registered email to secure custody. Open your mailbox and select the verification link.'}
+                {lang === 'fr'
+                  ? 'Nous avons envoyé un e-mail de confirmation à votre adresse de messagerie. Veuillez ouvrir votre boîte de réception et cliquer sur le lien de validation pour activer le compte.'
+                  : (isArabic
+                    ? 'لقد أرسلنا رسالة تفويض وتحقق إلى عنوان بريدك الإلكتروني الشريف لإثبات هويتك. تفضل بفتح صندوق الوارد والضغط على الرابط المرفق لتفعيل الحساب.'
+                    : 'We have dispatched a verification query directly to your registered email to secure custody. Open your mailbox and select the verification link.')}
               </p>
             </div>
 
@@ -579,7 +593,7 @@ export default function AuthPages({ isArabic, isDarkMode, onSuccess }: AuthPages
                 onClick={() => changeMode('login')}
                 className="w-full bg-natural-brand hover:bg-natural-brand/90 text-white font-bold p-3 rounded-xl flex items-center justify-center gap-2 cursor-pointer shadow transition"
               >
-                <span>{isArabic ? 'تم التأكيد! تسجيل الدخول' : 'Confirmed! Log In'}</span>
+                <span>{lang === 'fr' ? "C'est fait ! Se connecter" : (isArabic ? 'تم التأكيد! تسجيل الدخول' : 'Confirmed! Log In')}</span>
               </button>
             </div>
           </div>
