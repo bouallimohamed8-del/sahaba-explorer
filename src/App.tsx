@@ -12,11 +12,12 @@ import FilterControls from './components/FilterControls';
 import AdminDashboard from './components/AdminDashboard';
 import UserProfilePage from './components/UserProfilePage';
 import { DEFAULT_COMPANIONS, DEFAULT_RELATIONSHIPS } from './data/defaultDataset';
-import { Globe, Moon, Sun, Search, GitFork, User, ShieldAlert, Sparkles, RefreshCw, Layers, Compass, HelpCircle, ChevronRight, Info, LogOut, Shield } from 'lucide-react';
+import { Globe, Moon, Sun, Search, GitFork, User, ShieldAlert, Sparkles, RefreshCw, Layers, Compass, HelpCircle, ChevronRight, Info, LogOut, Shield, FileText, Printer } from 'lucide-react';
 import { useAuth } from './context/AuthContext';
 import AuthPages from './components/AuthPages';
+import PrintableReport from './components/PrintableReport';
 import { db } from './lib/firebase';
-import { doc, setDoc } from 'firebase/firestore';
+import { doc, setDoc, collection, query, orderBy, getDocs } from 'firebase/firestore';
 import { LanguageCode, UI_TRANSLATIONS } from './lib/i18n';
 
 export default function App() {
@@ -36,12 +37,44 @@ export default function App() {
   // UI state
   const [selectedCompanion, setSelectedCompanion] = useState<Companion | null>(null);
   const [hoveredCompanion, setHoveredCompanion] = useState<Companion | null>(null);
-  const [lang, setLang] = useState<LanguageCode>('fr');
+  const [lang, setLang] = useState<LanguageCode>('ar');
   const isArabic = lang === 'ar';
   const [isDarkMode, setIsDarkMode] = useState<boolean>(false);
   const [viewMode, setViewMode] = useState<'explorer' | 'admin' | 'profile'>('explorer');
   const [explorerViewType, setExplorerViewType] = useState<'graph' | 'directory' | 'classify'>('classify');
   const [showAdvancedFilters, setShowAdvancedFilters] = useState<boolean>(false);
+
+  // Print Report States
+  const [showPrintReport, setShowPrintReport] = useState<boolean>(false);
+  const [reportNotes, setReportNotes] = useState<any[]>([]);
+
+  // Query User Study notes for the report
+  useEffect(() => {
+    if (showPrintReport && user) {
+      const fetchNotes = async () => {
+        try {
+          const q = query(
+            collection(db, 'users', user.uid, 'notes'),
+            orderBy('createdAt', 'desc')
+          );
+          const snap = await getDocs(q);
+          const list: any[] = [];
+          snap.forEach(docSnap => {
+            const data = docSnap.data();
+            if (!selectedCompanion || data.companionId === selectedCompanion.id) {
+              list.push({ id: docSnap.id, ...data });
+            }
+          });
+          setReportNotes(list);
+        } catch (e) {
+          console.error("Error loading report notes:", e);
+        }
+      };
+      fetchNotes();
+    } else {
+      setReportNotes([]);
+    }
+  }, [showPrintReport, user, selectedCompanion]);
 
   // Record browsed history in Firestore
   useEffect(() => {
@@ -268,14 +301,6 @@ export default function App() {
             {/* Language Selection Toggle Group */}
             <div className={`flex p-1 rounded-xl border ${isDarkMode ? 'bg-natural-dark-panel border-natural-accent/15' : 'bg-white/10 border-white/20'}`}>
               <button
-                id="btn-lang-fr"
-                onClick={() => setLang('fr')}
-                className={`px-2.5 py-1 text-[11px] font-bold rounded-lg transition-all cursor-pointer ${lang === 'fr' ? 'bg-natural-accent text-white shadow' : 'text-white/80 hover:text-white'}`}
-                title="Français"
-              >
-                FR
-              </button>
-              <button
                 id="btn-lang-ar"
                 onClick={() => setLang('ar')}
                 className={`px-2.5 py-1 text-[11px] font-bold rounded-lg transition-all cursor-pointer ${lang === 'ar' ? 'bg-natural-accent text-white shadow' : 'text-white/80 hover:text-white'}`}
@@ -293,10 +318,21 @@ export default function App() {
               </button>
             </div>
 
+            {/* Academic PDF Report Action */}
+            <button
+              id="btn-trigger-pdf-report"
+              onClick={() => setShowPrintReport(true)}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-600 hover:bg-amber-500 text-white font-serif font-bold rounded-xl text-xs transition cursor-pointer active:scale-95 shadow-md border border-amber-500/30 no-print"
+              title={isArabic ? 'تصدير التقرير العلمي للبحث وتحميله كملف PDF متميز' : 'Generate and Export Academic Seerah Report PDF'}
+            >
+              <FileText className="w-3.5 h-3.5" />
+              <span>{isArabic ? 'التقرير العلمي PDF' : 'PDF Report'}</span>
+            </button>
+
             {/* Dark mode lights */}
             <button
               onClick={() => setIsDarkMode(!isDarkMode)}
-              className={`p-2 rounded-xl border transition cursor-pointer ${isDarkMode ? 'bg-natural-dark-panel border-natural-accent/20 text-natural-accent' : 'bg-white/10 border-white/20 text-white hover:bg-white/25'}`}
+              className={`p-2 rounded-xl border transition cursor-pointer ${isDarkMode ? 'bg-natural-dark-panel border-natural-accent/20 text-natural-accent' : 'bg-white/10 border-white/20 text-white hover:bg-white/25'} no-print`}
               title={isArabic ? 'تغيير المظهر' : 'Toggle Theme'}
             >
               {isDarkMode ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-white" />}
@@ -349,7 +385,7 @@ export default function App() {
                   }`}
                 >
                   <User className="w-3.5 h-3.5" />
-                  <span>{lang === 'fr' ? 'Connexion' : (isArabic ? 'دخول' : 'Login')}</span>
+                  <span>{isArabic ? 'دخول' : 'Login'}</span>
                 </button>
               )
             )}
@@ -856,6 +892,19 @@ export default function App() {
           <span>{isArabic ? 'صُنع بدقة وإخلاص لدعاة المعرفة' : 'Crafted with absolute historical precision'}</span>
         </div>
       </footer>
+
+      {/* High Fidelity PDF Study report overlay modal */}
+      {showPrintReport && (
+        <PrintableReport
+          companion={selectedCompanion}
+          allCompanions={companions}
+          relationships={relationships}
+          profile={profile}
+          notes={reportNotes}
+          onClose={() => setShowPrintReport(false)}
+          isArabic={isArabic}
+        />
+      )}
     </div>
   );
 }

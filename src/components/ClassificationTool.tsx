@@ -109,18 +109,18 @@ export default function ClassificationTool({
 
   // Grouping 2: By Tribe Clan (curated major families)
   const tribesList = useMemo(() => {
-    const groups: { nameAr: string; nameFr: string; count: number; sahaba: Companion[] }[] = [];
+    const groups: { nameAr: string; nameEn: string; count: number; sahaba: Companion[] }[] = [];
     
     // Factions list
     const majorTribes = [
-      { id: 'quraysh_hashim', nameAr: 'بنو هاشم (قريش)', nameFr: 'Banu Hashim (Qoraych)' },
-      { id: 'quraysh_taym', nameAr: 'بنو تيم (قريش)', nameFr: 'Banu Taym (Qoraych)' },
-      { id: 'quraysh_adi', nameAr: 'بنو عدي (قريش)', nameFr: 'Banu Adi (Qoraych)' },
-      { id: 'quraysh_umayyah', nameAr: 'بنو أمية (قريش)', nameFr: 'Banu Umayyah (Qoraych)' },
-      { id: 'quraysh_general', nameAr: 'بطون قريش الأخرى', nameFr: 'Autres Factions de Qoraych' },
-      { id: 'ansar_aws', nameAr: 'الأوس (الأنصار)', nameFr: 'Al-Aws (Ansar)' },
-      { id: 'ansar_khazraj', nameAr: 'الخزرج (الأنصار)', nameFr: 'Al-Khazraj (Ansar)' },
-      { id: 'other_clans', nameAr: 'قبائل وعشائر شريفة أخرى', nameFr: 'Autres Tribus Nobles' },
+      { id: 'quraysh_hashim', nameAr: 'بنو هاشم (قريش)', nameEn: 'Banu Hashim (Quraysh)' },
+      { id: 'quraysh_taym', nameAr: 'بنو تيم (قريش)', nameEn: 'Banu Taym (Quraysh)' },
+      { id: 'quraysh_adi', nameAr: 'بنو عدي (قريش)', nameEn: 'Banu Adi (Quraysh)' },
+      { id: 'quraysh_umayyah', nameAr: 'بنو أمية (قريش)', nameEn: 'Banu Umayyah (Quraysh)' },
+      { id: 'quraysh_general', nameAr: 'بطون قريش الأخرى', nameEn: 'Other Factions of Quraysh' },
+      { id: 'ansar_aws', nameAr: 'الأوس (الأنصار)', nameEn: 'Al-Aws (Ansar)' },
+      { id: 'ansar_khazraj', nameAr: 'الخزرج (الأنصار)', nameEn: 'Al-Khazraj (Ansar)' },
+      { id: 'other_clans', nameAr: 'قبائل وعشائر شريفة أخرى', nameEn: 'Other Noble Clans & Tribes' },
     ];
 
     majorTribes.forEach(t => {
@@ -154,7 +154,7 @@ export default function ClassificationTool({
       if (sahaba.length > 0) {
         groups.push({
           nameAr: t.nameAr,
-          nameFr: t.nameFr,
+          nameEn: t.nameEn,
           count: sahaba.length,
           sahaba
         });
@@ -166,15 +166,15 @@ export default function ClassificationTool({
 
   // Grouping 3: By City Profile / Rest / Settlement
   const citiesList = useMemo(() => {
-    const groups: { nameAr: string; nameFr: string; count: number; sahaba: Companion[] }[] = [];
+    const groups: { nameAr: string; nameEn: string; count: number; sahaba: Companion[] }[] = [];
     const mainCities = [
-      { id: 'mecca', nameAr: 'مكة المكرمة', nameFr: 'La Mecque' },
-      { id: 'medina', nameAr: 'المدينة المنورة', nameFr: 'Médine' },
-      { id: 'sham', nameAr: 'بلاد الشام (دمشق / حمص)', nameFr: 'Le Levant (Damas, Homs)' },
-      { id: 'iraq', nameAr: 'أكناف العراق (الكوفة / البصرة)', nameFr: 'L\'Irak (Kufa, Bassorah)' },
-      { id: 'egypt', nameAr: 'ديار مصر والفسطاط', nameFr: 'L\'Égypte' },
-      { id: 'abyssinia', nameAr: 'بلاد الحبشة', nameFr: 'L\'Abyssinie' },
-      { id: 'other', nameAr: 'حواضر ورباطات أخرى', nameFr: 'Autres régions' },
+      { id: 'mecca', nameAr: 'مكة المكرمة', nameEn: 'Mecca Al-Mukarramah' },
+      { id: 'medina', nameAr: 'المدينة المنورة', nameEn: 'Medina Al-Munawwarah' },
+      { id: 'sham', nameAr: 'بلاد الشام (دمشق / حمص)', nameEn: 'The Levant (Bilad al-Sham)' },
+      { id: 'iraq', nameAr: 'أكناف العراق (الكوفة / البصرة)', nameEn: 'Iraq (Kufa / Basra)' },
+      { id: 'egypt', nameAr: 'ديار مصر والفسطاط', nameEn: 'Egypt (Al-Fustat)' },
+      { id: 'abyssinia', nameAr: 'بلاد الحبشة', nameEn: 'Abyssinia (Al-Habashah)' },
+      { id: 'other', nameAr: 'حواضر ورباطات أخرى', nameEn: 'Other Lands & Regions' },
     ];
 
     mainCities.forEach(city => {
@@ -206,7 +206,7 @@ export default function ClassificationTool({
       if (sahaba.length > 0) {
         groups.push({
           nameAr: city.nameAr,
-          nameFr: city.nameFr,
+          nameEn: city.nameEn,
           count: sahaba.length,
           sahaba
         });
@@ -219,9 +219,9 @@ export default function ClassificationTool({
   // Grouping 4: By Transcription/Hadith narration counts
   const hadithVolumeGroups = useMemo(() => {
     const list = [
-      { id: 'high', nameAr: 'المكثرون (أكثر من 500 حديث)', nameFr: 'Les Grands Narrateurs (>500 hasiths)', score: 3 },
-      { id: 'medium', nameAr: 'المتوسطون (50 إلى 500 حديث)', nameFr: 'Moyens Prorogataires (50 - 500 hadiths)', score: 2 },
-      { id: 'general', nameAr: 'الرواة الآخرون (أقل من 50 حديث)', nameFr: 'Autres transmetteurs bénis (<50 hadiths)', score: 1 },
+      { id: 'high', nameAr: 'المكثرون (أكثر من 500 حديث)', nameEn: 'Major Narrators (>500 hadiths)', score: 3 },
+      { id: 'medium', nameAr: 'المتوسطون (50 إلى 500 حديث)', nameEn: 'Moderate Narrators (50-500 hadiths)', score: 2 },
+      { id: 'general', nameAr: 'الرواة الآخرون (أقل من 50 حديث)', nameEn: 'Other Blessed Narrators (<50 hadiths)', score: 1 },
     ];
 
     return list.map(g => {
@@ -360,7 +360,7 @@ export default function ClassificationTool({
                                 {comp.nameAr}
                               </span>
                               <span className="text-[10px] text-slate-500 font-serif leading-none mt-1 block">
-                                {isArabic ? comp.tribeAr : (lang === 'fr' ? comp.shortBioFr?.substring(0, 48) : comp.shortBioEn?.substring(0, 48))}...
+                                {isArabic ? comp.tribeAr : comp.shortBioEn?.substring(0, 48)}...
                               </span>
                             </div>
                             <ChevronRight className="w-3.5 h-3.5 text-slate-400 font-bold justify-end" />
@@ -383,14 +383,14 @@ export default function ClassificationTool({
               if (matches.length === 0 && subSearch) return null;
 
               return (
-                <div key={group.nameFr} className={`border rounded-2.5xl p-5 shadow-sm flex flex-col justify-between ${isDarkMode ? 'bg-[#1E1F1A]/80 border-neutral-800' : 'bg-[#FAF9F5]/45 border-natural-accent/20'}`}>
+                <div key={group.nameEn} className={`border rounded-2.5xl p-5 shadow-sm flex flex-col justify-between ${isDarkMode ? 'bg-[#1E1F1A]/80 border-neutral-800' : 'bg-[#FAF9F5]/45 border-natural-accent/20'}`}>
                   <div>
                     {/* Clan Header */}
                     <div className="flex items-center justify-between border-b pb-3 mb-4 border-natural-accent/10">
                       <div className="flex items-center gap-2">
                         <Users className="w-4 h-4 text-natural-accent" />
                         <h4 className="text-sm font-bold text-natural-brand font-serif">
-                          {isArabic ? group.nameAr : group.nameFr}
+                          {isArabic ? group.nameAr : group.nameEn}
                         </h4>
                       </div>
                       <span className="text-[9.5px] px-2.5 py-0.5 rounded-full font-mono bg-[#FAF8F5] border border-[#CFC5AD]/40 text-[#5A5A40] font-bold">
@@ -445,14 +445,14 @@ export default function ClassificationTool({
               if (matches.length === 0 && subSearch) return null;
 
               return (
-                <div key={group.nameFr} className={`border rounded-2.5xl p-5 shadow-sm flex flex-col justify-between ${isDarkMode ? 'bg-[#1E1F1A]/80 border-neutral-800' : 'bg-[#FAF9F5]/45 border-natural-accent/20'}`}>
+                <div key={group.nameEn} className={`border rounded-2.5xl p-5 shadow-sm flex flex-col justify-between ${isDarkMode ? 'bg-[#1E1F1A]/80 border-neutral-800' : 'bg-[#FAF9F5]/45 border-natural-accent/20'}`}>
                   <div>
                     {/* City Header */}
                     <div className="flex items-center justify-between border-b pb-3 mb-4 border-natural-accent/10">
                       <div className="flex items-center gap-2">
                         <MapPin className="w-4 h-4 text-red-400" />
                         <h4 className="text-sm font-bold text-natural-brand font-serif">
-                          {isArabic ? group.nameAr : group.nameFr}
+                          {isArabic ? group.nameAr : group.nameEn}
                         </h4>
                       </div>
                       <span className="text-[9.5px] px-2.5 py-0.5 rounded-full font-mono bg-amber-500/10 border border-amber-400/30 text-natural-accent font-extrabold">
@@ -513,7 +513,7 @@ export default function ClassificationTool({
                     <div className="flex items-center gap-2">
                       <BookOpen className="w-4 h-4 text-violet-400 font-extrabold" />
                       <h4 className="text-sm font-bold text-natural-brand font-serif">
-                        {isArabic ? group.nameAr : group.nameFr}
+                        {isArabic ? group.nameAr : group.nameEn}
                       </h4>
                     </div>
                     <span className="text-[9.5px] px-2.5 py-0.5 rounded-full font-mono bg-violet-500/10 border border-violet-400/30 text-violet-400 font-bold">

@@ -593,12 +593,8 @@ export default function NetworkGraph({
           <Sparkles className="w-3.5 h-3.5 text-amber-500 shrink-0" />
           <span>
             {layout === 'map' 
-              ? (lang === 'fr' 
-                  ? "Cliquez sur l'étoile d'un compagnon pour révéler son parcours et ses relations" 
-                  : (isArabic ? 'انقر على نجمة الصحابي لعرض صلاته ومسيرته بين الحواضر' : 'Click a companion star to reveal their paths and relationships'))
-              : (lang === 'fr' 
-                  ? "Cliquez sur les nœuds d'étoiles pour afficher les liens de parenté célestes" 
-                  : (isArabic ? 'اضغط على النجم لعرض البيانات السلكية والعلاقات' : 'Click star nodes to unleash celestial relationship bridges'))}
+              ? (isArabic ? 'انقر على نجمة الصحابي لعرض صلاته ومسيرته بين الحواضر' : 'Click a companion star to reveal their paths and relationships')
+              : (isArabic ? 'اضغط على النجم لعرض البيانات السلكية والعلاقات' : 'Click star nodes to unleash celestial relationship bridges')}
           </span>
         </div>
 
@@ -617,7 +613,7 @@ export default function NetworkGraph({
               title="3D Sphere Constellation"
             >
               <Orbit className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline text-[10px]">{lang === 'fr' ? 'Dôme Céleste' : (isArabic ? 'القبة السماوية' : 'Dome Const')}</span>
+              <span className="hidden sm:inline text-[10px]">{isArabic ? 'القبة السماوية' : 'Dome Const'}</span>
             </button>
             <button
               onClick={() => setLayout('rings')}
@@ -629,7 +625,7 @@ export default function NetworkGraph({
               title="Astrolabe Concentric Orbits"
             >
               <Layers className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline text-[10px]">{lang === 'fr' ? 'Astrolabe' : (isArabic ? 'مسارات الأسطرلاب' : 'Astrolabe')}</span>
+              <span className="hidden sm:inline text-[10px]">{isArabic ? 'مسارات الأسطرلاب' : 'Astrolabe'}</span>
             </button>
             <button
               onClick={() => setLayout('helix')}
@@ -641,7 +637,7 @@ export default function NetworkGraph({
               title="Chronological Timeline helix"
             >
               <Calendar className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline text-[10px]">{lang === 'fr' ? 'Chronologie' : (isArabic ? 'خط الزمن' : 'Timeline')}</span>
+              <span className="hidden sm:inline text-[10px]">{isArabic ? 'خط الزمن' : 'Timeline'}</span>
             </button>
           </div>
 
@@ -792,13 +788,13 @@ export default function NetworkGraph({
 
             {/* Geographical label identifiers */}
             <text x="180" y="440" transform="rotate(-65 180 440)" className={`text-[8px] font-serif font-semibold pointer-events-none tracking-widest ${isDarkMode ? 'fill-neutral-700' : 'fill-[#829998]'}`}>
-              {lang === 'fr' ? 'LA MER ROUGE' : (isArabic ? 'البحر الأحمر (بحر القلزم)' : 'THE RED SEA')}
+              {isArabic ? 'البحر الأحمر (بحر القلزم)' : 'THE RED SEA'}
             </text>
             <text x="60" y="115" className={`text-[8.5px] font-serif font-semibold pointer-events-none tracking-widest ${isDarkMode ? 'fill-neutral-700' : 'fill-[#81a1a0]'}`}>
-              {lang === 'fr' ? 'LA MER MÉDITERRANÉE' : (isArabic ? 'بحر الروم (المتوسط)' : 'MEDITERRANEAN SEA')}
+              {isArabic ? 'بحر الروم (المتوسط)' : 'MEDITERRANEAN SEA'}
             </text>
             <text x="350" y="320" transform="rotate(-15 350 320)" className={`text-[7px] font-mono pointer-events-none ${isDarkMode ? 'fill-stone-850' : 'fill-stone-400'}`}>
-              {lang === 'fr' ? "← ROUTE DE L'HÉGIRE PROPHÉTIQUE" : (isArabic ? '← طريق الهجرة النبوية الشريفة' : '← ROUTE OF NABAWI HIJRA')}
+              {isArabic ? '← طريق الهجرة النبوية الشريفة' : '← ROUTE OF NABAWI HIJRA'}
             </text>
           </g>
         )}
@@ -881,14 +877,14 @@ export default function NetworkGraph({
                       y="-1"
                       className={`text-[8px] font-sans font-bold ${isDarkMode ? 'fill-amber-400' : 'fill-[#8A6D3B]'}`}
                     >
-                      {lang === 'fr' ? translateCityLabel(city.id, 'fr').name : (isArabic ? city.labelAr : city.labelEn)}
+                      {isArabic ? city.labelAr : city.labelEn}
                     </text>
                     <text
                       textAnchor="middle"
                       y="6"
                       className={`text-[6px] font-serif ${isDarkMode ? 'fill-stone-400' : 'fill-stone-500'}`}
                     >
-                      {lang === 'fr' ? translateCityLabel(city.id, 'fr').hubText : (isArabic ? city.hubTextAr : city.hubTextEn)}
+                      {isArabic ? city.hubTextAr : city.hubTextEn}
                     </text>
                   </g>
                 </g>
@@ -955,7 +951,7 @@ export default function NetworkGraph({
                     y="3.5"
                     className={`text-[8px] font-sans font-bold ${isDarkMode ? 'fill-neutral-300' : 'fill-stone-800'}`}
                   >
-                    {lang === 'fr' ? RELATIONSHIP_TRANSLATIONS[rel.type]?.fr : (isArabic ? rConfig.labelAr : rConfig.labelEn)}
+                    {isArabic ? rConfig.labelAr : rConfig.labelEn}
                   </text>
                 </g>
               </g>
@@ -1077,9 +1073,7 @@ export default function NetworkGraph({
                           : isDarkMode ? 'fill-neutral-200' : 'fill-stone-800'
                       }`}
                     >
-                      {lang === 'fr' 
-                        ? (item.companion.nameFr || item.companion.nameEn).split(' ')[0] 
-                        : (isArabic ? item.companion.nameAr.split(' ')[0] : item.companion.nameEn.split(' ')[0])}
+                      {isArabic ? item.companion.nameAr.split(' ')[0] : item.companion.nameEn.split(' ')[0]}
                     </text>
                   </g>
                 )}
@@ -1098,9 +1092,9 @@ export default function NetworkGraph({
         }`}>
           <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: CATEGORY_CONFIG[selectedCompanion.category]?.color || '#71717A' }} />
           <div className="flex flex-col text-xs font-serif leading-tight">
-            <span className="font-bold">{lang === 'fr' ? (selectedCompanion.nameFr || selectedCompanion.nameEn) : (isArabic ? selectedCompanion.nameAr : selectedCompanion.nameEn)}</span>
+            <span className="font-bold">{isArabic ? selectedCompanion.nameAr : selectedCompanion.nameEn}</span>
             <span className="text-[10px] text-stone-550 capitalize">
-              {lang === 'fr' ? CATEGORY_TRANSLATIONS[selectedCompanion.category]?.fr : (isArabic ? CATEGORY_TRANSLATIONS[selectedCompanion.category]?.ar : CATEGORY_TRANSLATIONS[selectedCompanion.category]?.en)}
+              {isArabic ? CATEGORY_TRANSLATIONS[selectedCompanion.category]?.ar : CATEGORY_TRANSLATIONS[selectedCompanion.category]?.en}
             </span>
           </div>
           <button
@@ -1128,7 +1122,7 @@ export default function NetworkGraph({
           }`}
         >
           <HelpCircle className="w-3.5 h-3.5 text-amber-500" />
-          <span>{lang === 'fr' ? 'Classifications' : (isArabic ? 'الفئات النجمية' : 'Classifications')}</span>
+          <span>{isArabic ? 'الفئات النجمية' : 'Classifications'}</span>
         </button>
 
         {/* Legend Expandable Menu */}
@@ -1139,7 +1133,7 @@ export default function NetworkGraph({
               : 'bg-white/95 border-stone-200 text-stone-800'
           }`}>
             <div className="font-serif font-bold text-xs border-b pb-1.5 mb-2 flex items-center justify-between">
-              <span>{lang === 'fr' ? 'Groupements Célestes' : (isArabic ? 'تصانيف النجوم الكونية' : 'Celestial Groupings')}</span>
+              <span>{isArabic ? 'تصانيف النجوم الكونية' : 'Celestial Groupings'}</span>
               <button onClick={() => setIsLegendOpen(false)} className="text-[10px] text-stone-550 hover:text-stone-300">✕</button>
             </div>
             <div className="space-y-1.5 max-h-[180px] overflow-y-auto pr-1">
@@ -1147,7 +1141,7 @@ export default function NetworkGraph({
                 <div key={key} className="flex items-center gap-2 text-[10.5px]">
                   <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: config.color }} />
                   <span className="text-stone-500 dark:text-stone-300 truncate">
-                    {lang === 'fr' ? CATEGORY_TRANSLATIONS[key as CompanionCategory]?.fr : (isArabic ? config.labelAr : config.labelEn)}
+                    {isArabic ? config.labelAr : config.labelEn}
                   </span>
                 </div>
               ))}
