@@ -35,12 +35,12 @@ interface AuthContextType {
   loading: boolean;
   error: string | null;
   isEmailSent: boolean;
-  registerWithEmail: (email: string, password: string, fullName: string) => Promise<void>;
-  loginWithEmail: (email: string, password: string) => Promise<void>;
+  registerWithEmail: (email: string, password: string, fullName: string) => Promise<boolean>;
+  loginWithEmail: (email: string, password: string) => Promise<boolean>;
   signInWithGoogle: () => Promise<void>;
   signInWithFacebook: () => Promise<void>;
   logout: () => Promise<void>;
-  resetPassword: (email: string) => Promise<void>;
+  resetPassword: (email: string) => Promise<boolean>;
   clearError: () => void;
   resendVerification: () => Promise<void>;
 }
@@ -54,67 +54,91 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [error, setError] = useState<string | null>(null);
   const [isEmailSent, setIsEmailSent] = useState(false);
 
-  // Synchronize or create Firestore profile for a logged-in user
-  const syncUserProfile = async (firebaseUser: User) => {
+  // Synchronize or create Firestore profile for a logged-in user with standard retry logic to allow token sync
+  const syncUserProfile = async (firebaseUser: User, maxRetries = 3): Promise<boolean> => {
     const userDocRef = doc(db, 'users', firebaseUser.uid);
     const path = `users/${firebaseUser.uid}`;
 
-    try {
-      const userDoc = await getDoc(userDocRef);
-      if (!userDoc.exists()) {
-        const isBootstrapAdmin = firebaseUser.email === 'bouallimohamed8@gmail.com';
-        const newProfile: UserProfile = {
-          uid: firebaseUser.uid,
-          fullName: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'مستخدم جديد',
-          email: firebaseUser.email || '',
-          photoURL: firebaseUser.photoURL || '',
-          createdAt: new Date().toISOString(),
-          role: isBootstrapAdmin ? 'admin' : 'user', // "bouallimohamed8@gmail.com" acts as bootstrap Admin
-          disabled: false,
-          score: 0,
-        };
-        await setDoc(userDocRef, newProfile);
-        setProfile(newProfile);
-      } else {
-        setProfile(userDoc.data() as UserProfile);
+    let attempts = 0;
+    while (attempts < maxRetries) {
+      try {
+        const userDoc = await getDoc(userDocRef);
+        if (!userDoc.exists()) {
+          const isBootstrapAdmin = firebaseUser.email === 'bouallimohamed8@gmail.com';
+          const newProfile: UserProfile = {
+            uid: firebaseUser.uid,
+            fullName: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'مستخدم جديد',
+            email: firebaseUser.email || '',
+            photoURL: firebaseUser.photoURL || '',
+            createdAt: new Date().toISOString(),
+            role: isBootstrapAdmin ? 'admin' : 'user', // "bouallimohamed8@gmail.com" acts as bootstrap Admin
+            disabled: false,
+            score: 0,
+          };
+          await setDoc(userDocRef, newProfile);
+          setProfile(newProfile);
+        } else {
+          setProfile(userDoc.data() as UserProfile);
+        }
+        return true;
+      } catch (err: any) {
+        attempts++;
+        console.warn(`Sync profile attempt ${attempts}/${maxRetries} failed:`, err);
+        if (attempts >= maxRetries) {
+          handleFirestoreError(err, OperationType.GET, path);
+        }
+        // Wait 500_ms for credentials propagation before retry
+        await new Promise((resolve) => setTimeout(resolve, 500));
       }
-    } catch (err) {
-      handleFirestoreError(err, OperationType.GET, path);
     }
+    return false;
   };
 
   useEffect(() => {
+    let unsubscribeProfile: (() => void) | null = null;
+
     const unsubscribeAuth = onAuthStateChanged(auth, async (firebaseUser) => {
       setError(null);
+      
+      // Clear previous sub to prevent unauthorized snapshot errors on logout/switch
+      if (unsubscribeProfile) {
+        unsubscribeProfile();
+        unsubscribeProfile = null;
+      }
+
       if (firebaseUser) {
         setUser(firebaseUser);
 
-        // Email Verification is optional to prevent registration blockages in development/embed environments
+        // Ensure user profile document exists first via retry sync
+        try {
+          await syncUserProfile(firebaseUser, 3);
+        } catch (syncErr) {
+          console.warn("Silent profile sync bypass inside auth transition:", syncErr);
+        }
+
+        // Susbcribe snapshot securely
         const userDocRef = doc(db, 'users', firebaseUser.uid);
         const path = `users/${firebaseUser.uid}`;
 
-        // Ensure user document exists first
-        await syncUserProfile(firebaseUser);
-
-        const unsubscribeProfile = onSnapshot(userDocRef, (docSnapshot) => {
-          if (docSnapshot.exists()) {
-            const data = docSnapshot.data() as UserProfile;
-            if (data.disabled) {
-              // Sign out suspended users instantly
-              setError('عذراً، لقد تم تجميد حسابك من قبل إدارة الموقع.');
-              signOut(auth);
-              setProfile(null);
-            } else {
-              setProfile(data);
+        if (auth.currentUser && auth.currentUser.uid === firebaseUser.uid) {
+          unsubscribeProfile = onSnapshot(userDocRef, (docSnapshot) => {
+            if (docSnapshot.exists()) {
+              const data = docSnapshot.data() as UserProfile;
+              if (data.disabled) {
+                // Sign out suspended users instantly
+                setError('عذراً، لقد تم تجميد حسابك من قبل إدارة الموقع.');
+                signOut(auth);
+                setProfile(null);
+              } else {
+                setProfile(data);
+              }
             }
-          }
-          setLoading(false);
-        }, (err) => {
-          handleFirestoreError(err, OperationType.GET, path);
-          setLoading(false);
-        });
-
-        return () => unsubscribeProfile();
+            setLoading(false);
+          }, (err) => {
+            console.warn("Profile listener error:", err);
+            setLoading(false);
+          });
+        }
       } else {
         setUser(null);
         setProfile(null);
@@ -122,10 +146,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     });
 
-    return () => unsubscribeAuth();
+    return () => {
+      unsubscribeAuth();
+      if (unsubscribeProfile) {
+        unsubscribeProfile();
+      }
+    };
   }, []);
 
-  const registerWithEmail = async (email: string, password: string, fullName: string) => {
+  const registerWithEmail = async (email: string, password: string, fullName: string): Promise<boolean> => {
     setError(null);
     setLoading(true);
     setIsEmailSent(false);
@@ -146,7 +175,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
       
       // Auto synchronize / create user profile directly
-      await syncUserProfile(createdUser);
+      const syncSuccess = await syncUserProfile(createdUser, 3);
+      return syncSuccess;
     } catch (err: any) {
       console.error(err);
       if (err.code === 'auth/email-already-in-use') {
@@ -160,16 +190,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       } else {
         setError(err.message || 'فشل إنشاء الحساب، يرجى المحاولة لاحقاً.');
       }
+      return false;
     } finally {
       setLoading(false);
     }
   };
 
-  const loginWithEmail = async (email: string, password: string) => {
+  const loginWithEmail = async (email: string, password: string): Promise<boolean> => {
     setError(null);
     setLoading(true);
     try {
       await signInWithEmailAndPassword(auth, email, password);
+      return true;
     } catch (err: any) {
       console.error(err);
       if (err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') {
@@ -182,6 +214,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setError(err.message || 'فشل تسجيل الدخول، يرجى المحاولة لاحقاً.');
       }
       await signOut(auth);
+      return false;
     } finally {
       setLoading(false);
     }
@@ -235,11 +268,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const resetPassword = async (email: string) => {
+  const resetPassword = async (email: string): Promise<boolean> => {
     setError(null);
     setLoading(true);
     try {
       await sendPasswordResetEmail(auth, email);
+      return true;
     } catch (err: any) {
       console.error(err);
       if (err.code === 'auth/user-not-found') {
@@ -247,6 +281,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       } else {
         setError(err.message || 'فشل إرسال رابط إعادة التعيين.');
       }
+      return false;
     } finally {
       setLoading(false);
     }

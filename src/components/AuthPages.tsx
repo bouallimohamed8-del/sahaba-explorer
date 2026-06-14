@@ -43,6 +43,107 @@ export default function AuthPages({ isArabic, isDarkMode, onSuccess }: AuthPages
   const [resetEmail, setResetEmail] = useState('');
   const [resetSuccess, setResetSuccess] = useState<string | null>(null);
 
+  // Formats and decodes complex Firebase Auth or Firestore errors into user-friendly localized messages with setup guides
+  const formatFriendlyError = (rawError: string | null): React.ReactNode => {
+    if (!rawError) return null;
+
+    const lowerErr = rawError.toLowerCase();
+
+    // Check if it represents a JSON-structured Firestore or operation error
+    if (rawError.trim().startsWith('{') && rawError.trim().endsWith('}')) {
+      try {
+        const errObj = JSON.parse(rawError);
+        if (errObj && errObj.error) {
+          const errMsg = errObj.error.toLowerCase();
+          
+          if (errMsg.includes('permission') || errMsg.includes('insufficient')) {
+            return (
+              <div className="space-y-1.5 text-xs">
+                <p className="font-bold text-red-600">🚨 {isArabic ? 'صلاحيات الحساب وقاعدة البيانات الشريفة معطلة' : 'Database Rules Constraint Active'}</p>
+                <p className={`leading-relaxed ${isDarkMode ? 'text-slate-350' : 'text-neutral-600'}`}>
+                  {isArabic 
+                    ? 'لم تتمكن قاعدة البيانات من إنشاء ملفك الشخصي الشريف بعد. يرجى التأكد من تشغيل وتفعيل خدمة Firestore Database في سحابة مشروع Firebase الخاص بك.'
+                    : 'The cloud firestore refused creation of your account profile block. Ensure Cloud Firestore database tab is fully provisioned in your console.'}
+                </p>
+                <div className="pt-1">
+                  <a 
+                    href="https://console.firebase.google.com/project/gen-lang-client-0066747491/firestore" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="underline text-natural-accent font-bold hover:text-natural-accent/80 inline-flex items-center gap-1"
+                  >
+                    👉 {isArabic ? 'الانتقال إلى لوحة تحكم Firestore لقاعدة البيانات' : 'Go to Cloud Firestore Console Office'}
+                  </a>
+                </div>
+              </div>
+            );
+          }
+
+          if (errMsg.includes('offline') || errMsg.includes('network')) {
+            return (
+              <div className="space-y-1">
+                <p className="font-bold">⚠️ {isArabic ? 'مشكلة في للاتصال بالشبكة' : 'Network/Connectivity Offline'}</p>
+                <p>{isArabic ? 'يرجى التحقق من اتصالك بالإنترنت والتحقق من إعدادات جدار الحماية الخاص بك.' : 'Please check your internet connection configuration.'}</p>
+              </div>
+            );
+          }
+
+          return (
+            <div className="space-y-1">
+              <p className="font-bold">{isArabic ? 'عائق في مزامنة قاعدة البيانات الشريفة' : 'Cloud Synchronisation Incident'}</p>
+              <p className="opacity-95">{errObj.error}</p>
+              <p className="text-[10px] opacity-70">Operation: {errObj.operationType} on {errObj.path}</p>
+            </div>
+          );
+        }
+      } catch (e) {
+        // Fallback
+      }
+    }
+
+    // Standard Auth string check
+    if (lowerErr.includes('auth/operation-not-allowed')) {
+      return (
+        <div className="space-y-2">
+          <p className="font-bold text-red-600">⚠️ {isArabic ? 'خيار التسجيل بالبريد الإلكتروني غير مفعّل بعد' : 'Email/Password Authentication Disabled'}</p>
+          <p className={`leading-relaxed font-sans ${isDarkMode ? 'text-slate-300' : 'text-neutral-600'}`}>
+            {isArabic
+              ? 'يرجى تفعيل خيار (Email/Password) كـ Sign-in provider من لوحة تحكم مشروع Firebase الخاص بك لتتمكن من إنشاء حساب ببريد إلكتروني وكلمة مرور.'
+              : 'Please enable Email/Password login provider inside your project under Firebase Authentication -> Sign-in method.'}
+          </p>
+          <div className="pt-1">
+            <a
+              href="https://console.firebase.google.com/project/gen-lang-client-0066747491/authentication/providers"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="bg-red-500/10 hover:bg-red-500/20 text-red-600 font-bold px-3 py-1.5 rounded-lg border border-red-500/30 inline-block text-[10.5px] transition"
+            >
+              🚀 {isArabic ? 'اضغط هنا لتفعيل خيار الدخول في ثوانٍ' : 'Click Here to Enable Email/Password Auth Now'}
+            </a>
+          </div>
+        </div>
+      );
+    }
+
+    if (lowerErr.includes('auth/weak-password')) {
+      return isArabic ? 'الرمز السري ضعيف جداً، يجب أن يتكون من 6 أحرف على الأقل.' : 'Password is too weak. Must be at least 6 characters.';
+    }
+    
+    if (lowerErr.includes('auth/email-already-in-use')) {
+      return isArabic ? 'هذا البريد الإلكتروني مسجل بالفعل بحساب آخر.' : 'Email address is already in use by another account.';
+    }
+
+    if (lowerErr.includes('auth/invalid-email')) {
+      return isArabic ? 'صيغة البريد الإلكتروني غير صحيحة.' : 'The format of the email is invalid.';
+    }
+
+    if (lowerErr.includes('auth/invalid-credential') || lowerErr.includes('auth/wrong-password') || lowerErr.includes('auth/user-not-found')) {
+      return isArabic ? 'البريد الإلكتروني أو كلمة المرور غير صحيحة.' : 'Incorrect email address or password credentials.';
+    }
+
+    return rawError;
+  };
+
   // State handlers
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -64,8 +165,8 @@ export default function AuthPages({ isArabic, isDarkMode, onSuccess }: AuthPages
       return;
     }
 
-    await registerWithEmail(registerEmail, registerPassword, registerName);
-    if (!error && !regError) {
+    const success = await registerWithEmail(registerEmail, registerPassword, registerName);
+    if (success && !regError) {
       setMode('email_sent');
     }
   };
@@ -80,8 +181,8 @@ export default function AuthPages({ isArabic, isDarkMode, onSuccess }: AuthPages
       return;
     }
 
-    await loginWithEmail(loginEmail, loginPassword);
-    if (!error && onSuccess) {
+    const success = await loginWithEmail(loginEmail, loginPassword);
+    if (success && onSuccess) {
       onSuccess();
     }
   };
@@ -97,8 +198,8 @@ export default function AuthPages({ isArabic, isDarkMode, onSuccess }: AuthPages
       return;
     }
 
-    await resetPassword(resetEmail);
-    if (!error) {
+    const success = await resetPassword(resetEmail);
+    if (success) {
       setResetSuccess(
         isArabic
           ? 'تم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك الإلكتروني.'
@@ -166,8 +267,8 @@ export default function AuthPages({ isArabic, isDarkMode, onSuccess }: AuthPages
         {(error || regError) && (
           <div className="mb-5 p-4 rounded-xl border bg-red-500/5 border-red-500/20 text-red-500 text-xs flex gap-2.5 items-start">
             <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
-            <div className="leading-relaxed">
-              {regError || error}
+            <div className="leading-relaxed w-full">
+              {regError ? regError : formatFriendlyError(error)}
             </div>
           </div>
         )}
