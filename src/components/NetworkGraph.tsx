@@ -10,16 +10,13 @@ import {
   ZoomOut, 
   RotateCcw, 
   Orbit, 
-  Compass, 
   HelpCircle, 
   Layers, 
   Calendar, 
-  Sparkles, 
-  Eye, 
-  Info, 
+  Compass,
   Play, 
-  Pause, 
-  Maximize2 
+  Pause,
+  Sparkles
 } from 'lucide-react';
 
 interface NetworkGraphProps {
@@ -34,66 +31,66 @@ interface NetworkGraphProps {
   isDarkMode?: boolean;
 }
 
-// Category design parameters
+// Minimal aesthetic categories configuration (clean modern pastel lights/dark accents)
 export const CATEGORY_CONFIG: Record<CompanionCategory, { color: string; bgClass: string; textClass: string; labelAr: string; labelEn: string }> = {
   Khulafa_Rashidun: {
-    color: '#D4AF37', // Pure Gold
+    color: '#D4AF37', // Pure Celestial Gold
     bgClass: 'bg-amber-500/15 border-amber-400',
     textClass: 'text-amber-500',
     labelAr: 'الخلفاء الراشدون',
     labelEn: 'Khulafa al-Rashidun'
   },
   Ahl_al_Bayt: {
-    color: '#10B981', // Emerald
+    color: '#10B981', // Emerald Mint
     bgClass: 'bg-emerald-500/15 border-emerald-400',
     textClass: 'text-emerald-500',
     labelAr: 'آل البيت الأطهار',
     labelEn: 'Ahl al-Bayt'
   },
   Muhajirun: {
-    color: '#3B82F6', // Celestial blue
+    color: '#3B82F6', // Luminous Blue
     bgClass: 'bg-blue-500/15 border-blue-400',
     textClass: 'text-blue-500',
     labelAr: 'المهاجرون',
     labelEn: 'Muhajirun'
   },
   Ansar: {
-    color: '#22C55E', // Islamic green
+    color: '#22C55E', // Sage Green
     bgClass: 'bg-green-500/15 border-green-400',
     textClass: 'text-green-500',
     labelAr: 'الأنصار',
     labelEn: 'Ansar'
   },
   Wives: {
-    color: '#EC4899', // Elegant pink
+    color: '#EC4899', // Blossom Pink
     bgClass: 'bg-pink-500/15 border-pink-400',
     textClass: 'text-pink-500',
     labelAr: 'أمهات المؤمنين',
     labelEn: 'Wives of the Prophet ﷺ'
   },
   Hadith_Narrators: {
-    color: '#8B5CF6', // Royal purple
+    color: '#8B5CF6', // Astral Purple
     bgClass: 'bg-violet-500/15 border-violet-400',
     textClass: 'text-violet-500',
     labelAr: 'رواة الحديث الحفاظ',
     labelEn: 'Hadith Narrators'
   },
   Military: {
-    color: '#EF4444', // Crimson red
+    color: '#EF4444', // Crimson Spark
     bgClass: 'bg-red-500/15 border-red-400',
     textClass: 'text-red-500',
     labelAr: 'القادة الفاتحون',
     labelEn: 'Military Commanders'
   },
   Scholars: {
-    color: '#06B6D4', // Indigo cyan
+    color: '#06B6D4', // Deep Cyan
     bgClass: 'bg-cyan-500/15 border-cyan-400',
     textClass: 'text-cyan-500',
     labelAr: 'العلماء والفقهاء',
     labelEn: 'Scholars'
   },
   Other: {
-    color: '#71717A', // Warm slate
+    color: '#71717A', // Minimal Grey
     bgClass: 'bg-zinc-500/15 border-zinc-400',
     textClass: 'text-zinc-500',
     labelAr: 'صحابة آخرون',
@@ -101,65 +98,68 @@ export const CATEGORY_CONFIG: Record<CompanionCategory, { color: string; bgClass
   }
 };
 
-// Relation aesthetic mappings
-export const RELATION_CONFIG: Record<RelationshipType, { color: string; dash?: string; labelAr: string; labelEn: string; icon: string }> = {
+export const RELATION_CONFIG: Record<RelationshipType, { color: string; dash?: string; labelAr: string; labelEn: string }> = {
   family: {
     color: '#F59E0B', 
     dash: 'none',
-    labelAr: 'قرابة ونسب عائلي',
-    labelEn: 'Family relationship',
-    icon: '👥'
+    labelAr: 'نسب وقرابة',
+    labelEn: 'Family relationship'
   },
   marriage: {
     color: '#EC4899', 
-    dash: '4,4',
-    labelAr: 'رابطة صهر ومصاهرة',
-    labelEn: 'Marriage connection',
-    icon: '💍'
+    dash: '3,3',
+    labelAr: 'مصاهرة',
+    labelEn: 'Marriage connection'
   },
   teacher_student: {
     color: '#06B6D4', 
     dash: 'none',
-    labelAr: 'رواية علم وتلمذة',
-    labelEn: 'Teacher & Student',
-    icon: '📜'
+    labelAr: 'رواية وعلم',
+    labelEn: 'Teacher & Student'
   },
   friendship: {
     color: '#3B82F6', 
-    dash: '2,2',
-    labelAr: 'أخوة ومؤاخاة الإسلام',
-    labelEn: 'Brotherhood / Companionship',
-    icon: '🤝'
+    dash: '1,2',
+    labelAr: 'مؤاخاة وصحبة',
+    labelEn: 'Brotherhood & Companionship'
   },
   hijra_partner: {
     color: '#10B981', 
-    dash: '6,3',
-    labelAr: 'رفقة الهجرة والبيعة',
-    labelEn: 'Hijra Migration Partner',
-    icon: '🐪'
+    dash: '5,2',
+    labelAr: 'رفقة الهجرة',
+    labelEn: 'Hijra Partner'
   },
   battle_comrade: {
     color: '#EF4444', 
     dash: 'none',
-    labelAr: 'رفقة الغزو والجهاد',
-    labelEn: 'Battle Comrade',
-    icon: '⚔️'
+    labelAr: 'رفقة الجهاد',
+    labelEn: 'Battle Comrade'
   },
   political: {
     color: '#8B5CF6', 
-    dash: '5,5',
-    labelAr: 'شورى وإمارة وخلافة',
-    labelEn: 'Alliance / Shura Council',
-    icon: '🏛️'
+    dash: '4,4',
+    labelAr: 'شورى وبيعة',
+    labelEn: 'Alliance / Shura'
   },
   hadith_transmission: {
     color: '#F97316', 
-    dash: '1,3',
-    labelAr: 'إسناد ونقل مرويات',
-    labelEn: 'Hadith Transmission Chain',
-    icon: '✍️'
+    dash: '1,4',
+    labelAr: 'إسناد ونقل',
+    labelEn: 'Hadith Transmission'
   }
 };
+
+// Historical cities/geographic anchors of early Islam
+const CITIES_LIST = [
+  { id: 'mecca', labelAr: 'مكة المكرمة', labelEn: 'Makkah', x: 230, y: 380, hubTextAr: 'أم القرى', hubTextEn: 'Al-Mukarramah' },
+  { id: 'medina', labelAr: 'المدينة المنورة', labelEn: 'Al-Madinah', x: 280, y: 260, hubTextAr: 'طيبة الطيبة', hubTextEn: 'Al-Munawwarah' },
+  { id: 'sham', labelAr: 'حاضرة الشام', labelEn: 'Al-Sham (Syria)', x: 270, y: 90, hubTextAr: 'أرض الرباط الخصيب', hubTextEn: 'Levant Garrison' },
+  { id: 'iraq', labelAr: 'العراق الكوفي', labelEn: 'Al-Iraq (Kufa)', x: 440, y: 110, hubTextAr: 'محراب الفقه', hubTextEn: 'House of Science' },
+  { id: 'egypt', labelAr: 'ديار مصر والفسطاط', labelEn: 'Egypt (Fustat)', x: 90, y: 170, hubTextAr: 'حصن الفلاح', hubTextEn: 'Nile Outpost' },
+  { id: 'abyssinia', labelAr: 'أرض الحبشة النبيلة', labelEn: 'Abyssinia', x: 120, y: 480, hubTextAr: 'ملك لا يظلم بشر به', hubTextEn: 'First Hegira Haven' },
+  { id: 'yemen', labelAr: 'أكناف اليمن', labelEn: 'Yemen', x: 440, y: 460, hubTextAr: 'مأرز الإيمان والحكمة', hubTextEn: 'Southern Gate' },
+  { id: 'persia', labelAr: 'بلاد فارس والشرق', labelEn: 'Persia & East', x: 620, y: 140, hubTextAr: 'مشرق البصائر', hubTextEn: 'Persian Horizons' }
+];
 
 export default function NetworkGraph({
   companions,
@@ -174,108 +174,167 @@ export default function NetworkGraph({
 }: NetworkGraphProps) {
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // 3D Matrix Projection Angles (Pitch = Tilt X, Yaw = Spin Y)
-  const [pitch, setPitch] = useState<number>(0.55); // Default ~31 degrees tilt
-  const [yaw, setYaw] = useState<number>(0.25);   // Default rotation
-  const [zoom, setZoom] = useState<number>(1.05);
+  // Projection Angles
+  const [pitch, setPitch] = useState<number>(0.45);
+  const [yaw, setYaw] = useState<number>(0.6);
+  const [zoom, setZoom] = useState<number>(1.25);
 
-  // Layout selection: 'dome' | 'tiers' | 'helix'
-  const [layout, setLayout] = useState<'dome' | 'tiers' | 'helix'>('dome');
-  
-  // Interactive Controls state
+  // Interactive Maps / Layout states: 'map' (Geographic Caravan Scroll) | 'sphere' (3D Constellation) | 'rings' (Astrolabe orbits) | 'helix' (Timeline path)
+  const [layout, setLayout] = useState<'map' | 'sphere' | 'rings' | 'helix'>('map');
   const [isPanning, setIsPanning] = useState<boolean>(false);
   const [isAutoSpinning, setIsAutoSpinning] = useState<boolean>(true);
-  const [isLegendOpen, setIsLegendOpen] = useState<boolean>(true);
-  const [selectedCategoryKey, setSelectedCategoryKey] = useState<string | null>(null);
-  const [hoveredCategoryKey, setHoveredCategoryKey] = useState<string | null>(null);
+  const [isLegendOpen, setIsLegendOpen] = useState<boolean>(false);
 
-  // Reference for dragging rotational state
   const dragStartMouse = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
-  const dragStartAngles = useRef<{ pitch: number; yaw: number }>({ pitch: 0.55, yaw: 0.25 });
+  const dragStartAngles = useRef<{ pitch: number; yaw: number }>({ pitch: 0.45, yaw: 0.6 });
 
-  // Slow orbital continuous rotation effect
+  // Auto orbital rotation (only when layout is 3D sphere/rings)
   useEffect(() => {
-    if (!isAutoSpinning || isPanning) return;
+    if (!isAutoSpinning || isPanning || layout === 'map') return;
     const interval = setInterval(() => {
-      setYaw(prev => (prev + 0.003) % (2 * Math.PI));
-    }, 20); // Smooth fluid rotations
+      setYaw(prev => (prev + 0.0025) % (2 * Math.PI));
+    }, 25);
     return () => clearInterval(interval);
-  }, [isAutoSpinning, isPanning]);
+  }, [isAutoSpinning, isPanning, layout]);
 
-  // Center view on selected companion node triggers
+  // Pause on click to focus
   useEffect(() => {
     if (selectedCompanion) {
-      setIsAutoSpinning(false); // Pause so they can read and navigate relations
+      setIsAutoSpinning(false);
     }
   }, [selectedCompanion]);
 
-  // 3D coordinates system calculations (Calculates raw X, Y, Z coordinates depending on active layout mode)
+  // Map companion to a high-accuracy historical geographical hub
+  const getCompanionAssignedCity = (companion: Companion): string => {
+    const id = companion.id;
+    const city = (companion.cityEn || '').toLowerCase();
+    
+    // Hardcoded overrides for prominent figures
+    if (id === 'abu_bakr' || id === 'umar_ibn_al_khattab' || id === 'uthman_ibn_affan') return 'medina';
+    if (id === 'ali_ibn_abi_talib' || id === 'abdullah_ibn_masud') return 'iraq';
+    if (id === 'khalid_ibn_al_walid' || id === 'abu_ubaydah_ibn_al_jarrah') return 'sham';
+    if (id === 'amr_ibn_al_aas') return 'egypt';
+    if (id === 'jaafar_ibn_abi_talib') return 'abyssinia';
+    if (id === 'muadh_ibn_jabal') return 'yemen';
+    if (id === 'salman_al_farsi') return 'persia';
+    if (id === 'bilal_ibn_rabah') return 'sham'; // Went to Sham (Damascus) post-prophet era
+
+    if (city.includes('mecca') && city.includes('medina')) {
+      if (companion.category === 'Wives') return 'mecca';
+      return 'medina';
+    }
+    
+    if (city.includes('medina')) return 'medina';
+    if (city.includes('mecca')) return 'mecca';
+    if (city.includes('kufa') || city.includes('basra') || city.includes('iraq')) return 'iraq';
+    if (city.includes('syria') || city.includes('sham') || city.includes('damascus')) return 'sham';
+    if (city.includes('egypt') || city.includes('fustat')) return 'egypt';
+    if (city.includes('abyssinia') || city.includes('habash')) return 'abyssinia';
+    if (city.includes('persia') || city.includes('fars')) return 'persia';
+    if (city.includes('yemen')) return 'yemen';
+    
+    if (companion.category === 'Ansar') return 'medina';
+    if (companion.category === 'Wives') return 'mecca';
+    
+    // Simple balanced distribute hash
+    const hashCode = id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    const hubs = ['mecca', 'medina', 'sham', 'iraq'];
+    return hubs[hashCode % hubs.length];
+  };
+
+  // Generate clean geographical and mathematical coordinates
   const relativeCoordinates = useMemo(() => {
     const coords: Record<string, { x: number; y: number; z: number }> = {};
     const total = companions.length;
 
-    if (layout === 'dome') {
-      // 1. DOME OF LUMINARIES (Spherical coordinates hemisphere distribution sorted by group)
-      const sorted = [...companions].sort((a, b) => a.category.localeCompare(b.category));
-      
-      sorted.forEach((companion, idx) => {
-        // Map as a layered golden dome
-        const angle = idx * 2.39996; // Golden Angle spacing
-        const radius = 230 * Math.sqrt((idx + 0.6) / total); // Uniform area density
-        
-        // Circular coordinates in X-Z plane
-        const x = radius * Math.cos(angle);
-        const z = radius * Math.sin(angle);
-        
-        // Domical curvature: Hemispherical projection (negative Y is upward on screen)
-        const domeHeight = 240;
-        const sphericalY = -Math.sqrt(Math.max(0, domeHeight * domeHeight - x * x - z * z)) * 0.7;
-        
-        coords[companion.id] = { x, y: sphericalY, z };
+    if (layout === 'map') {
+      // Group companions by their assigned city
+      const cityGroups: Record<string, Companion[]> = {};
+      CITIES_LIST.forEach(city => {
+        cityGroups[city.id] = [];
       });
 
-    } else if (layout === 'tiers') {
-      // 2. CONCENTRIC ASTROLABE TIERS (Divided horizontally based on historical roles)
-      const tier3 = companions.filter(c => ['Khulafa_Rashidun', 'Ahl_al_Bayt', 'Wives'].includes(c.category));
-      const tier2 = companions.filter(c => ['Muhajirun', 'Ansar'].includes(c.category));
-      const tier1 = companions.filter(c => !['Khulafa_Rashidun', 'Ahl_al_Bayt', 'Wives', 'Muhajirun', 'Ansar'].includes(c.category));
+      companions.forEach(c => {
+        const cityId = getCompanionAssignedCity(c);
+        if (!cityGroups[cityId]) cityGroups[cityId] = [];
+        cityGroups[cityId].push(c);
+      });
 
-      const assignTier = (comps: Companion[], height: number, outerRadius: number) => {
+      // Position each companion in an orbital system around their city hub
+      Object.entries(cityGroups).forEach(([cityId, comps]) => {
+        const cityInfo = CITIES_LIST.find(city => city.id === cityId)!;
+        const count = comps.length;
+
+        comps.forEach((comp, idx) => {
+          let offsetRadius = 24;
+          let angleOffset = 0;
+
+          if (count > 4) {
+            const ringIndex = idx % 2;
+            offsetRadius = ringIndex === 0 ? 18 : 34;
+            angleOffset = ringIndex === 0 ? 0 : Math.PI / count;
+          }
+
+          const angle = angleOffset + (idx / (count || 1)) * 2 * Math.PI;
+          coords[comp.id] = {
+            x: cityInfo.x + offsetRadius * Math.cos(angle),
+            y: cityInfo.y + offsetRadius * Math.sin(angle),
+            z: 0 // flat map
+          };
+        });
+      });
+    } else if (layout === 'sphere') {
+      // Elegant natural spherical layout sorted by category to form star constellations
+      const sorted = [...companions].sort((a, b) => a.category.localeCompare(b.category));
+      sorted.forEach((companion, idx) => {
+        const phi = Math.acos(-1 + (2 * idx) / total); // uniform elevation distribution
+        const theta = Math.sqrt(total * Math.PI) * phi; // spiral horizontal wrapping
+
+        // Radius for space volume
+        const radius = 220; 
+        coords[companion.id] = {
+          x: radius * Math.sin(phi) * Math.cos(theta),
+          y: radius * Math.cos(phi) * 0.85, // sleek squashed celestial look
+          z: radius * Math.sin(phi) * Math.sin(theta)
+        };
+      });
+    } else if (layout === 'rings') {
+      // Concentric minimalist astrolabe tracks
+      const primaryGroup = companions.filter(c => ['Khulafa_Rashidun', 'Ahl_al_Bayt', 'Wives'].includes(c.category));
+      const secondaryGroup = companions.filter(c => ['Muhajirun', 'Ansar'].includes(c.category));
+      const restGroup = companions.filter(c => !primaryGroup.includes(c) && !secondaryGroup.includes(c));
+
+      const assignRing = (comps: Companion[], radius: number, heightOffset: number) => {
         const len = comps.length;
         comps.forEach((comp, idx) => {
-          // Space evenly around the ring
           const angle = (idx / (len || 1)) * 2 * Math.PI;
           coords[comp.id] = {
-            x: outerRadius * Math.cos(angle),
-            y: height,
-            z: outerRadius * Math.sin(angle)
+            x: radius * Math.cos(angle),
+            y: heightOffset,
+            z: radius * Math.sin(angle)
           };
         });
       };
 
-      // Plot the 3 dynamic heights
-      assignTier(tier3, -110, 120); // Top golden tier (closer to focus)
-      assignTier(tier2, 0, 200);   // Middle structural tier
-      assignTier(tier1, 110, 275);  // Bottom foundation scholars and narrative conveyers
+      assignRing(primaryGroup, 100, -80);
+      assignRing(secondaryGroup, 190, 0);
+      assignRing(restGroup, 260, 80);
 
     } else if (layout === 'helix') {
-      // 3. GREAT TEMPORAL HELIX SPIRAL (Sorted chronologically by deathYearAH)
+      // Pure mathematical chronological thread
       const sortedChronological = [...companions].sort((a, b) => {
-        // Fallback default years if missing to prevent alignment collapses
-        const yearA = a.deathYearAH !== undefined ? a.deathYearAH : 50;
-        const yearB = b.deathYearAH !== undefined ? b.deathYearAH : 50;
+        const yearA = a.deathYearAH !== undefined ? a.deathYearAH : 40;
+        const yearB = b.deathYearAH !== undefined ? b.deathYearAH : 40;
         return yearA - yearB;
       });
 
       sortedChronological.forEach((companion, idx) => {
         const progress = idx / (total || 1);
-        const angle = idx * 0.42; // Spiral spacing pitch winding around center
-        const radius = 90 + progress * 160; // Slightly funneling outward
-        
-        // Generate winding spiral coordinates up the axis
+        const angle = idx * 0.45;
+        const radius = 80 + progress * 160;
         coords[companion.id] = {
           x: radius * Math.cos(angle),
-          y: -140 + progress * 280, // Winding vertically from top (early death) down to base (late death)
+          y: -130 + progress * 260,
           z: radius * Math.sin(angle)
         };
       });
@@ -284,578 +343,746 @@ export default function NetworkGraph({
     return coords;
   }, [companions, layout]);
 
-  // Combined projection transform (Projects dynamic 3D coords onto 2D viewport coordinates)
+  // Modern camera projection matrices (integrates flat 2D maps and 3D rotations)
   const projectedData = useMemo(() => {
     const center = { x: 400, y: 260 };
     const list: Record<string, { id: string; screenX: number; screenY: number; zDepth: number }> = {};
 
     Object.entries(relativeCoordinates).forEach(([id, coordVal]) => {
       const coord = coordVal as { x: number; y: number; z: number };
-      // 3D rotation matrix around Y-axis (Yaw)
-      const cosY = Math.cos(yaw);
-      const sinY = Math.sin(yaw);
-      const xRotated = coord.x * cosY - coord.z * sinY;
-      const zRotated = coord.x * sinY + coord.z * cosY;
 
-      // 3D rotation matrix around X-axis (Pitch)
-      const cosP = Math.cos(pitch);
-      const sinP = Math.sin(pitch);
-      const yRotated = coord.y * cosP - zRotated * sinP;
-      const zDepth = coord.y * sinP + zRotated * cosP;
+      if (layout === 'map') {
+        // Flat Geographical Map - scales around map center utilizing zoom
+        const dx = coord.x - center.x;
+        const dy = coord.y - center.y;
+        list[id] = {
+          id,
+          screenX: center.x + dx * zoom,
+          screenY: center.y + dy * zoom,
+          zDepth: 0
+        };
+      } else {
+        const cosY = Math.cos(yaw);
+        const sinY = Math.sin(yaw);
+        const xRotated = coord.x * cosY - coord.z * sinY;
+        const zRotated = coord.x * sinY + coord.z * cosY;
 
-      // Camera focal projection distance model
-      const cameraDistance = 720;
-      const perspectiveScale = cameraDistance / (cameraDistance + zDepth);
+        const cosP = Math.cos(pitch);
+        const sinP = Math.sin(pitch);
+        const yRotated = coord.y * cosP - zRotated * sinP;
+        const zDepth = coord.y * sinP + zRotated * cosP;
 
-      list[id] = {
-        id,
-        screenX: center.x + xRotated * perspectiveScale * zoom,
-        screenY: center.y + yRotated * perspectiveScale * zoom,
-        zDepth
-      };
+        const cameraDistance = 750;
+        const perspectiveScale = cameraDistance / (cameraDistance + zDepth);
+
+        list[id] = {
+          id,
+          screenX: center.x + xRotated * perspectiveScale * zoom,
+          screenY: center.y + yRotated * perspectiveScale * zoom,
+          zDepth
+        };
+      }
     });
 
     return list;
-  }, [relativeCoordinates, yaw, pitch, zoom]);
+  }, [relativeCoordinates, yaw, pitch, zoom, layout]);
 
-  // Project mathematical wireframe auxiliary orbits dynamically in 3D based on visual layout
-  const projectedAstrolabeRings = useMemo(() => {
+  // Project faint minimalist geometric orbital background rings (sphere layout)
+  const geometricRings = useMemo(() => {
+    if (layout === 'map') return []; // custom geographic map vectors rendered separately
+
+    const cameraDistance = 750;
     const center = { x: 400, y: 260 };
-    const cameraDistance = 720;
 
-    const projectPoint3D = (x: number, y: number, z: number) => {
+    const projectPoint = (x: number, y: number, z: number) => {
       const cosY = Math.cos(yaw);
       const sinY = Math.sin(yaw);
-      const xRot = x * cosY - z * sinY;
-      const zRot = x * sinY + z * cosY;
+      const xR = x * cosY - z * sinY;
+      const zR = x * sinY + z * cosY;
 
       const cosP = Math.cos(pitch);
       const sinP = Math.sin(pitch);
-      const yRot = y * cosP - zRot * sinP;
-      const zDepth = y * sinP + zRot * cosP;
+      const yR = y * cosP - zR * sinP;
+      const zDepth = y * sinP + zR * cosP;
 
       const scale = cameraDistance / (cameraDistance + zDepth);
       return {
-        x: center.x + xRot * scale * zoom,
-        y: center.y + yRot * scale * zoom,
-        zDepth
+        x: center.x + xR * scale * zoom,
+        y: center.y + yR * scale * zoom
       };
     };
 
-    const ringsPaths: { path: string; labelAr: string; labelEn: string; color: string; style: 'solid' | 'dashed' }[] = [];
+    const lines: string[] = [];
 
-    if (layout === 'tiers') {
-      // Draw 3 dynamic concentric tier tracks
-      const tiersParams = [
-        { h: -110, r: 120, labelAr: 'الفلك الأعلى (الآل والخلفاء)', labelEn: 'Upper Tier: Family & Caliphs', color: '#D4AF37' },
-        { h: 0, r: 200, labelAr: 'المحيط الأوسط (المهاجرون والأنصار)', labelEn: 'Mid Tier: Migrators & Supporters', color: '#3B82F6' },
-        { h: 110, r: 275, labelAr: 'أفق السند والحديث والعلوم', labelEn: 'Base Tier: Narrators & Jurists', color: '#8B5CF6' }
-      ];
-
-      tiersParams.forEach(t => {
-        let pathString = '';
-        const pointsCount = 48;
-        for (let i = 0; i <= pointsCount; i++) {
-          const angle = (i / pointsCount) * 2 * Math.PI;
-          const x = t.r * Math.cos(angle);
-          const z = t.r * Math.sin(angle);
-          const pt = projectPoint3D(x, t.h, z);
-          
-          if (i === 0) pathString += `M ${pt.x} ${pt.y}`;
-          else pathString += ` L ${pt.x} ${pt.y}`;
+    if (layout === 'sphere') {
+      const ringRadii = [120, 220];
+      ringRadii.forEach(r => {
+        let pathStr = '';
+        for (let i = 0; i <= 64; i++) {
+          const angle = (i / 64) * 2 * Math.PI;
+          const pt = projectPoint(r * Math.cos(angle), 0, r * Math.sin(angle));
+          pathStr += (i === 0 ? 'M' : 'L') + ` ${pt.x} ${pt.y}`;
         }
-        ringsPaths.push({
-          path: pathString,
-          labelAr: t.labelAr,
-          labelEn: t.labelEn,
-          color: t.color,
-          style: 'solid'
-        });
+        lines.push(pathStr);
       });
-
-    } else if (layout === 'dome') {
-      // Draw concentric circular orbits detailing latitude parallel bounds on dome of Sahaba
-      const heights = [-180, -115, -45, 0];
-      const radii = [135, 195, 230, 240];
-
-      radii.forEach((r, idx) => {
-        const h = heights[idx];
-        let pathString = '';
-        const pointsCount = 42;
-        for (let i = 0; i <= pointsCount; i++) {
-          const angle = (i / pointsCount) * 2 * Math.PI;
-          const x = r * Math.cos(angle);
-          const z = r * Math.sin(angle);
-          const pt = projectPoint3D(x, h, z);
-          
-          if (i === 0) pathString += `M ${pt.x} ${pt.y}`;
-          else pathString += ` L ${pt.x} ${pt.y}`;
+    } else if (layout === 'rings') {
+      [-80, 0, 80].forEach((h, idx) => {
+        const radii = [100, 190, 260];
+        const r = radii[idx];
+        let pathStr = '';
+        for (let i = 0; i <= 64; i++) {
+          const angle = (i / 64) * 2 * Math.PI;
+          const pt = projectPoint(r * Math.cos(angle), h, r * Math.sin(angle));
+          pathStr += (i === 0 ? 'M' : 'L') + ` ${pt.x} ${pt.y}`;
         }
-        ringsPaths.push({
-          path: pathString,
-          labelAr: isArabic ? `المدار الفلكي ${idx + 1}` : `Celestial Orbit Ring ${idx + 1}`,
-          labelEn: `Orbital Ring ${idx + 1}`,
-          color: '#CFC5AD',
-          style: 'dashed'
-        });
+        lines.push(pathStr);
       });
-
-      // Longitude cross meridian arches
-      for (let angleFactor = 0; angleFactor < 4; angleFactor++) {
-        const phiAngle = (angleFactor / 4) * Math.PI;
-        let pathString = '';
-        const stepCount = 20;
-        for (let j = 0; j <= stepCount; j++) {
-          const progress = (j / stepCount) * Math.PI - Math.PI / 2; // sweep hemisphere
-          const r = 230 * Math.cos(progress);
-          const y = -230 * Math.sin(progress) * 0.55;
-          const x = r * Math.cos(phiAngle);
-          const z = r * Math.sin(phiAngle);
-          const pt = projectPoint3D(x, y, z);
-
-          if (j === 0) pathString += `M ${pt.x} ${pt.y}`;
-          else pathString += ` L ${pt.x} ${pt.y}`;
-        }
-        ringsPaths.push({
-          path: pathString,
-          labelAr: '',
-          labelEn: '',
-          color: '#CFC5AD',
-          style: 'dashed'
-        });
-      }
-
     } else if (layout === 'helix') {
-      // Continuous spiral baseline ribbon matching chronological flow of historical souls
-      let pathString = '';
-      const totalSteps = 80;
-      for (let i = 0; i <= totalSteps; i++) {
-        const progress = i / totalSteps;
-        const angle = progress * totalSteps * 0.42 * (totalSteps / 80);
-        const radius = 90 + progress * 160;
-        const y = -140 + progress * 280;
-        
-        const pt = projectPoint3D(radius * Math.cos(angle), y, radius * Math.sin(angle));
-        
-        if (i === 0) pathString += `M ${pt.x} ${pt.y}`;
-        else pathString += ` L ${pt.x} ${pt.y}`;
+      let pathStr = '';
+      for (let i = 0; i <= 80; i++) {
+        const progress = i / 80;
+        const angle = i * 0.45;
+        const radius = 80 + progress * 160;
+        const pt = projectPoint(radius * Math.cos(angle), -130 + progress * 260, radius * Math.sin(angle));
+        pathStr += (i === 0 ? 'M' : 'L') + ` ${pt.x} ${pt.y}`;
       }
-      ringsPaths.push({
-        path: pathString,
-        labelAr: 'خط تواتر الأثر الزمني',
-        labelEn: 'Time Spiral Chronological Ribbon',
-        color: '#D4AF37',
-        style: 'solid'
-      });
+      lines.push(pathStr);
     }
 
-    return ringsPaths;
-  }, [pitch, yaw, zoom, layout, isArabic]);
+    return lines;
+  }, [pitch, yaw, zoom, layout]);
 
-  // Compute node relationship matches or dimming parameters in active 3D view
-  const nodeStates = useMemo(() => {
-    const states: Record<string, { isSelected: boolean; isHovered: boolean; isConnected: boolean; isPath: boolean; shouldDim: boolean }> = {};
+  // Determine which companions are direct connection neighbors of the active selection (Only clicked/active gets details)
+  const connectedNeighborIds = useMemo(() => {
+    const setOfIds = new Set<string>();
+    const activeId = selectedCompanion?.id;
+    if (!activeId) return setOfIds;
 
-    companions.forEach(c => {
-      const isSel = selectedCompanion?.id === c.id;
-      const isHov = hoveredCompanion?.id === c.id;
-      
-      const categoryMatches = !selectedCategoryKey || c.category === selectedCategoryKey;
-      const hoverCategoryMatches = !hoveredCategoryKey || c.category === hoveredCategoryKey;
-      
-      let isPath = highlightedPath?.includes(c.id) || false;
-
-      // Determine connections from links
-      let isConnected = false;
-      if (hoveredCompanion) {
-        isConnected = relationships.some(r => 
-          (r.sourceId === hoveredCompanion.id && r.targetId === c.id) ||
-          (r.targetId === hoveredCompanion.id && r.sourceId === c.id)
-        );
-      } else if (selectedCompanion) {
-        isConnected = relationships.some(r => 
-          (r.sourceId === selectedCompanion.id && r.targetId === c.id) ||
-          (r.targetId === selectedCompanion.id && r.sourceId === c.id)
-        );
-      }
-
-      // Dim criteria
-      let shouldDim = false;
-      if (selectedCompanion && !isSel && !isConnected && !isPath) {
-        shouldDim = true;
-      } else if (hoveredCompanion && !isHov && !isConnected) {
-        shouldDim = true;
-      } else if (selectedCategoryKey && !categoryMatches) {
-        shouldDim = true;
-      } else if (hoveredCategoryKey && !hoverCategoryMatches) {
-        shouldDim = true;
-      }
-
-      states[c.id] = {
-        isSelected: isSel,
-        isHovered: isHov,
-        isConnected,
-        isPath,
-        shouldDim
-      };
+    relationships.forEach(r => {
+      if (r.sourceId === activeId) setOfIds.add(r.targetId);
+      if (r.targetId === activeId) setOfIds.add(r.sourceId);
     });
 
-    return states;
-  }, [companions, relationships, selectedCompanion, hoveredCompanion, highlightedPath, selectedCategoryKey, hoveredCategoryKey]);
+    return setOfIds;
+  }, [selectedCompanion, relationships]);
 
-  // Compile map categories node count dictionary
-  const categoryCounts = useMemo(() => {
-    const counts: Record<string, number> = {};
-    companions.forEach(c => {
-      counts[c.category] = (counts[c.category] || 0) + 1;
-    });
-    return counts;
-  }, [companions]);
-
-  // Trackball/Coordinates rotation handlers on dragging canvas workspace
+  // Drag behaviors (Pitch/Yaw only triggers when 3D is active, otherwise panning happens)
   const handleMouseDown = (e: React.MouseEvent) => {
-    // Start canvas-wide dragging orbit rotation
+    if (layout === 'map') return; // stationary map
     setIsPanning(true);
     dragStartMouse.current = { x: e.clientX, y: e.clientY };
     dragStartAngles.current = { pitch, yaw };
   };
 
   const handleMouseMove = (e: React.MouseEvent) => {
-    if (!isPanning) return;
+    if (!isPanning || layout === 'map') return;
+    const dx = e.clientX - dragStartMouse.current.x;
+    const dy = e.clientY - dragStartMouse.current.y;
+    const speed = 0.005;
     
-    const deltaX = e.clientX - dragStartMouse.current.x;
-    const deltaY = e.clientY - dragStartMouse.current.y;
-
-    // Convert pixels drag delta to radial angle adjustments
-    const speed = 0.006;
-    let newYaw = dragStartAngles.current.yaw - deltaX * speed;
-    let newPitch = dragStartAngles.current.pitch + deltaY * speed;
-
-    // Clamp pitch to prevent extreme upside down flips
-    newPitch = Math.max(-1.1, Math.min(1.4, newPitch));
-
+    let newYaw = dragStartAngles.current.yaw - dx * speed;
+    let newPitch = dragStartAngles.current.pitch + dy * speed;
+    
+    newPitch = Math.max(-1.0, Math.min(1.2, newPitch));
+    
     setYaw(newYaw);
     setPitch(newPitch);
   };
 
-  const handleMouseUpOrLeave = () => {
+  const handleMouseUp = () => {
     setIsPanning(false);
   };
 
-  // Depth-sorting all elements prior to drawing ensures correct visual overlays
+  // Painter's sorting sequence
   const sortedDrawOrder = useMemo(() => {
-    const list: { type: 'node'; id: string; zDepth: number; companion: Companion }[] = [];
-    
-    companions.forEach(c => {
-      const proj = projectedData[c.id];
-      if (proj) {
-        list.push({
-          type: 'node',
-          id: c.id,
-          zDepth: proj.zDepth,
-          companion: c
-        });
-      }
-    });
-
-    // Sort descending by zDepth: largest depth (furthest away) is rendered first (painters algorithm)
-    return list.sort((a, b) => b.zDepth - a.zDepth);
+    return Object.entries(projectedData)
+      .map(([id, proj]) => {
+        const c = companions.find(x => x.id === id);
+        return {
+          id,
+          proj: proj as { id: string; screenX: number; screenY: number; zDepth: number },
+          companion: c!
+        };
+      })
+      .filter(item => item.companion !== undefined)
+      .sort((a, b) => b.proj.zDepth - a.proj.zDepth);
   }, [companions, projectedData]);
 
-  // Handle zoom changes
-  const handleZoomIn = () => setZoom(prev => Math.min(prev + 0.15, 2.2));
-  const handleZoomOut = () => setZoom(prev => Math.max(prev - 0.15, 0.45));
-  
-  // Reset views
+  // Clean filters resetting
   const handleReset = () => {
-    setPitch(0.55);
-    setYaw(0.25);
-    setZoom(1.05);
+    setPitch(0.45);
+    setYaw(0.6);
+    setZoom(1.25);
     setIsAutoSpinning(true);
-    setSelectedCategoryKey(null);
-    setHoveredCategoryKey(null);
   };
 
   return (
     <div
       ref={containerRef}
-      id="sahaba-celestial-canvas-container"
-      className={`relative w-full h-[580px] border rounded-[2rem] overflow-hidden select-none transition-all duration-550 shadow-2xl ${
+      id="astro-celestial-constellation"
+      className={`relative w-full h-[600px] border rounded-[2rem] overflow-hidden select-none transition-all duration-300 shadow-xl ${
         isDarkMode 
-          ? 'bg-[#10110D] border-neutral-850 text-slate-100' 
-          : 'bg-[#F2ECE0] border-[#CFC5AD]/55 text-[#443825]'
+          ? 'bg-[#090A08] border-neutral-900 text-stone-200 animate-fade-in' 
+          : 'bg-[#F9F6F0] border-stone-200/80 text-stone-850 animate-fade-in'
       }`}
       onMouseDown={handleMouseDown}
       onMouseMove={handleMouseMove}
-      onMouseUp={handleMouseUpOrLeave}
-      onMouseLeave={handleMouseUpOrLeave}
-      style={{ cursor: isPanning ? 'grabbing' : 'grab' }}
+      onMouseUp={handleMouseUp}
+      onMouseLeave={handleMouseUp}
+      style={{ cursor: isPanning && layout !== 'map' ? 'grabbing' : layout === 'map' ? 'default' : 'grab' }}
     >
-      
-      {/* Dynamic starry nebula particle cluster backdrop */}
-      <div className="absolute inset-0 pointer-events-none opacity-20">
-        <div className={`absolute inset-0 bg-gradient-radial from-[#D4AF37]/5 to-transparent`} />
-        {/* Generates ambient vector sparkling particles */}
+      {/* Absolute parchment grain / stars background */}
+      <div className="absolute inset-0 pointer-events-none opacity-25">
         <svg className="w-full h-full">
-          {Array.from({ length: 30 }).map((_, i) => (
-            <circle
-              key={i}
-              cx={`${((i * 197) % 100)}%`}
-              cy={`${((i * 313) % 100)}%`}
-              r={0.6 + (i % 3) * 0.4}
-              fill={isDarkMode ? '#FCF3D7' : '#4E3D25'}
-              opacity={0.3 + (i % 4) * 0.2}
-              className={i % 2 === 0 ? 'animate-pulse' : ''}
-              style={{ animationDuration: `${2 + (i % 5)}s` }}
-            />
-          ))}
+          {layout === 'map' ? (
+            // Grid and coordinate lines for ancient parchment atlas
+            <>
+              {Array.from({ length: 6 }).map((_, i) => (
+                <line
+                  key={`v-${i}`}
+                  x1={`${(i + 1) * 15}%`}
+                  y1="0"
+                  x2={`${(i + 1) * 15}%`}
+                  y2="100%"
+                  stroke={isDarkMode ? 'rgba(174,139,59,0.06)' : 'rgba(174,139,59,0.1)'}
+                  strokeWidth="0.8"
+                  strokeDasharray="4,8"
+                />
+              ))}
+              {Array.from({ length: 5 }).map((_, i) => (
+                <line
+                  key={`h-${i}`}
+                  x1="0"
+                  y1={`${(i + 1) * 18}%`}
+                  x2="100%"
+                  y2={`${(i + 1) * 18}%`}
+                  stroke={isDarkMode ? 'rgba(174,139,59,0.06)' : 'rgba(174,139,59,0.1)'}
+                  strokeWidth="0.8"
+                  strokeDasharray="4,8"
+                />
+              ))}
+            </>
+          ) : (
+            // Celestial starry backdrop
+            Array.from({ length: 45 }).map((_, i) => (
+              <circle
+                key={i}
+                cx={`${((i * 263) % 100)}%`}
+                cy={`${((i * 419) % 100)}%`}
+                r={0.4 + (i % 2) * 0.4}
+                fill={isDarkMode ? '#FCF3D7' : '#9E8665'}
+                opacity={0.3 + (i % 3) * 0.2}
+              />
+            ))
+          )}
         </svg>
       </div>
 
-      {/* Elegant HUD Control Bar Header */}
+      {/* Control overlay menu */}
       <div className="absolute top-4 left-4 right-4 z-20 flex flex-wrap gap-2 items-center justify-between pointer-events-none">
         
-        {/* Dynamic Instructional Indicator Capsule */}
-        <div className={`px-4 py-2 rounded-full border text-[11px] font-serif font-bold flex items-center gap-2 pointer-events-auto shadow-lg backdrop-blur-xl transition ${
+        {/* Instructional Pill */}
+        <div className={`px-4 py-2 rounded-full border text-[10.5px] font-sans tracking-wide font-medium flex items-center gap-2 pointer-events-auto shadow-md backdrop-blur-md transition-all ${
           isDarkMode 
-            ? 'bg-[#181914]/90 border-neutral-850 text-slate-200' 
-            : 'bg-white/95 border-[#CFBFA5] text-[#3E311B]'
+            ? 'bg-neutral-950/80 border-neutral-800 text-stone-300' 
+            : 'bg-white/85 border-stone-200 text-stone-700'
         }`}>
-          <Compass className="w-4 h-4 text-amber-500 animate-spin-slow shrink-0" />
+          <Sparkles className="w-3.5 h-3.5 text-amber-500 shrink-0" />
           <span>
-            {isArabic
-              ? 'توجيه ثلاثي الأبعاد: اسحب أي مكان فارغ لتدوير أفلاك الصحابة • استخدم المفاتيح للتحكم'
-              : '3D Tracker: Click & drag anywhere to steer orbits • Hover nodes to inspect ties'}
+            {layout === 'map' 
+              ? (isArabic ? 'انقر على نجمة الصحابي لعرض صلاته ومسيرته بين الحواضر' : 'Click a companion star to reveal their paths and relationships')
+              : (isArabic ? 'اضغط على النجم لعرض البيانات السلكية والعلاقات' : 'Click star nodes to unleash celestial relationship bridges')}
           </span>
         </div>
 
-        {/* Dynamic Controls Hub */}
+        {/* Navigation / Switch Layout buttons */}
         <div className="flex items-center gap-2 pointer-events-auto">
-          
-          {/* Layout Modifiers Pill */}
-          <div className={`flex rounded-full p-1 border shadow-lg backdrop-blur-xl ${
-            isDarkMode ? 'bg-[#181914]/90 border-neutral-850' : 'bg-white/95 border-[#CFBFA5]'
+          <div className={`flex rounded-full p-0.5 border shadow-sm backdrop-blur-md ${
+            isDarkMode ? 'bg-neutral-950/80 border-neutral-850' : 'bg-white/80 border-stone-200'
           }`}>
             <button
-              onClick={() => setLayout('dome')}
-              className={`p-1.5 px-3 rounded-full text-xs font-serif font-bold flex items-center gap-1 transition ${
-                layout === 'dome'
-                  ? 'bg-amber-600 text-white shadow-inner'
-                  : 'text-stone-500 hover:text-amber-600 dark:hover:text-amber-400'
+              onClick={() => setLayout('map')}
+              className={`p-1.5 px-3 rounded-full text-xs font-serif font-bold flex items-center gap-1 transition-all ${
+                layout === 'map'
+                  ? 'bg-amber-600 text-white shadow'
+                  : 'text-stone-500 hover:text-amber-500'
               }`}
-              title={isArabic ? 'قبة السلف الصالح' : 'Dome of Luminaries'}
+              title="Geographical Caravan Map"
             >
-              <Orbit className="w-3.5 h-3.5" />
-              <span className="hidden md:inline text-[10.5px]">{isArabic ? 'القبة السماوية' : 'Aura Dome'}</span>
+              <Compass className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline text-[10px]">{isArabic ? 'خريطة القوافل' : 'Caravan Map'}</span>
             </button>
             <button
-              onClick={() => setLayout('tiers')}
-              className={`p-1.5 px-3 rounded-full text-xs font-serif font-bold flex items-center gap-1 transition ${
-                layout === 'tiers'
+              onClick={() => setLayout('sphere')}
+              className={`p-1.5 px-3 rounded-full text-xs font-serif font-bold flex items-center gap-1 transition-all ${
+                layout === 'sphere'
                   ? 'bg-amber-600 text-white shadow'
-                  : 'text-stone-500 hover:text-amber-600 dark:hover:text-amber-400'
+                  : 'text-stone-500 hover:text-amber-550'
               }`}
-              title={isArabic ? 'أفلاك الطبقات' : 'Category Concentric Rings'}
+              title="3D Sphere Constellation"
+            >
+              <Orbit className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline text-[10px]">{isArabic ? 'القبة السماوية' : 'Dome Const'}</span>
+            </button>
+            <button
+              onClick={() => setLayout('rings')}
+              className={`p-1.5 px-3 rounded-full text-xs font-serif font-bold flex items-center gap-1 transition-all ${
+                layout === 'rings'
+                  ? 'bg-amber-600 text-white shadow'
+                  : 'text-stone-500 hover:text-amber-550'
+              }`}
+              title="Astrolabe Concentric Orbits"
             >
               <Layers className="w-3.5 h-3.5" />
-              <span className="hidden md:inline text-[10.5px]">{isArabic ? 'أفلاك الطبقات' : 'Orbital Rings'}</span>
+              <span className="hidden sm:inline text-[10px]">{isArabic ? 'مسارات الأسطرلاب' : 'Astrolabe'}</span>
             </button>
             <button
               onClick={() => setLayout('helix')}
               className={`p-1.5 px-3 rounded-full text-xs font-serif font-bold flex items-center gap-1 transition-all ${
                 layout === 'helix'
                   ? 'bg-amber-600 text-white shadow'
-                  : 'text-stone-500 hover:text-amber-600 dark:hover:text-amber-400'
+                  : 'text-stone-500 hover:text-amber-550'
               }`}
-              title={isArabic ? 'اللولب السيري الزمني' : 'Temporal Chronological Spiral'}
+              title="Chronological Timeline helix"
             >
               <Calendar className="w-3.5 h-3.5" />
-              <span className="hidden md:inline text-[10.5px]">{isArabic ? 'المنحنى الزمني' : 'Helix Timeline'}</span>
+              <span className="hidden sm:inline text-[10px]">{isArabic ? 'خط الزمن' : 'Timeline'}</span>
             </button>
           </div>
 
-          {/* Navigational Utilities */}
-          <div className={`flex items-center p-1 rounded-full border shadow-lg backdrop-blur-xl ${
-            isDarkMode ? 'bg-[#181914]/90 border-neutral-850' : 'bg-white/95 border-[#CFBFA5]'
+          {/* Action pills */}
+          <div className={`flex items-center p-0.5 rounded-full border shadow-sm backdrop-blur-md ${
+            isDarkMode ? 'bg-neutral-950/80 border-neutral-850' : 'bg-white/80 border-stone-200'
           }`}>
+            {layout !== 'map' && (
+              <button
+                onClick={() => setIsAutoSpinning(!isAutoSpinning)}
+                className="p-1.5 rounded-full text-stone-500 hover:text-amber-500 transition-colors"
+                title="Pause/Resume Auto-spin"
+              >
+                {isAutoSpinning ? <Pause className="w-3 h-3" /> : <Play className="w-3 h-3" />}
+              </button>
+            )}
             <button
-              onClick={() => setIsAutoSpinning(!isAutoSpinning)}
-              className={`p-1.5 rounded-full transition hover:bg-stone-100 dark:hover:bg-neutral-800 ${
-                isAutoSpinning ? 'text-emerald-500' : 'text-neutral-500'
-              }`}
-              title={isAutoSpinning ? (isArabic ? 'إيقاف الدوران' : 'Pause Auto-Spin') : (isArabic ? 'بدء الدوران تلقائياً' : 'Spin Orbits')}
+              onClick={() => setZoom(prev => Math.min(prev + 0.15, 2.2))}
+              className="p-1.5 rounded-full text-stone-500 hover:text-amber-500 transition-colors"
+              title="Zoom In"
             >
-              {isAutoSpinning ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
+              <ZoomIn className="w-3 h-3" />
             </button>
             <button
-              onClick={handleZoomIn}
-              className="p-1.5 rounded-full transition hover:bg-stone-100 dark:hover:bg-neutral-800 text-stone-500 hover:text-amber-600"
-              title={isArabic ? 'تكبير البؤرة' : 'Perspective Zoom In'}
+              onClick={() => setZoom(prev => Math.max(prev - 0.15, 0.45))}
+              className="p-1.5 rounded-full text-stone-500 hover:text-amber-500 transition-colors"
+              title="Zoom Out"
             >
-              <ZoomIn className="w-3.5 h-3.5" />
-            </button>
-            <button
-              onClick={handleZoomOut}
-              className="p-1.5 rounded-full transition hover:bg-stone-100 dark:hover:bg-neutral-800 text-stone-500 hover:text-amber-600"
-              title={isArabic ? 'تنصيف النطاق' : 'Perspective Zoom Out'}
-            >
-              <ZoomOut className="w-3.5 h-3.5" />
+              <ZoomOut className="w-3 h-3" />
             </button>
             <button
               onClick={handleReset}
-              className="p-1.5 rounded-full transition hover:bg-stone-100 dark:hover:bg-neutral-800 text-stone-500 hover:text-amber-605"
-              title={isArabic ? 'إعادة الإحداثيات' : 'Calibrate Astrolabe'}
+              className="p-1.5 rounded-full text-stone-500 hover:text-amber-500 transition-colors"
+              title="Reset View"
             >
-              <RotateCcw className="w-3.5 h-3.5" />
+              <RotateCcw className="w-3 h-3" />
             </button>
           </div>
         </div>
       </div>
 
-      {/* Main 3D projected Canvas workspace using standard SVG with painter overlays */}
+      {/* Main interactive SVG stage */}
       <svg className="w-full h-full select-none" viewBox="0 0 800 520">
         <defs>
-          {/* Glowing Filters */}
-          <filter id="astrolabe-node-glow" x="-20%" y="-20%" width="140%" height="140%">
-            <feGaussianBlur stdDeviation="4" result="blur" />
+          <filter id="celestial-glow" x="-30%" y="-30%" width="160%" height="160%">
+            <feGaussianBlur stdDeviation="3.5" result="blur" />
             <feComposite in="SourceGraphic" in2="blur" operator="over" />
           </filter>
-          
-          <filter id="golden-pulse-glow" x="-30%" y="-30%" width="160%" height="160%">
-            <feGaussianBlur stdDeviation="6" result="blur" />
-            <feComponentTransfer in="blur" result="glow">
-              <feFuncA type="linear" slope="0.8" />
-            </feComponentTransfer>
-            <feMerge>
-              <feMergeNode in="glow" />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
-          </filter>
-
-          {/* Connections custom arrows markers */}
-          {Object.entries(RELATION_CONFIG).map(([type, config]) => (
-            <marker
-              key={`arrow-head-${type}`}
-              id={`arrow-cap-${type}`}
-              viewBox="0 0 10 10"
-              refX="18"
-              refY="5"
-              markerWidth="4"
-              markerHeight="4"
-              orient="auto-start-reverse"
-            >
-              <path d="M 0 1 L 10 5 L 0 9 z" fill={config.color} />
-            </marker>
-          ))}
         </defs>
 
-        {/* 1. THREE-DIMENSIONAL ASTROLABE WIREFRAME GEOMETRY AND ORBITS */}
-        <g id="astrolabe-wireframe-lines" opacity={isDarkMode ? 0.35 : 0.5}>
-          {projectedAstrolabeRings.map((ring, idx) => (
-            <g key={`astrolabe-ring-${idx}`}>
-              <path
-                d={ring.path}
-                fill="none"
-                stroke={ring.color}
-                strokeWidth={ring.style === 'solid' ? 1.4 : 0.8}
-                strokeDasharray={ring.style === 'dashed' ? '3,6' : 'none'}
-                className="transition-all duration-300"
-              />
-              {/* Overlay orbital micro annotations */}
-              {ring.labelAr && idx === 0 && (
-                <path d={ring.path} id={`ring-text-${idx}`} fill="none" />
-              )}
+        {/* 1. LAYOUT: GEOGRAPHIC BACKGROUND MAP */}
+        {layout === 'map' && (
+          <g id="geographic-cartography-backdrop" opacity="0.8">
+            
+            {/* RED SEA water vector body */}
+            <path
+              d="M 50,530 Q 140,430 170,340 T 140,210"
+              fill="none"
+              stroke={isDarkMode ? '#1e241c' : '#cee7e5'}
+              strokeWidth="42"
+              strokeLinecap="round"
+              opacity="0.65"
+            />
+            <path
+              d="M 50,530 Q 140,430 170,340 T 140,210"
+              fill="none"
+              stroke={isDarkMode ? '#233230' : '#b2dbda'}
+              strokeWidth="16"
+              strokeLinecap="round"
+              opacity="0.8"
+            />
+            
+            {/* MEDITERRANEAN SEA water vector body */}
+            <path
+              d="M 0,220 Q 110,210 150,195 T 250,75 L 0,75 Z"
+              fill={isDarkMode ? '#172324' : '#daf1f0'}
+              opacity="0.65"
+            />
+            
+            {/* PERSIAN GULF water vector body */}
+            <path
+              d="M 530,230 Q 630,245 680,330 L 800,290 L 800,180 Z"
+              fill={isDarkMode ? '#172221' : '#daedea'}
+              opacity="0.6"
+            />
+
+            {/* Compass Rose at the Top-Right */}
+            <g transform="translate(740, 95)" opacity="0.6">
+              <circle r="22" fill="none" stroke={isDarkMode ? '#444' : '#cbd5e1'} strokeWidth="1" strokeDasharray="2,3" />
+              <polygon points="0,-26 4,-6 0,0" fill="#ae8b3b" />
+              <polygon points="0,-26 -4,-6 0,0" fill="#d4af37" />
+              <polygon points="0,26 4,6 0,0" fill="#71717A" />
+              <polygon points="0,26 -4,6 0,0" fill="#A1A1AA" />
+              <polygon points="26,0 6,4 0,0" fill="#ae8b3b" />
+              <polygon points="26,0 6,-4 0,0" fill="#d4af37" />
+              <polygon points="-26,0 -6,4 0,0" fill="#71717A" />
+              <polygon points="-26,0 -6,-4 0,0" fill="#A1A1AA" />
+              <circle r="4" fill={isDarkMode ? '#090a08' : '#fafaf9'} stroke="#ae8b3b" strokeWidth="1" />
+              <text y="-32" textAnchor="middle" className="text-[9px] font-serif font-bold fill-amber-600">N (شمال)</text>
             </g>
-          ))}
-        </g>
 
-        {/* 2. THREE-DIMENSIONAL CONSTELLATION LINES (RELATIONSHIPS) */}
-        <g id="astrolabe-constellation-lines">
-          {relationships.map(rel => {
-            const ptStart = projectedData[rel.sourceId];
-            const ptEnd = projectedData[rel.targetId];
-            if (!ptStart || !ptEnd) return null;
+            {/* Decorative Waves icons on seas */}
+            <path d="M 120,290 Q 125,286 130,290 Q 135,286 140,290" fill="none" stroke={isDarkMode ? '#444' : '#aec7c5'} strokeWidth="1" />
+            <path d="M 60,370 Q 65,366 70,370 Q 75,366 80,370" fill="none" stroke={isDarkMode ? '#444' : '#aec7c5'} strokeWidth="1" />
+            <path d="M 640,240 Q 645,236 650,240 Q 655,236 660,240" fill="none" stroke={isDarkMode ? '#333' : '#aec7c5'} strokeWidth="1" />
 
-            const stateStart = nodeStates[rel.sourceId];
-            const stateEnd = nodeStates[rel.targetId];
-            if (!stateStart || !stateEnd) return null;
+            {/* Faint Historic Caravan / Migration paths */}
+            {/* 1. Darb al-Hijrah: Mecca to Medina */}
+            <path
+              id="geo-path-hijrah"
+              d="M 230,380 Q 255,320 280,260"
+              fill="none"
+              stroke="#ae8b3b"
+              strokeWidth="1.2"
+              strokeDasharray="4,6"
+              opacity="0.8"
+            />
+            {/* 2. Sommer trade route: Mecca to Syria */}
+            <path
+              id="geo-path-syria"
+              d="M 230,380 L 270,90"
+              fill="none"
+              stroke="#5a7e6b"
+              strokeWidth="1.0"
+              strokeDasharray="2,6"
+              opacity="0.7"
+            />
+            {/* 3. Red Sea crossing path to Abyssinia */}
+            <path
+              id="geo-path-abyssinia"
+              d="M 230,380 L 120,480"
+              fill="none"
+              stroke="#a87c93"
+              strokeWidth="1.2"
+              strokeDasharray="5,6"
+              opacity="0.75"
+            />
+            {/* 4. Iraq-Kufe caravan trails */}
+            <path
+              id="geo-path-iraq"
+              d="M 280,260 Q 360,180 440,110"
+              fill="none"
+              stroke="#436585"
+              strokeWidth="0.8"
+              strokeDasharray="3,5"
+              opacity="0.7"
+            />
 
-            const isPathEdge = highlightedPath?.includes(rel.sourceId) && highlightedPath?.includes(rel.targetId);
-            
-            // Highlight connections that involve active nodes
-            const isDirectLink = (hoveredCompanion?.id === rel.sourceId || hoveredCompanion?.id === rel.targetId) ||
-                                 (selectedCompanion?.id === rel.sourceId || selectedCompanion?.id === rel.targetId);
+            {/* Geographical label identifiers */}
+            <text x="180" y="440" transform="rotate(-65 180 440)" className={`text-[8px] font-serif font-semibold pointer-events-none tracking-widest ${isDarkMode ? 'fill-neutral-700' : 'fill-[#829998]'}`}>
+              {isArabic ? 'البحر الأحمر (بحر القلزم)' : 'THE RED SEA'}
+            </text>
+            <text x="60" y="115" className={`text-[8.5px] font-serif font-semibold pointer-events-none tracking-widest ${isDarkMode ? 'fill-neutral-700' : 'fill-[#81a1a0]'}`}>
+              {isArabic ? 'بحر الروم (المتوسط)' : 'MEDITERRANEAN SEA'}
+            </text>
+            <text x="350" y="320" transform="rotate(-15 350 320)" className={`text-[7px] font-mono pointer-events-none ${isDarkMode ? 'fill-stone-850' : 'fill-stone-400'}`}>
+              {isArabic ? '← طريق الهجرة النبوية الشريفة' : '← ROUTE OF NABAWI HIJRA'}
+            </text>
+          </g>
+        )}
 
-            const config = RELATION_CONFIG[rel.type] || { color: '#CFC5AD', dash: '3,3' };
+        {/* 2. LAYOUT: 3D CELESTIAL WIREFRAMES BACKGROUND */}
+        {layout !== 'map' && (
+          <g stroke={isDarkMode ? '#242424' : '#EBE6DC'} fill="none" strokeWidth="0.85" opacity="0.55">
+            {geometricRings.map((p, idx) => (
+              <path key={idx} d={p} strokeDasharray={idx % 2 === 0 ? 'none' : '2,4'} />
+            ))}
+          </g>
+        )}
 
-            let strokeColor = config.color;
-            let strokeWidth = 1.25;
-            let strokeOpacity = isDarkMode ? 0.14 : 0.22;
-            let displayLabel = false;
+        {/* 3. GEOGRAPHIC CITY BUILT EMBLEMS AND LABELS (MAP ONLY) */}
+        {layout === 'map' && (
+          <g id="historical-city-emblems-group">
+            {CITIES_LIST.map((city) => {
+              // Convert coordinate with dynamic zoom
+              const dx = (city.x - 400) * zoom;
+              const dy = (city.y - 260) * zoom;
+              const cx = 400 + dx;
+              const cy = 260 + dy;
 
-            if (isPathEdge) {
-              strokeColor = '#D4AF37'; // Pure path gold
-              strokeWidth = 3.2;
-              strokeOpacity = 0.95;
-              displayLabel = true;
-            } else if (isDirectLink) {
-              strokeWidth = 2.4;
-              strokeOpacity = 0.9;
-              displayLabel = true;
-            } else if (selectedCategoryKey) {
-              // Dim links if filtered
-              const matchSource = companions.find(x => x.id === rel.sourceId)?.category === selectedCategoryKey;
-              const matchTarget = companions.find(x => x.id === rel.targetId)?.category === selectedCategoryKey;
-              strokeOpacity = matchSource && matchTarget ? 0.45 : 0.04;
-            } else if (selectedCompanion || hoveredCompanion) {
-              // Dim unrelated nodes
-              strokeOpacity = 0.04;
-            }
+              // Count companions clustered in this city
+              const cityCompsCount = companions.filter(c => getCompanionAssignedCity(c) === city.id).length;
 
-            // Curve coordinate offset to avoid overlapping straight lines (giving spatial volume)
-            const dx = ptEnd.screenX - ptStart.screenX;
-            const dy = ptEnd.screenY - ptStart.screenY;
-            const len = Math.sqrt(dx*dx + dy*dy) || 1;
-            
-            // Standard smooth arc bezier coordinates control offset
-            const midX = (ptStart.screenX + ptEnd.screenX) / 2 - (dy / len) * 16;
-            const midY = (ptStart.screenY + ptEnd.screenY) / 2 + (dx / len) * 16;
+              return (
+                <g key={city.id} className="transition-all duration-300">
+                  {/* Dotted boundaries for companion system orbits */}
+                  <circle
+                    cx={cx}
+                    cy={cy}
+                    r={cityCompsCount > 4 ? 41 : 31}
+                    fill="none"
+                    stroke={isDarkMode ? 'rgba(174,139,59,0.1)' : 'rgba(174,139,59,0.15)'}
+                    strokeWidth="0.8"
+                    strokeDasharray="3,4"
+                  />
 
-            return (
-              <g key={rel.id} className="transition-all duration-300">
-                {/* Projected Arch Connection */}
-                <path
-                  d={`M ${ptStart.screenX} ${ptStart.screenY} Q ${midX} ${midY} ${ptEnd.screenX} ${ptEnd.screenY}`}
-                  fill="none"
-                  stroke={strokeColor}
-                  strokeWidth={strokeWidth}
-                  strokeDasharray={config.dash}
-                  opacity={strokeOpacity}
-                  markerEnd={`url(#arrow-cap-${rel.type})`}
-                  className="transition-all duration-300"
-                />
+                  {/* Pulsing focal hub core */}
+                  <circle
+                    cx={cx}
+                    cy={cy}
+                    r="8"
+                    fill={isDarkMode ? 'rgba(174,139,59,0.08)' : 'rgba(174,139,59,0.04)'}
+                    className="animate-pulse"
+                  />
 
-                {/* Interactive floating holographic relation badge */}
-                {displayLabel && (
-                  <g transform={`translate(${midX}, ${midY})`} className="cursor-help">
+                  {/* Vector ancient minaret/dome structure */}
+                  <path
+                    d={`M ${cx - 5} ${cy + 4} L ${cx - 5} ${cy - 1} Q ${cx} ${cy - 8} ${cx + 5} ${cy - 1} L ${cx + 5} ${cy + 4} Z`}
+                    fill={isDarkMode ? 'rgba(212,175,55,0.7)' : 'rgba(197,160,89,0.7)'}
+                    stroke={isDarkMode ? '#ae8b3b' : '#bfa168'}
+                    strokeWidth="0.8"
+                  />
+                  <line
+                    x1={cx}
+                    y1={cy - 8}
+                    x2={cx}
+                    y2={cy - 12}
+                    stroke={isDarkMode ? '#d4af37' : '#c5a059'}
+                    strokeWidth="1"
+                  />
+
+                  {/* City Label plate - offset dynamically to avoid overlapping the nodes below or above */}
+                  <g transform={`translate(${cx}, ${cy - 20})`}>
                     <rect
-                      x="-55"
-                      y="-8"
-                      width="110"
-                      height="16"
-                      rx="6"
-                      fill={isDarkMode ? '#1B1C16' : '#FAF8F4'}
-                      stroke={strokeColor}
-                      strokeWidth="1.2"
-                      className="shadow-md"
-                      opacity="0.95"
+                      x="-42"
+                      y="-11"
+                      width="84"
+                      height="19"
+                      rx="4"
+                      fill={isDarkMode ? '#0d0d0c' : '#FAF8F4'}
+                      stroke={isDarkMode ? '#222' : '#E8DED2'}
+                      strokeWidth="0.8"
+                      className="shadow-sm border"
                     />
                     <text
                       textAnchor="middle"
-                      y="2.5"
-                      className={`text-[8.5px] font-bold font-serif ${isDarkMode ? 'fill-slate-205' : 'fill-stone-750'}`}
+                      y="-1"
+                      className={`text-[8px] font-sans font-bold ${isDarkMode ? 'fill-amber-400' : 'fill-[#8A6D3B]'}`}
                     >
-                      {isArabic ? rel.labelAr : rel.labelEn}
+                      {isArabic ? city.labelAr : city.labelEn}
+                    </text>
+                    <text
+                      textAnchor="middle"
+                      y="6"
+                      className={`text-[6px] font-serif ${isDarkMode ? 'fill-stone-400' : 'fill-stone-500'}`}
+                    >
+                      {isArabic ? city.hubTextAr : city.hubTextEn}
+                    </text>
+                  </g>
+                </g>
+              );
+            })}
+          </g>
+        )}
+
+        {/* 4. HIGH-FIDELITY ARCHED CONNECTIONS AND RELATIONSHIPS */}
+        <g id="celestial-relationship-bridges">
+          {relationships.map(rel => {
+            const startPt = projectedData[rel.sourceId];
+            const endPt = projectedData[rel.targetId];
+            if (!startPt || !endPt) return null;
+
+            // Decision Guidlines: Connections MUST appear ONLY if either source or target is selected/highlighted 
+            // of if they belong to a highlighted pathway. This keeps views entirely offline/clean by default!
+            const isRelatedToClicked = selectedCompanion && (selectedCompanion.id === rel.sourceId || selectedCompanion.id === rel.targetId);
+            const isPathSelected = highlightedPath && (highlightedPath.includes(rel.sourceId) && highlightedPath.includes(rel.targetId));
+            
+            if (!isRelatedToClicked && !isPathSelected) {
+              return null; // pure minimalist hiding
+            }
+
+            const rConfig = (RELATION_CONFIG[rel.type] || { color: '#D4AF37', dash: '2,2', labelAr: '', labelEn: '' }) as { color: string; dash?: string; labelAr: string; labelEn: string };
+            const dx = endPt.screenX - startPt.screenX;
+            const dy = endPt.screenY - startPt.screenY;
+            const distance = Math.sqrt(dx * dx + dy * dy) || 1;
+            
+            // Layout-specific customizable bend curves to avoid crowded centers
+            const curveOffset = layout === 'map' ? 12 : 21;
+            const controlX = (startPt.screenX + endPt.screenX) / 2 - (dy / distance) * curveOffset;
+            const controlY = (startPt.screenY + endPt.screenY) / 2 + (dx / distance) * curveOffset;
+
+            const color = isPathSelected ? '#D4AF37' : rConfig.color;
+            const strokeWidth = isPathSelected ? 2.5 : 1.4;
+
+            return (
+              <g key={rel.id} className="transition-all duration-300">
+                <path
+                  d={`M ${startPt.screenX} ${startPt.screenY} Q ${controlX} ${controlY} ${endPt.screenX} ${endPt.screenY}`}
+                  fill="none"
+                  stroke={color}
+                  strokeWidth={strokeWidth}
+                  strokeDasharray={rConfig.dash}
+                  opacity="0.85"
+                />
+                
+                {/* Float relationship label near center of the curve */}
+                <g transform={`translate(${controlX}, ${controlY})`}>
+                  <rect
+                    x="-45"
+                    y="-7"
+                    width="90"
+                    height="14"
+                    rx="4"
+                    fill={isDarkMode ? '#131411' : '#FCFAF7'}
+                    stroke={color}
+                    strokeWidth="0.8"
+                    className="shadow-sm"
+                  />
+                  <text
+                    textAnchor="middle"
+                    y="3.5"
+                    className={`text-[8px] font-sans font-bold ${isDarkMode ? 'fill-neutral-300' : 'fill-stone-800'}`}
+                  >
+                    {isArabic ? rConfig.labelAr : rConfig.labelEn}
+                  </text>
+                </g>
+              </g>
+            );
+          })}
+        </g>
+
+        {/* 5. CELESTIAL STAR COMPANIONS */}
+        <g id="celestial-stars-systems">
+          {sortedDrawOrder.map(item => {
+            const isSelected = selectedCompanion?.id === item.id;
+            const isNeighbor = connectedNeighborIds.has(item.id);
+            const isHovered = hoveredCompanion?.id === item.id;
+            const isPathPoint = highlightedPath?.includes(item.id) || false;
+
+            const category = item.companion.category;
+            const config = CATEGORY_CONFIG[category] || CATEGORY_CONFIG.Other;
+
+            // Z-Depth scaling logic
+            const proximityScale = layout === 'map' ? 1.0 : (1.0 - (item.proj.zDepth / 1650));
+            let sizeScale = 1.0;
+            let opacity = 0.85;
+
+            // Focus states filtering opacity
+            if (selectedCompanion) {
+              if (isSelected) {
+                sizeScale = 1.55;
+                opacity = 1.0;
+              } else if (isNeighbor || isPathPoint) {
+                sizeScale = 1.1;
+                opacity = 0.95;
+              } else {
+                sizeScale = 0.55;
+                opacity = 0.12; // Dim down unselected/unrelated companions to highlight links
+              }
+            } else if (hoveredCompanion) {
+              const isDirectHoverNeighbor = relationships.some(r => 
+                (r.sourceId === hoveredCompanion.id && r.targetId === item.id) ||
+                (r.targetId === hoveredCompanion.id && r.sourceId === item.id)
+              );
+              if (item.id === hoveredCompanion.id) {
+                sizeScale = 1.35;
+                opacity = 1.0;
+              } else if (isDirectHoverNeighbor) {
+                sizeScale = 1.05;
+                opacity = 0.9;
+              } else {
+                sizeScale = 0.6;
+                opacity = 0.18;
+              }
+            }
+
+            const finalScale = sizeScale * proximityScale;
+
+            return (
+              <g
+                key={item.id}
+                transform={`translate(${item.proj.screenX}, ${item.proj.screenY}) scale(${finalScale})`}
+                className="cursor-pointer transition-all duration-300"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onSelectCompanion(item.companion);
+                }}
+                onMouseEnter={() => onHoverCompanion(item.companion)}
+                onMouseLeave={() => onHoverCompanion(null)}
+                opacity={opacity}
+              >
+                {/* Glowing light aura backdrop for active elements */}
+                {(isSelected || isHovered || isPathPoint) && (
+                  <circle
+                    r="15"
+                    fill={config.color}
+                    opacity="0.32"
+                    filter="url(#celestial-glow)"
+                    className="animate-pulse"
+                  />
+                )}
+
+                {/* Minimal elegant star center point */}
+                <circle
+                  r={isSelected ? "6.5" : "4.2"}
+                  fill={config.color}
+                  stroke={isDarkMode ? '#000' : '#FFF'}
+                  strokeWidth={isSelected ? "1.8" : "1.1"}
+                  className="shadow-sm transition-all duration-300"
+                />
+
+                {/* Rotating concentric orbiting ring indicating active selection */}
+                {isSelected && (
+                  <circle
+                    r="10.5"
+                    fill="none"
+                    stroke="#D4AF37"
+                    strokeWidth="1.0"
+                    strokeDasharray="2,2"
+                  />
+                )}
+
+                {/* VISIBLE CARDS ON SELECTION/HOVER ONLY: Reveals themselves cleanly on demand */}
+                {(isSelected || isNeighbor || isHovered || isPathPoint) && (
+                  <g className="transition-all duration-300 pointer-events-none">
+                    <rect
+                      x="-44"
+                      y={isSelected ? "14" : "10"}
+                      width="88"
+                      height="20"
+                      rx="4"
+                      fill={isDarkMode ? 'rgba(9, 10, 8, 0.92)' : 'rgba(255, 255, 255, 0.96)'}
+                      stroke={isSelected ? '#D4AF37' : config.color}
+                      strokeWidth="0.8"
+                      className="shadow-sm"
+                    />
+                    <text
+                      y={isSelected ? "23" : "19"}
+                      textAnchor="middle"
+                      className={`text-[8.5px] font-bold font-serif ${
+                        isSelected 
+                          ? 'fill-amber-500 font-extrabold' 
+                          : isDarkMode ? 'fill-neutral-200' : 'fill-stone-800'
+                      }`}
+                    >
+                      {isArabic ? item.companion.nameAr.split(' ')[0] : item.companion.nameEn.split(' ')[0]}
                     </text>
                   </g>
                 )}
@@ -863,244 +1090,66 @@ export default function NetworkGraph({
             );
           })}
         </g>
-
-        {/* 3. DEPTH-SORTED RADIAN COMPANION NODES (Preserves genuine spatial alignment overlaps) */}
-        <g id="astrolabe-stars-nodes">
-          {sortedDrawOrder.map(item => {
-            const state = nodeStates[item.id];
-            const proj = projectedData[item.id];
-            if (!proj || !state) return null;
-
-            const categoryConf = CATEGORY_CONFIG[item.companion.category] || CATEGORY_CONFIG.Other;
-
-            let sizeScale = 1.0;
-            let borderStroke = categoryConf.color;
-            let borderWidth = 2.0;
-
-            // Scale nodes dynamically closer vs further
-            const defaultProximityScale = 1.0 - (proj.zDepth / 1400); // 1.2 at front, 0.7 at back
-            
-            if (state.isSelected) {
-              sizeScale = 1.45;
-              borderStroke = '#D4AF37'; // Pure gold selection anchor
-              borderWidth = 3.6;
-            } else if (state.isHovered || state.isConnected) {
-              sizeScale = 1.25;
-              borderWidth = 2.8;
-              borderStroke = '#D4AF37'; // Glow highlights relative peers
-            } else if (state.isPath) {
-              sizeScale = 1.2;
-              borderWidth = 3.0;
-              borderStroke = '#10B981';
-            } else if (state.shouldDim) {
-              sizeScale = 0.75;
-            }
-
-            const scale = sizeScale * defaultProximityScale;
-
-            return (
-              <g
-                key={item.id}
-                transform={`translate(${proj.screenX}, ${proj.screenY}) scale(${scale})`}
-                className="transition-all duration-350 cursor-pointer"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onSelectCompanion(item.companion);
-                }}
-                onMouseEnter={() => onHoverCompanion(item.companion)}
-                onMouseLeave={() => onHoverCompanion(null)}
-                opacity={state.shouldDim ? 0.25 : 1.0}
-              >
-                
-                {/* 3D Drop Projective Line to base plane (Visual suspension string) */}
-                {layout !== 'helix' && (
-                  <line
-                    x1="0"
-                    y1="0"
-                    x2="0"
-                    y2={35 / scale}
-                    stroke={categoryConf.color}
-                    strokeWidth="0.8"
-                    strokeDasharray="2,3"
-                    opacity="0.45"
-                  />
-                )}
-
-                {/* Pulsing selection aura glow ring */}
-                {(state.isSelected || state.isHovered || state.isPath) && (
-                  <circle
-                    r="24"
-                    fill="none"
-                    stroke={categoryConf.color}
-                    strokeWidth="2.5"
-                    className="animate-pulse opacity-40"
-                    filter="url(#astrolabe-node-glow)"
-                  />
-                )}
-
-                {/* Sacred Geometrical Octagram backing plates (Islamic star plate Rub' El Hizb style) */}
-                <g className="transition-all duration-300">
-                  {/* Rotating decorative geometric background */}
-                  <path
-                    d="M -13,0 L -9,-9 L 0,-13 L 9,-9 L 13,0 L 9,9 L 0,13 L -9,9 Z"
-                    fill={isDarkMode ? '#1B1C16' : '#FCFAF7'}
-                    stroke={borderStroke}
-                    strokeWidth={borderWidth}
-                    className="shadow-lg transition-colors"
-                  />
-                  {/* Second interlocking plate offset by 45 degrees forming exact 8-pointed star */}
-                  <path
-                    d="M -13,0 L -9,-9 L 0,-13 L 9,-9 L 13,0 L 9,9 L 0,13 L -9,9 Z"
-                    fill="none"
-                    stroke={borderStroke}
-                    strokeWidth={borderWidth - 0.7}
-                    transform="rotate(45)"
-                    className="transition-colors"
-                  />
-                </g>
-
-                {/* Core Initial emblem */}
-                <circle cx="0" cy="0" r="7" fill={categoryConf.color} className="opacity-15" />
-                <text
-                  textAnchor="middle"
-                  y="3"
-                  className="text-[9px] font-extrabold font-serif"
-                  fill={categoryConf.color}
-                >
-                  {item.companion.nameAr.charAt(0)}
-                </text>
-
-                {/* Primary Arabic Title label banner */}
-                <text
-                  y="24"
-                  textAnchor="middle"
-                  className={`text-[9.5px] font-bold font-serif filter drop-shadow select-none ${
-                    isDarkMode ? 'fill-slate-150' : 'fill-[#2B2319]'
-                  } ${state.isSelected ? 'fill-amber-500 font-extrabold scale-105' : ''}`}
-                  style={{ textShadow: isDarkMode ? '0 1px 2px #000' : '0 1px 1px #fff' }}
-                >
-                  {item.companion.nameAr.split(' ')[0]}
-                </text>
-
-                {/* Sub-heading Transliterated English text */}
-                <text
-                  y="31.5"
-                  textAnchor="middle"
-                  className={`text-[7px] font-mono tracking-wide ${
-                    isDarkMode ? 'fill-slate-400' : 'fill-stone-500'
-                  }`}
-                >
-                  {item.companion.nameEn.split(' ')[0]}
-                </text>
-              </g>
-            );
-          })}
-        </g>
       </svg>
 
-      {/* Floating 3D Navigation Compass Widget (Bottom-Left) */}
-      <div className={`absolute bottom-4 left-4 z-20 rounded-2xl border p-3.5 shadow-xl backdrop-blur-xl transition pointer-events-auto ${
-        isDarkMode 
-          ? 'bg-[#181914]/95 border-neutral-850 text-slate-300' 
-          : 'bg-white/95 border-[#CFBFA5] text-[#3E311B] font-serif'
-      }`}>
-        <div className="flex items-center gap-2 text-xs font-bold border-b pb-1.5 mb-2">
-          <Eye className="w-4 h-4 text-amber-500 shrink-0" />
-          <span>{isArabic ? 'إحداثيات بوصلة الأسطرلاب' : 'Compass Orientation'}</span>
+      {/* Floating Active Selection Banner Indicator on Click */}
+      {selectedCompanion && (
+        <div className={`absolute top-18 left-4 p-3 rounded-2xl border flex items-center gap-3 shadow-lg backdrop-blur-md transition-all duration-300 ${
+          isDarkMode 
+            ? 'bg-neutral-950/90 border-neutral-800 text-stone-200' 
+            : 'bg-white/95 border-stone-200 text-stone-800'
+        }`}>
+          <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: CATEGORY_CONFIG[selectedCompanion.category]?.color || '#71717A' }} />
+          <div className="flex flex-col text-xs font-serif leading-tight">
+            <span className="font-bold">{isArabic ? selectedCompanion.nameAr : selectedCompanion.nameEn}</span>
+            <span className="text-[10px] text-stone-550 capitalize">{selectedCompanion.category.replace(/_/g, ' ')}</span>
+          </div>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onHoverCompanion(null);
+              // reset companion by clicking deselect in parent App
+              onSelectCompanion(selectedCompanion); // toggles off if done again or reset
+            }}
+            className="text-[10px] ml-2 px-1 rounded bg-stone-150 dark:bg-neutral-800 hover:text-red-500 cursor-pointer"
+          >
+            ✕
+          </button>
         </div>
-        
-        {/* Simple interactive dials or radar visualizers */}
-        <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-[10px] font-mono font-bold">
-          <span className="text-stone-500">{isArabic ? 'الميل العمودي:' : 'Vertical Tilt:'}</span>
-          <span className="text-amber-500 text-right">{Math.round((pitch * 180) / Math.PI)}°</span>
+      )}
 
-          <span className="text-stone-500">{isArabic ? 'الدوران الأفقي:' : 'Spin Orbit:'}</span>
-          <span className="text-amber-500 text-right">{Math.round((yaw * 180) / Math.PI)}°</span>
+      {/* Astro Categories Legend Toggle Pill */}
+      <div className="absolute bottom-4 right-4 z-20 pointer-events-auto">
+        <button
+          onClick={() => setIsLegendOpen(!isLegendOpen)}
+          className={`p-2.5 px-4 rounded-full border text-xs font-sans font-bold flex items-center gap-2 shadow-md backdrop-blur-md transition-all ${
+            isDarkMode 
+              ? 'bg-neutral-950/80 border-neutral-850 text-stone-300 font-bold' 
+              : 'bg-white/85 border-stone-200 text-stone-705 font-bold'
+          }`}
+        >
+          <HelpCircle className="w-3.5 h-3.5 text-amber-500" />
+          <span>{isArabic ? 'الفئات النجمية' : 'Classifications'}</span>
+        </button>
 
-          <span className="text-stone-500">{isArabic ? 'نمط التوزيع:' : 'Active Array:'}</span>
-          <span className="text-amber-500 text-right capitalize">{layout}</span>
-        </div>
-      </div>
-
-      {/* INTERACTIVE LEGEND BAR PANEL (Bottom-Right) */}
-      <div className={`absolute bottom-4 right-4 z-20 rounded-2xl border shadow-2xl backdrop-blur-xl transition-all duration-300 pointer-events-auto ${
-        isDarkMode 
-          ? 'bg-[#181914]/95 border-neutral-850 text-slate-300' 
-          : 'bg-white/95 border-[#CFBFA5] text-[#3E311B] font-serif'
-      } ${isLegendOpen ? 'w-[250px] p-3.5' : 'w-[48px] h-[48px] p-0 flex items-center justify-center cursor-pointer'}`}
-      onClick={() => {
-        if (!isLegendOpen) setIsLegendOpen(true);
-      }}
-      >
-        {!isLegendOpen ? (
-          <HelpCircle className="w-5 h-5 text-amber-500 animate-pulse" />
-        ) : (
-          <div>
-            <div className={`font-bold border-b pb-1.5 mb-2.5 flex items-center justify-between text-xs`}>
-              <div className="flex items-center gap-1.5">
-                <HelpCircle className="w-3.5 h-3.5 text-amber-500" />
-                <span>{isArabic ? 'تصنيف الفئات والطبقات' : 'Astronomical Categories'}</span>
-              </div>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setIsLegendOpen(false);
-                }}
-                className="text-[9px] px-1.5 py-0.5 rounded hover:bg-stone-100 dark:hover:bg-neutral-805 cursor-pointer text-stone-500"
-              >
-                {isArabic ? 'إخفاء' : 'Close'}
-              </button>
+        {/* Legend Expandable Menu */}
+        {isLegendOpen && (
+          <div className={`absolute bottom-12 right-0 w-[240px] p-3.5 rounded-2xl border shadow-xl backdrop-blur-md transition-all ${
+            isDarkMode 
+              ? 'bg-neutral-950/95 border-neutral-800 text-stone-300' 
+              : 'bg-white/95 border-stone-200 text-stone-800'
+          }`}>
+            <div className="font-serif font-bold text-xs border-b pb-1.5 mb-2 flex items-center justify-between">
+              <span>{isArabic ? 'تصانيف النجوم الكونية' : 'Celestial Groupings'}</span>
+              <button onClick={() => setIsLegendOpen(false)} className="text-[10px] text-stone-550 hover:text-stone-300">✕</button>
             </div>
-
-            {/* Loop categories interactively */}
-            <div className="space-y-1 max-h-[175px] overflow-y-auto pr-1">
-              {Object.entries(CATEGORY_CONFIG).map(([key, config]) => {
-                const count = categoryCounts[key] || 0;
-                const isSelected = selectedCategoryKey === key;
-                const isHovered = hoveredCategoryKey === key;
-
-                return (
-                  <div
-                    key={key}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setSelectedCategoryKey(isSelected ? null : key);
-                    }}
-                    onMouseEnter={() => setHoveredCategoryKey(key)}
-                    onMouseLeave={() => setHoveredCategoryKey(null)}
-                    className={`flex items-center justify-between text-[11px] p-1 px-2 rounded-lg transition-all cursor-pointer ${
-                      isSelected
-                        ? 'bg-amber-600/15 text-amber-500 font-bold border border-amber-600/25'
-                        : isHovered
-                          ? 'bg-stone-100 dark:bg-neutral-850 text-amber-500'
-                          : 'hover:bg-amber-600/5'
-                    }`}
-                  >
-                    <div className="flex items-center gap-2 min-w-0">
-                      <span
-                        className="w-2.5 h-2.5 rounded-full inline-block shrink-0 border border-black/10"
-                        style={{ backgroundColor: config.color }}
-                      />
-                      <span className="truncate pr-1">{isArabic ? config.labelAr : config.labelEn}</span>
-                    </div>
-                    <span className="text-[9px] font-mono font-bold px-1.5 py-0.2 rounded-full bg-stone-100 dark:bg-neutral-800 text-stone-605">
-                      {count}
-                    </span>
-                  </div>
-                );
-              })}
-
-              {selectedCategoryKey && (
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setSelectedCategoryKey(null);
-                  }}
-                  className="w-full text-center text-[10px] py-1 mt-2 tracking-wide font-bold uppercase rounded-lg bg-red-500/10 text-red-500 hover:bg-red-500/20 cursor-pointer transition"
-                >
-                  {isArabic ? 'إلغاء تصفية الفئات' : 'Reset Category Filters'}
-                </button>
-              )}
+            <div className="space-y-1.5 max-h-[180px] overflow-y-auto pr-1">
+              {Object.entries(CATEGORY_CONFIG).map(([key, config]) => (
+                <div key={key} className="flex items-center gap-2 text-[10.5px]">
+                  <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: config.color }} />
+                  <span className="text-stone-500 dark:text-stone-300 truncate">{isArabic ? config.labelAr : config.labelEn}</span>
+                </div>
+              ))}
             </div>
           </div>
         )}

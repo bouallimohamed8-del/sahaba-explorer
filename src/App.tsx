@@ -16,6 +16,7 @@ import { useAuth } from './context/AuthContext';
 import AuthPages from './components/AuthPages';
 import { db } from './lib/firebase';
 import { doc, setDoc } from 'firebase/firestore';
+import { LanguageCode, UI_TRANSLATIONS } from './lib/i18n';
 
 export default function App() {
   const { user, profile, loading: authLoading, logout } = useAuth();
@@ -34,7 +35,8 @@ export default function App() {
   // UI state
   const [selectedCompanion, setSelectedCompanion] = useState<Companion | null>(null);
   const [hoveredCompanion, setHoveredCompanion] = useState<Companion | null>(null);
-  const [isArabic, setIsArabic] = useState<boolean>(true);
+  const [lang, setLang] = useState<LanguageCode>('fr');
+  const isArabic = lang === 'ar';
   const [isDarkMode, setIsDarkMode] = useState<boolean>(false);
   const [viewMode, setViewMode] = useState<'explorer' | 'admin' | 'profile'>('explorer');
   const [explorerViewType, setExplorerViewType] = useState<'graph' | 'directory'>('graph');
@@ -262,14 +264,33 @@ export default function App() {
               </button>
             </div>
 
-            {/* Language toggle links */}
-            <button
-              onClick={() => setIsArabic(!isArabic)}
-              className={`flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-xl border transition-all cursor-pointer ${isDarkMode ? 'text-slate-200 bg-natural-dark-panel border-natural-accent/20' : 'text-white bg-white/10 border-white/20 hover:bg-white/20'}`}
-            >
-              <Globe className="w-3.5 h-3.5 text-white animate-spin-slow" />
-              <span>{isArabic ? 'English' : 'العربية'}</span>
-            </button>
+            {/* Language Selection Toggle Group */}
+            <div className={`flex p-1 rounded-xl border ${isDarkMode ? 'bg-natural-dark-panel border-natural-accent/15' : 'bg-white/10 border-white/20'}`}>
+              <button
+                id="btn-lang-fr"
+                onClick={() => setLang('fr')}
+                className={`px-2.5 py-1 text-[11px] font-bold rounded-lg transition-all cursor-pointer ${lang === 'fr' ? 'bg-natural-accent text-white shadow' : 'text-white/80 hover:text-white'}`}
+                title="Français"
+              >
+                FR
+              </button>
+              <button
+                id="btn-lang-ar"
+                onClick={() => setLang('ar')}
+                className={`px-2.5 py-1 text-[11px] font-bold rounded-lg transition-all cursor-pointer ${lang === 'ar' ? 'bg-natural-accent text-white shadow' : 'text-white/80 hover:text-white'}`}
+                title="العربية"
+              >
+                AR
+              </button>
+              <button
+                id="btn-lang-en"
+                onClick={() => setLang('en')}
+                className={`px-2.5 py-1 text-[11px] font-bold rounded-lg transition-all cursor-pointer ${lang === 'en' ? 'bg-natural-accent text-white shadow' : 'text-white/80 hover:text-white'}`}
+                title="English"
+              >
+                EN
+              </button>
+            </div>
 
             {/* Dark mode lights */}
             <button
@@ -746,6 +767,7 @@ export default function App() {
               }, 150);
             }}
             isArabic={isArabic}
+            lang={lang}
             isDarkMode={isDarkMode}
             onNavigateHome={() => setViewMode('explorer')}
           />

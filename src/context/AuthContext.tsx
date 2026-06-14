@@ -26,6 +26,7 @@ export interface UserProfile {
   createdAt: string;
   role: 'user' | 'admin';
   disabled: boolean;
+  score?: number; // QCM points score
 }
 
 interface AuthContextType {
@@ -70,6 +71,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           createdAt: new Date().toISOString(),
           role: isBootstrapAdmin ? 'admin' : 'user', // "bouallimohamed8@gmail.com" acts as bootstrap Admin
           disabled: false,
+          score: 0,
         };
         await setDoc(userDocRef, newProfile);
         setProfile(newProfile);

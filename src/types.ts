@@ -90,6 +90,19 @@ export interface Companion {
   deathPlaceEn?: string;
   externalLinks?: string[];
   mediaUrls?: { type: 'photo' | 'map' | 'document'; url: string; title: string; }[];
+
+  // French translations
+  nameFr?: string;
+  kunyaFr?: string;
+  lineageFr?: string;
+  titlesFr?: string[];
+  tribeFr?: string;
+  cityFr?: string;
+  shortBioFr?: string;
+  longBioFr?: string;
+  conversionFr?: string;
+  achievementsFr?: string[];
+  historicalSignificanceFr?: string;
 }
 
 export type RelationshipType =

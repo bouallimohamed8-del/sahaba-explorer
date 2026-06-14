@@ -33,13 +33,19 @@ import {
   BookOpen, 
   Check, 
   X,
-  History as HistoryIcon
+  History as HistoryIcon,
+  HelpCircle,
+  Award,
+  Sparkles,
+  RefreshCw
 } from 'lucide-react';
+import { LanguageCode, UI_TRANSLATIONS, SEERAH_QCM_QUESTIONS, QCMQuestion } from '../lib/i18n';
 
 interface UserProfilePageProps {
   allCompanions: Companion[];
   onSelectCompanion: (companion: Companion) => void;
   isArabic: boolean;
+  lang?: LanguageCode;
   isDarkMode?: boolean;
   onNavigateHome: () => void;
 }
@@ -67,13 +73,68 @@ export default function UserProfilePage({
   allCompanions,
   onSelectCompanion,
   isArabic,
+  lang,
   isDarkMode = false,
   onNavigateHome
 }: UserProfilePageProps) {
-  const { user, profile, logout } = useAuth();
+  const { user, profile } = useAuth();
+  
+  const currentLang = lang || (isArabic ? 'ar' : 'fr');
+  
+  const t = (key: string) => {
+    return UI_TRANSLATIONS[key]?.[currentLang] || UI_TRANSLATIONS[key]?.['fr'] || key;
+  };
   
   // Navigation tabs
-  const [activeTab, setActiveTab] = useState<'profile' | 'history' | 'notes'>('profile');
+  const [activeTab, setActiveTab] = useState<'profile' | 'history' | 'notes' | 'quiz'>('profile');
+  
+  // QCM interactive states
+  const [currentQuestion, setCurrentQuestion] = useState<QCMQuestion | null>(null);
+  const [selectedChoice, setSelectedChoice] = useState<number | null>(null);
+  const [isAnswered, setIsAnswered] = useState(false);
+  const [isCorrectResult, setIsCorrectResult] = useState(false);
+  const [quizPointsGranted, setQuizPointsGranted] = useState(0);
+  const [showExplanation, setShowExplanation] = useState(false);
+
+  const startNewQuiz = () => {
+    const randomIndex = Math.floor(Math.random() * SEERAH_QCM_QUESTIONS.length);
+    const q = SEERAH_QCM_QUESTIONS[randomIndex];
+    setCurrentQuestion(q);
+    setSelectedChoice(null);
+    setIsAnswered(false);
+    setShowExplanation(false);
+    setQuizPointsGranted(0);
+  };
+
+  const submitAnswer = async (index: number) => {
+    if (!user || !currentQuestion || isAnswered) return;
+    setSelectedChoice(index);
+    const correct = index === currentQuestion.correctIndex;
+    setIsCorrectResult(correct);
+    setIsAnswered(true);
+    
+    let points = -5;
+    if (correct) {
+      if (currentQuestion.difficulty === 'easy') points = 5;
+      else if (currentQuestion.difficulty === 'medium') points = 10;
+      else if (currentQuestion.difficulty === 'hard') points = 15;
+      else if (currentQuestion.difficulty === 'expert') points = 20;
+    }
+    setQuizPointsGranted(points);
+
+    // Save points inside User Firestore document
+    const currentScore = profile?.score || 0;
+    const newScore = Math.max(0, currentScore + points);
+    
+    try {
+      const userDocRef = doc(db, 'users', user.uid);
+      await updateDoc(userDocRef, {
+        score: newScore
+      });
+    } catch (err) {
+      console.error("Failed saving quiz points score to Firestore user profile:", err);
+    }
+  };
   
   // User profile editing state
   const [isEditingProfile, setIsEditingProfile] = useState(false);
@@ -359,7 +420,7 @@ export default function UserProfilePage({
             }`}
           >
             <UserIcon className="w-4 h-4 text-natural-accent" />
-            <span>{isArabic ? 'بيانات الحساب الشخصي' : 'Personal Profile Info'}</span>
+            <span>{t('profileTab')}</span>
           </button>
 
           <button
@@ -373,7 +434,7 @@ export default function UserProfilePage({
             }`}
           >
             <FileText className="w-4 h-4 text-natural-accent" />
-            <span className="flex-1 text-right">{isArabic ? 'حقيبة الملاحظات والفوائد' : 'Study Notes'}</span>
+            <span className="flex-1 text-right">{t('studyNotesTab')}</span>
             <span className="text-[10px] bg-natural-accent/15 text-natural-brand px-1.5 rounded-full font-mono">
               {notesList.length}
             </span>
@@ -390,9 +451,31 @@ export default function UserProfilePage({
             }`}
           >
             <HistoryIcon className="w-4 h-4 text-natural-accent" />
-            <span className="flex-1 text-right">{isArabic ? 'سجل القراءة والتصفح' : 'Browse History'}</span>
+            <span className="flex-1 text-right">{t('browseHistoryTab')}</span>
             <span className="text-[10px] bg-natural-accent/15 text-natural-brand px-1.5 rounded-full font-mono">
               {historyList.length}
+            </span>
+          </button>
+
+          <button
+            onClick={() => {
+              setActiveTab('quiz');
+              if (!currentQuestion) {
+                startNewQuiz();
+              }
+            }}
+            className={`w-full p-3.5 rounded-2xl text-xs font-serif font-bold text-start flex items-center gap-2.5 cursor-pointer transition-all ${
+              activeTab === 'quiz'
+                ? 'bg-[#A88B52] text-white shadow-md font-extrabold translate-x-1'
+                : isDarkMode 
+                  ? 'bg-natural-dark-panel/40 hover:bg-neutral-800 text-stone-400 hover:text-white border border-neutral-850'
+                  : 'bg-white hover:bg-natural-brand/5 text-natural-text border border-natural-accent/15'
+            }`}
+          >
+            <HelpCircle className="w-4 h-4 text-natural-accent" />
+            <span className="flex-1 text-right">{t('quizTab')}</span>
+            <span className="text-[10px] bg-amber-500/10 text-amber-600 px-1.5 rounded-full font-mono font-bold">
+              ★ {profile?.score || 0}
             </span>
           </button>
         </div>
@@ -790,6 +873,170 @@ export default function UserProfilePage({
                       </div>
                     ))}
                   </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* 4. COMPONENT STATE: INTERACTIVE TRIVIA QUIZ (QCM) */}
+          {activeTab === 'quiz' && (
+            <div className={`p-6 rounded-[2rem] border shadow-md space-y-6 animate-fade-in ${
+              isDarkMode ? 'bg-[#181914] border-neutral-805 text-slate-100' : 'bg-white border-[#D8CEB6]/50'
+            }`}>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b pb-4 border-neutral-200/50">
+                <div className="flex items-center gap-2.5">
+                  <div className="p-2 bg-amber-500/10 rounded-xl text-amber-600">
+                    <HelpCircle className="w-5 h-5 text-amber-500" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-bold uppercase font-serif text-natural-brand">{t('quizTab')}</h3>
+                    <p className="text-[10.5px] text-stone-500 font-sans">{t('quizTabDesc')}</p>
+                  </div>
+                </div>
+                
+                <div className="flex items-center gap-3">
+                  <span className="text-[10.5px] font-serif text-stone-500 font-bold">{t('starterScore')}:</span>
+                  <div className="bg-amber-500/10 text-amber-600 px-3 py-1.5 rounded-xl text-xs font-mono font-black flex items-center gap-1.5 shadow-sm border border-amber-500/20 animate-pulse">
+                    <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+                    <span>{profile?.score || 0} PTS</span>
+                  </div>
+                </div>
+              </div>
+
+              {currentQuestion ? (
+                <div className="space-y-6 animate-fade-in">
+                  {/* Top difficulty banner row */}
+                  <div className="flex flex-wrap items-center justify-between gap-2.5">
+                    <div className="flex items-center gap-2">
+                      <span className="text-[11px] font-serif text-stone-500">{t('difficultyLabel')}:</span>
+                      <span className={`text-[10px] uppercase font-mono px-2.5 py-1 rounded-full font-bold shadow-sm ${
+                        currentQuestion.difficulty === 'easy' ? 'bg-green-500/10 text-green-500 border border-green-500/20' :
+                        currentQuestion.difficulty === 'medium' ? 'bg-blue-500/10 text-blue-500 border border-blue-500/20' :
+                        currentQuestion.difficulty === 'hard' ? 'bg-orange-500/10 text-orange-500 border border-orange-500/20' :
+                        'bg-red-500/10 text-red-500 border border-red-500/20'
+                      }`}>
+                        {currentQuestion.difficulty === 'easy' && t('easy')}
+                        {currentQuestion.difficulty === 'medium' && t('medium')}
+                        {currentQuestion.difficulty === 'hard' && t('hard')}
+                        {currentQuestion.difficulty === 'expert' && t('expert')}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <span className="text-[11px] font-serif text-stone-500">{t('pointsPotential')}:</span>
+                      <span className="text-[11px] font-mono font-bold text-natural-accent bg-natural-brand/5 px-2 py-0.5 rounded-lg border border-natural-brand/10">
+                        +{(currentQuestion.difficulty === 'easy' ? 5 : currentQuestion.difficulty === 'medium' ? 10 : currentQuestion.difficulty === 'hard' ? 15 : 20)} PTS
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Question text box */}
+                  <div className={`p-5 rounded-2xl border text-center font-serif font-bold text-sm ${
+                    isDarkMode ? 'bg-[#1D1E16] border-neutral-750 text-amber-200' : 'bg-[#FAF9F5] border-natural-accent/20 text-[#443825]'
+                  }`}>
+                    {currentQuestion.question[currentLang] || currentQuestion.question['fr']}
+                  </div>
+
+                  {/* 4 Choices grid */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3" id="qcm-choices-grid">
+                    {currentQuestion.choices[currentLang]?.map((choice, idx) => {
+                      const isSelected = selectedChoice === idx;
+                      const isCorrectAnswer = idx === currentQuestion.correctIndex;
+                      
+                      let choiceStyle = '';
+                      if (isAnswered) {
+                        if (isCorrectAnswer) {
+                          // Green correct border/bg
+                          choiceStyle = 'bg-green-500/10 border-green-500 text-green-600 font-extrabold';
+                        } else if (isSelected) {
+                          // Red incorrect border/bg
+                          choiceStyle = 'bg-red-500/10 border-red-500 text-red-500 font-bold';
+                        } else {
+                          // Faded border
+                          choiceStyle = isDarkMode ? 'border-neutral-800 text-stone-550 opacity-55' : 'border-neutral-150 text-stone-400 opacity-60';
+                        }
+                      } else {
+                        choiceStyle = isDarkMode
+                          ? 'bg-natural-dark-bg/60 border-neutral-750 hover:border-natural-accent hover:bg-[#20211B] text-slate-200'
+                          : 'bg-white border-[#CFC5AD]/40 hover:border-natural-brand hover:bg-[#F2ECE0]/20 text-natural-text';
+                      }
+
+                      return (
+                        <button
+                          key={idx}
+                          disabled={isAnswered}
+                          onClick={() => submitAnswer(idx)}
+                          className={`p-4 rounded-xl border text-xs text-start transition duration-200 flex items-center gap-3 w-full cursor-pointer ${choiceStyle}`}
+                        >
+                          <div className={`w-6 h-6 rounded-lg border flex items-center justify-center font-bold text-xs select-none ${
+                            isAnswered && isCorrectAnswer ? 'bg-green-500 border-green-600 text-white' :
+                            isAnswered && isSelected ? 'bg-red-500 border-red-600 text-white' :
+                            isDarkMode ? 'bg-neutral-850 border-neutral-700 text-stone-400' : 'bg-stone-50 border-[#D8CEB6]/55 text-natural-brand'
+                          }`}>
+                            {String.fromCharCode(65 + idx)}
+                          </div>
+                          <span className="flex-1">{choice}</span>
+                          
+                          {isAnswered && isCorrectAnswer && (
+                            <Check className="w-4 h-4 text-green-500 animate-bounce" />
+                          )}
+                          {isAnswered && isSelected && !isCorrectAnswer && (
+                            <X className="w-4 h-4 text-red-500" />
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {/* Status Banner Result alerts */}
+                  {isAnswered && (
+                    <div className={`p-4 rounded-2xl border text-center font-serif text-xs space-y-2 animate-fade-in ${
+                      isCorrectResult 
+                        ? 'bg-green-500/10 border-green-500/30 text-green-600/90' 
+                        : 'bg-red-500/10 border-red-500/30 text-red-500/90'
+                    }`}>
+                      <div className="font-extrabold flex items-center justify-center gap-1.5 text-sm">
+                        <span>{isCorrectResult ? '🎉' : '❌'}</span>
+                        <span>{isCorrectResult ? t('correctNotice') : t('wrongNotice')}</span>
+                        <span className="font-mono text-xs font-bold px-1.5 bg-black/10 rounded-lg">
+                          {quizPointsGranted > 0 ? `+${quizPointsGranted}` : quizPointsGranted} PTS
+                        </span>
+                      </div>
+                      
+                      {/* Explanatory text card */}
+                      <p className={`text-xs text-start leading-relaxed font-sans px-2 pt-1 border-t border-dashed ${
+                        isCorrectResult ? 'border-green-500/25 text-neutral-700/80 dark:text-slate-350' : 'border-red-500/25 text-neutral-700/80 dark:text-slate-350'
+                      }`}>
+                        <strong>{t('sourceLabel')}:</strong> {currentQuestion.explanation[currentLang] || currentQuestion.explanation['fr']}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Controls footer */}
+                  <div className="flex gap-2 justify-end pt-2">
+                    <button
+                      onClick={startNewQuiz}
+                      className="p-3 px-5 bg-natural-brand hover:bg-[#A88B52] text-white font-serif font-bold rounded-xl text-xs flex items-center gap-1.5 transition active:scale-95 shadow cursor-pointer text-center"
+                    >
+                      <RefreshCw className="w-3.5 h-3.5 animate-spin-slow" />
+                      <span>{t('nextQuestionBtn')}</span>
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center py-12 space-y-4 animate-fade-in">
+                  <Award className="w-12 h-12 text-amber-500 mx-auto animate-pulse" />
+                  <p className="text-xs font-serif text-stone-500 leading-relaxed max-w-sm mx-auto">
+                    {t('correctAnswerScore')}
+                    <br />
+                    <span className="text-red-500/90">{t('wrongAnswerScore')}</span>
+                  </p>
+                  <button
+                    onClick={startNewQuiz}
+                    className="p-3 px-6 bg-natural-brand hover:bg-[#A88B52] text-white font-serif font-bold rounded-xl text-xs transition active:scale-95 shadow-md shrink-0 cursor-pointer"
+                  >
+                    {t('startQuizBtn')}
+                  </button>
                 </div>
               )}
             </div>
