@@ -180,7 +180,7 @@ export default function NetworkGraph({
   const [zoom, setZoom] = useState<number>(1.25);
 
   // Interactive Maps / Layout states: 'map' (Geographic Caravan Scroll) | 'sphere' (3D Constellation) | 'rings' (Astrolabe orbits) | 'helix' (Timeline path)
-  const [layout, setLayout] = useState<'map' | 'sphere' | 'rings' | 'helix'>('map');
+  const [layout, setLayout] = useState<'map' | 'sphere' | 'rings' | 'helix'>('sphere');
   const [isPanning, setIsPanning] = useState<boolean>(false);
   const [isAutoSpinning, setIsAutoSpinning] = useState<boolean>(true);
   const [isLegendOpen, setIsLegendOpen] = useState<boolean>(false);
@@ -601,23 +601,11 @@ export default function NetworkGraph({
             isDarkMode ? 'bg-neutral-950/80 border-neutral-850' : 'bg-white/80 border-stone-200'
           }`}>
             <button
-              onClick={() => setLayout('map')}
-              className={`p-1.5 px-3 rounded-full text-xs font-serif font-bold flex items-center gap-1 transition-all ${
-                layout === 'map'
-                  ? 'bg-amber-600 text-white shadow'
-                  : 'text-stone-500 hover:text-amber-500'
-              }`}
-              title="Geographical Caravan Map"
-            >
-              <Compass className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline text-[10px]">{isArabic ? 'خريطة القوافل' : 'Caravan Map'}</span>
-            </button>
-            <button
               onClick={() => setLayout('sphere')}
               className={`p-1.5 px-3 rounded-full text-xs font-serif font-bold flex items-center gap-1 transition-all ${
                 layout === 'sphere'
                   ? 'bg-amber-600 text-white shadow'
-                  : 'text-stone-500 hover:text-amber-550'
+                  : 'text-stone-500 hover:text-amber-555'
               }`}
               title="3D Sphere Constellation"
             >
@@ -629,7 +617,7 @@ export default function NetworkGraph({
               className={`p-1.5 px-3 rounded-full text-xs font-serif font-bold flex items-center gap-1 transition-all ${
                 layout === 'rings'
                   ? 'bg-amber-600 text-white shadow'
-                  : 'text-stone-500 hover:text-amber-550'
+                  : 'text-stone-500 hover:text-amber-555'
               }`}
               title="Astrolabe Concentric Orbits"
             >
@@ -641,7 +629,7 @@ export default function NetworkGraph({
               className={`p-1.5 px-3 rounded-full text-xs font-serif font-bold flex items-center gap-1 transition-all ${
                 layout === 'helix'
                   ? 'bg-amber-600 text-white shadow'
-                  : 'text-stone-500 hover:text-amber-550'
+                  : 'text-stone-500 hover:text-amber-555'
               }`}
               title="Chronological Timeline helix"
             >

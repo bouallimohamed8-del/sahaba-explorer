@@ -26,6 +26,7 @@ import {
   LogOut,
   X,
   FileText,
+  Video,
   Link as LinkIcon
 } from 'lucide-react';
 
@@ -36,6 +37,7 @@ import AdminMaintenance from './AdminMaintenance';
 import AdminImportExport from './AdminImportExport';
 import AdminUsers from './AdminUsers';
 import FirebaseUsersManager from './FirebaseUsersManager';
+import AdminVideosModeration from './AdminVideosModeration';
 
 interface AdminDashboardProps {
   companions: Companion[];
@@ -60,7 +62,7 @@ export default function AdminDashboard({
   });
 
   // Navigation tab
-  const [activeTab, setActiveTab] = useState<'stats' | 'companion_form' | 'relation_form' | 'proposals' | 'maintenance' | 'import_export' | 'users'>('stats');
+  const [activeTab, setActiveTab] = useState<'stats' | 'companion_form' | 'relation_form' | 'proposals' | 'maintenance' | 'import_export' | 'users' | 'videos'>('stats');
   const [usersSubTab, setUsersSubTab] = useState<'firebase' | 'classic'>('firebase');
 
   // Backend Stats
@@ -598,7 +600,8 @@ export default function AdminDashboard({
           { key: 'proposals', label: `${isArabic ? 'طلبات المراجعة' : 'Approvals queue'} (${pendingCount})`, icon: ClipboardCheck },
           { key: 'maintenance', label: isArabic ? 'مراقبة الجودة والدمج' : 'Quality checks & Merges', icon: AlertCircle },
           { key: 'import_export', label: isArabic ? 'استيراد وتصدير' : 'JSON/CSV Backups', icon: FileSpreadsheet },
-          { key: 'users', label: isArabic ? 'المشرفون المنظمون' : 'Administrators manager', icon: Users, reqSuper: true }
+          { key: 'users', label: isArabic ? 'المشرفون المنظمون' : 'Administrators manager', icon: Users, reqSuper: true },
+          { key: 'videos', label: isArabic ? 'إدارة اليوتيوب والوسائط' : 'Médiathèque (YouTube)', icon: Video }
         ].map((tab) => {
           if (tab.reqSuper && user.role !== 'Super Admin') return null;
           const Icon = tab.icon;
@@ -1432,6 +1435,14 @@ export default function AdminDashboard({
               />
             )}
           </div>
+        )}
+
+        {activeTab === 'videos' && (
+          <AdminVideosModeration
+            companions={companions}
+            isArabic={isArabic}
+            isDarkMode={isDarkMode}
+          />
         )}
       </div>
     </div>

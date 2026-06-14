@@ -7,6 +7,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Companion, Relationship, FilterState, TimelineEvent, BattleInfo } from './types';
 import NetworkGraph, { CATEGORY_CONFIG } from './components/NetworkGraph';
 import CompanionDetail from './components/CompanionDetail';
+import ClassificationTool from './components/ClassificationTool';
 import FilterControls from './components/FilterControls';
 import AdminDashboard from './components/AdminDashboard';
 import UserProfilePage from './components/UserProfilePage';
@@ -39,7 +40,7 @@ export default function App() {
   const isArabic = lang === 'ar';
   const [isDarkMode, setIsDarkMode] = useState<boolean>(false);
   const [viewMode, setViewMode] = useState<'explorer' | 'admin' | 'profile'>('explorer');
-  const [explorerViewType, setExplorerViewType] = useState<'graph' | 'directory'>('graph');
+  const [explorerViewType, setExplorerViewType] = useState<'graph' | 'directory' | 'classify'>('classify');
   const [showAdvancedFilters, setShowAdvancedFilters] = useState<boolean>(false);
 
   // Record browsed history in Firestore
@@ -457,7 +458,21 @@ export default function App() {
                     <Layers className="w-4 h-4 text-natural-accent" />
                     <span className="text-xs font-bold font-serif text-natural-brand">{isArabic ? 'طريقة العرض المعتمدة:' : 'Explorer Display Layout:'}</span>
                   </div>
-                  <div className="flex gap-1" id="view-mode-toggle-group">
+                   <div className="flex gap-1" id="view-mode-toggle-group">
+                    <button
+                      id="view-type-classify"
+                      onClick={() => setExplorerViewType('classify')}
+                      className={`px-3 py-1.5 rounded-xl text-xs font-serif font-bold transition flex items-center gap-1.5 cursor-pointer active:scale-95 ${
+                        explorerViewType === 'classify'
+                          ? 'bg-natural-brand text-white shadow'
+                          : isDarkMode
+                            ? 'text-slate-400 hover:bg-neutral-800 hover:text-white'
+                            : 'text-neutral-600 hover:bg-[#F5F2ED] hover:text-natural-accent'
+                      }`}
+                    >
+                      <span>🗂️</span>
+                      <span>{isArabic ? 'أداة التصنيف القيمة' : 'Classification'}</span>
+                    </button>
                     <button
                       id="view-type-grid"
                       onClick={() => setExplorerViewType('directory')}
@@ -469,8 +484,8 @@ export default function App() {
                             : 'text-neutral-600 hover:bg-[#F5F2ED] hover:text-natural-accent'
                       }`}
                     >
-                      <span>🗂️</span>
-                      <span>{isArabic ? 'بطاقات مبسطة' : 'Simple Cards'}</span>
+                      <span>📑</span>
+                      <span>{isArabic ? 'بطاقات السيرة' : 'Sira cards'}</span>
                     </button>
                     <button
                       id="view-type-graph"
@@ -484,12 +499,21 @@ export default function App() {
                       }`}
                     >
                       <span>🕸️</span>
-                      <span>{isArabic ? 'مخطط العلاقات' : 'Relationship Map'}</span>
+                      <span>{isArabic ? 'شبكة العلاقات' : 'Relations Map'}</span>
                     </button>
                   </div>
                 </div>
 
-                {explorerViewType === 'graph' ? (
+                {explorerViewType === 'classify' ? (
+                  <ClassificationTool
+                    companions={filteredCompanions}
+                    onSelectCompanion={setSelectedCompanion}
+                    selectedCompanion={selectedCompanion}
+                    isArabic={isArabic}
+                    lang={lang}
+                    isDarkMode={isDarkMode}
+                  />
+                ) : explorerViewType === 'graph' ? (
                   <NetworkGraph
                     companions={filteredCompanions}
                     relationships={relationships}
@@ -557,8 +581,8 @@ export default function App() {
                                 </div>
 
                                 <div className="space-y-1">
-                                  <h4 className="text-base font-serif font-bold text-natural-brand group-hover:text-natural-accent transition-colors">
-                                    {isArabic ? comp.nameAr : comp.nameEn}
+                                  <h4 className="text-base font-serif font-bold text-natural-brand group-hover:text-natural-accent transition-colors" lang="ar" dir="rtl">
+                                    {comp.nameAr}
                                   </h4>
                                   <p className="text-[11px] font-mono text-stone-500 truncate">
                                     {isArabic ? comp.tribeAr : comp.tribeEn}
@@ -595,7 +619,7 @@ export default function App() {
                     </div>
                     <div className="flex-1">
                       <div className="flex items-center gap-1.5 mb-1">
-                        <h4 className="text-sm font-bold text-natural-brand font-serif">{isArabic ? hoveredCompanion.nameAr : hoveredCompanion.nameEn}</h4>
+                        <h4 className="text-sm font-bold text-natural-brand font-serif" lang="ar" dir="rtl">{hoveredCompanion.nameAr}</h4>
                         <span className="text-[10px] bg-natural-accent/15 border border-natural-accent/30 rounded px-1.5 font-bold text-natural-brand font-mono">
                           {hoveredCompanion.ageAtDeath} {isArabic ? 'سنة' : 'yrs'}
                         </span>
@@ -633,7 +657,7 @@ export default function App() {
                       >
                         <option value="">-- {isArabic ? 'اختر البداية' : 'Select Start Node'} --</option>
                         {companions.map(c => (
-                          <option key={c.id} value={c.id}>{isArabic ? c.nameAr : c.nameEn}</option>
+                          <option key={c.id} value={c.id}>{c.nameAr} ({c.nameEn})</option>
                         ))}
                       </select>
                     </div>
@@ -648,7 +672,7 @@ export default function App() {
                       >
                         <option value="">-- {isArabic ? 'اختر الهدف' : 'Select Target Node'} --</option>
                         {companions.map(c => (
-                          <option key={c.id} value={c.id}>{isArabic ? c.nameAr : c.nameEn}</option>
+                          <option key={c.id} value={c.id}>{c.nameAr} ({c.nameEn})</option>
                         ))}
                       </select>
                     </div>
@@ -688,7 +712,7 @@ export default function App() {
                                 <span className="w-5 h-5 rounded bg-natural-accent/20 text-natural-brand text-[10.5px] font-bold flex items-center justify-center border border-natural-accent/30 font-mono">
                                   {idx + 1}
                                 </span>
-                                <span className={`font-serif font-bold ${isDarkMode ? 'text-slate-100' : 'text-natural-brand'}`}>{isArabic ? node.nameAr.split(' ')[0] : node.nameEn.split(' ')[0]}</span>
+                                <span className={`font-serif font-bold ${isDarkMode ? 'text-slate-100' : 'text-natural-brand'}`} lang="ar" dir="rtl">{node.nameAr}</span>
                                 {idx < highlightedPath.length - 1 && (
                                   <span className="text-natural-accent text-[11px]">&larr;</span>
                                 )}
@@ -705,7 +729,7 @@ export default function App() {
                 {selectedCompanion ? (
                   <div className={`border rounded-3xl p-5 shadow-lg relative ${isDarkMode ? 'bg-natural-dark-panel border-neutral-800' : 'bg-white/90 border-natural-accent/30 animate-fade-in'}`}>
                     <span className="text-[9px] uppercase font-bold text-natural-accent block mb-1">SELECTED COMPANION</span>
-                    <h2 className="text-lg font-bold text-natural-brand font-serif mb-0.5">{isArabic ? selectedCompanion.nameAr : selectedCompanion.nameEn}</h2>
+                    <h2 className="text-lg font-bold text-natural-brand font-serif mb-0.5" lang="ar" dir="rtl">{selectedCompanion.nameAr}</h2>
                     <p className={`text-[11.5px] leading-relaxed mt-2 italic mb-4 ${isDarkMode ? 'text-slate-300' : 'text-neutral-700 font-serif'}`}>
                       "{isArabic ? selectedCompanion.shortBioAr : selectedCompanion.shortBioEn}"
                     </p>

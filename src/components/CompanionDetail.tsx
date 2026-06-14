@@ -6,9 +6,9 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { Companion, Relationship, BattleInfo } from '../types';
 import { DEFAULT_BATTLES } from '../data/defaultDataset';
-import { BookOpen, Calendar, Award, Copy, Check, Users, ShieldAlert, ArrowRight, ArrowLeft, Landmark, History, Library, Compass, Save, Trash2, Edit3, Plus, FileText, Lock } from 'lucide-react';
+import { BookOpen, Calendar, Award, Copy, Check, Users, ShieldAlert, ArrowRight, ArrowLeft, Landmark, History, Library, Compass, Save, Trash2, Edit3, Plus, FileText, Lock, Play, Tv } from 'lucide-react';
 import { db } from '../lib/firebase';
-import { collection, query, orderBy, getDocs, doc, setDoc, deleteDoc } from 'firebase/firestore';
+import { collection, query, orderBy, getDocs, doc, setDoc, deleteDoc, where } from 'firebase/firestore';
 
 interface CompanionDetailProps {
   companion: Companion;
@@ -42,6 +42,34 @@ export default function CompanionDetail({
   const [newNoteContent, setNewNoteContent] = useState('');
   const [noteTitleInput, setNoteTitleInput] = useState('');
   const [noteErrorMessage, setNoteErrorMessage] = useState('');
+
+  // Dynamic YouTube Videos list for this Companion
+  const [videos, setVideos] = useState<any[]>([]);
+  const [loadingVideos, setLoadingVideos] = useState<boolean>(false);
+
+  useEffect(() => {
+    const fetchVideos = async () => {
+      if (!companion) return;
+      setLoadingVideos(true);
+      try {
+        const qRef = collection(db, 'videos');
+        const qs = await getDocs(qRef);
+        const list: any[] = [];
+        qs.forEach(docSnap => {
+          const data = docSnap.data();
+          if (data.companionId === companion.id) {
+            list.push({ id: docSnap.id, ...data });
+          }
+        });
+        setVideos(list);
+      } catch (err) {
+        console.error("Error fetching companion videos in detail:", err);
+      } finally {
+        setLoadingVideos(false);
+      }
+    };
+    fetchVideos();
+  }, [companion.id]);
 
   // Fetch study notes belonging to this companion
   const fetchCompanionNotes = async () => {
@@ -220,7 +248,7 @@ export default function CompanionDetail({
         <div className="text-center md:text-start flex-1">
           {/* Identity Name */}
           <div className="flex flex-wrap items-center justify-center md:justify-start gap-2.5 mb-1.5">
-            <h1 className="text-2xl md:text-3xl font-extrabold text-natural-brand tracking-tight font-serif">{isArabic ? companion.nameAr : companion.nameEn}</h1>
+            <h1 className="text-2xl md:text-3xl font-extrabold text-natural-brand tracking-tight font-serif" lang="ar" dir="rtl">{companion.nameAr}</h1>
             <span className={`text-[10px] px-2.5 py-0.5 rounded-full font-mono font-bold ${isDarkMode ? 'bg-natural-dark-bg border border-neutral-700 text-slate-400' : 'bg-[#FBECE6] border border-natural-accent/30 text-natural-brand'}`}>
               {companion.ageAtDeath} {isArabic ? 'سنة هجرية' : 'years old'}
             </span>
@@ -364,7 +392,7 @@ export default function CompanionDetail({
                         {rel.peer?.nameAr.charAt(0)}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <h4 className="text-[11px] font-bold truncate">{isArabic ? rel.peer?.nameAr : rel.peer?.nameEn}</h4>
+                        <h4 className="text-[11px] font-bold truncate" lang="ar" dir="rtl">{rel.peer?.nameAr}</h4>
                         <span className={`text-[9.5px] block ${isDarkMode ? 'text-slate-405' : 'text-natural-accent/80 font-sans'}`}>{isArabic ? rel.peerRelationText : rel.peerRelationTextEn}</span>
                       </div>
                     </div>
@@ -521,98 +549,123 @@ export default function CompanionDetail({
       {/* TAB CONTENT: SOURCES, LIBRARIES AND MAP DETAILS */}
       {activeTab === 'sources' && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 text-neutral-805">
-          {/* Classical Reference Sources */}
-          <div className="space-y-4">
-            <h3 className={`text-sm font-bold border-b pb-2 flex items-center gap-1.5 font-serif ${isDarkMode ? 'text-slate-200 border-neutral-800' : 'text-natural-brand border-natural-accent/20'}`}>
-              <Library className="w-4.5 h-4.5 text-natural-accent" />
-              <span>{isArabic ? 'توثيق المصادر التراثية المسندة' : 'Classical Reference Documents'}</span>
-            </h3>
-            <p className={`text-[10.5px] leading-relaxed ${isDarkMode ? 'text-slate-400' : 'text-neutral-600 font-serif'}`}>
-              {isArabic
-                ? 'اعتُمدت هذه البيانات بفضل جهود الحفاظ والمؤرخين الأوائل الذين وثّقوا تراجم الصحابة والأسانيد النبوية الشريفة:'
-                : 'This encyclopedia aggregates records certified using historical consensus across senior classical documents of Islamic bibliography:'}
-            </p>
-            <div className="grid grid-cols-2 gap-2 text-xs">
-              {companion.sources.map((s, idx) => (
-                <div key={idx} className={`rounded-xl px-3 py-2.5 border flex items-center gap-1.5 ${isDarkMode ? 'bg-natural-dark-bg/60 border-neutral-750 text-slate-350' : 'bg-[#FAF9F5] border-natural-accent/20 text-natural-text font-serif'}`}>
-                  <span className="w-1.5 h-1.5 rounded-full bg-natural-accent" />
-                  <span>{s}</span>
-                </div>
-              ))}
+          {/* Classical Reference Sources & Academic Library */}
+          <div className="space-y-6">
+            <div>
+              <h3 className={`text-sm font-bold border-b pb-2 flex items-center gap-1.5 font-serif ${isDarkMode ? 'text-slate-200 border-neutral-800' : 'text-natural-brand border-natural-accent/20'}`}>
+                <Library className="w-4.5 h-4.5 text-natural-accent" />
+                <span>{isArabic ? 'توثيق المصادر التراثية المسندة' : 'Classical Reference Documents'}</span>
+              </h3>
+              <p className={`text-[10.5px] leading-relaxed mb-3 ${isDarkMode ? 'text-slate-400' : 'text-neutral-600 font-serif'}`}>
+                {isArabic
+                  ? 'اعتُمدت هذه البيانات بفضل جهود الحفاظ والمؤرخين الأوائل الذين وثّقوا تراجم الصحابة والأسانيد النبوية الشريفة:'
+                  : 'This encyclopedia aggregates records certified using historical consensus across senior classical documents of Islamic bibliography:'}
+              </p>
+              <div className="grid grid-cols-2 gap-2 text-xs">
+                {companion.sources.map((s, idx) => (
+                  <div key={idx} className={`rounded-xl px-3 py-2.5 border flex items-center gap-1.5 ${isDarkMode ? 'bg-natural-dark-bg/60 border-neutral-750 text-slate-350' : 'bg-[#FAF9F5] border-natural-accent/20 text-natural-text font-serif'}`}>
+                    <span className="w-1.5 h-1.5 rounded-full bg-natural-accent" />
+                    <span>{s}</span>
+                  </div>
+                ))}
+              </div>
             </div>
 
-            {/* Academic library and study references */}
-            <h3 className={`text-sm font-bold border-b pt-3 pb-2 flex items-center gap-1.5 font-serif ${isDarkMode ? 'text-slate-200 border-neutral-800' : 'text-natural-brand border-natural-accent/25'}`}>
-              <BookOpen className="w-4.5 h-4.5 text-natural-accent" />
-              <span>{isArabic ? 'مؤلفات ودراسات أكاديمية مضافة' : 'Academic & Modern Studies'}</span>
-            </h3>
-            <ul className="space-y-2 text-xs pr-1">
-              {companion.library.map((l, idx) => (
-                <li key={idx} className={`flex gap-2 px-3 py-2 rounded-xl border ${isDarkMode ? 'bg-natural-dark-bg/40 border-neutral-750 text-slate-300' : 'bg-white border-natural-accent/15 text-neutral-700 font-serif'}`}>
-                  <span className="text-slate-500">📖</span>
-                  <span className="italic">{l}</span>
-                </li>
-              ))}
-            </ul>
+            <div>
+              <h3 className={`text-sm font-bold border-b pb-2 flex items-center gap-1.5 font-serif ${isDarkMode ? 'text-slate-200 border-neutral-800' : 'text-natural-brand border-natural-accent/25'}`}>
+                <BookOpen className="w-4.5 h-4.5 text-natural-accent" />
+                <span>{isArabic ? 'مؤلفات ودراسات أكاديمية مضافة' : 'Academic & Modern Studies'}</span>
+              </h3>
+              <ul className="space-y-2 text-xs pr-1">
+                {companion.library.map((l, idx) => (
+                  <li key={idx} className={`flex gap-2 px-3 py-2 rounded-xl border ${isDarkMode ? 'bg-natural-dark-bg/40 border-neutral-750 text-slate-300' : 'bg-white border-natural-accent/15 text-neutral-700 font-serif'}`}>
+                    <span className="text-slate-500">📖</span>
+                    <span className="italic">{l}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
           </div>
 
-          {/* Interactive media map & travel coordinates */}
+          {/* Audio-visual informative YouTube references (Médiathèque Audio-Visuelle) */}
           <div className={`border p-5 rounded-2xl flex flex-col justify-between ${isDarkMode ? 'bg-[#1E1F1A] border-neutral-800' : 'bg-[#FAF9F5] border-natural-accent/20 shadow-sm'}`}>
             <div>
               <h3 className={`text-sm font-bold border-b pb-2 flex items-center gap-1.5 font-serif ${isDarkMode ? 'text-slate-200 border-neutral-800' : 'text-natural-brand border-natural-accent/25'}`}>
-                <Compass className="w-4.5 h-4.5 text-natural-accent" />
-                <span>{isArabic ? 'مسارات تنقل الصحابي ومواطن السيرة-خريطة' : 'Geographic Journeys & Milestones'}</span>
+                <Tv className="w-4.5 h-4.5 text-natural-accent" />
+                <span>{isArabic ? 'المكتبة المرئية والمسموعة' : 'Médiathèque Audio-Visuelle'}</span>
               </h3>
-              <p className={`text-[10.5px] leading-relaxed mt-2 mb-4 ${isDarkMode ? 'text-slate-400' : 'text-neutral-600 font-serif'}`}>
+              <p className={`text-[10.5px] leading-relaxed mt-2 mb-4 ${isDarkMode ? 'text-slate-405' : 'text-neutral-600 font-serif'}`}>
                 {isArabic
-                  ? 'تمثل هذه الخريطة البيانية خطوط تنقل الصحابي وهجراته بين الأقطار لقول الحق أو نصرة الغزوات وتعليم التابعين.'
-                  : 'Map representing key geopolitical routes this companion paced, from initial Meccan days, Medina migrations, to Damascus, Iraq, or Abyssinia.'}
+                  ? 'مجموعة من المواد التعليمية المرئية والمسموعة والمحاضرات الوثائقية المختارة حول سيرة هذا الصحابي الجليل.'
+                  : 'Une sélection de documentaires, de récits audio-visuels et de conférences de haute précision sur l\'héritage historique de ce noble compagnon.'}
               </p>
 
-              {/* Geographic graphic plot visualizer */}
-              <div className={`relative w-full h-[140px] border rounded-xl overflow-hidden flex items-center justify-center ${isDarkMode ? 'bg-natural-dark-panel border-neutral-750' : 'bg-[#FAF9F5] border-natural-accent/25'}`}>
-                {/* Simulated old map pattern background */}
-                <div className="absolute inset-0 opacity-10 bg-radial from-slate-500 to-transparent pointer-events-none" />
-                <svg className="w-full h-full p-2 text-slate-500">
-                  {/* Draw connection route vectors */}
-                  <line x1="40" y1="90" x2="100" y2="40" stroke="#8c6a46" strokeWidth="1" strokeDasharray="2,3" />
-                  <line x1="100" y1="40" x2="180" y2="70" stroke="#8c6a46" strokeWidth="1" strokeDasharray="2,3" />
-                  {companion.id === 'bilal_bin_rabah' && (
-                    <line x1="100" y1="40" x2="240" y2="30" stroke="#BF7F4B" strokeWidth="1.5" />
-                  )}
-                  {companion.id === 'ali_bin_abi_talib' && (
-                    <line x1="100" y1="40" x2="220" y2="60" stroke="#BF7F4B" strokeWidth="1.5" />
-                  )}
+              {loadingVideos ? (
+                <div className="flex items-center justify-center p-8 text-xs font-mono text-slate-450">
+                  <div className="animate-spin rounded-full h-4 w-4 border-2 border-natural-accent border-t-transparent mr-2" />
+                  <span>{isArabic ? 'جاري تحميل المواد المرئية...' : 'Chargement de la médiathèque...'}</span>
+                </div>
+              ) : videos.length === 0 ? (
+                <div className={`p-6 border border-dashed rounded-xl text-center ${isDarkMode ? 'bg-natural-dark-panel/40 border-neutral-750 text-slate-500' : 'bg-white border-neutral-200 text-neutral-500 font-serif'}`}>
+                  <Play className="w-6 h-6 mx-auto mb-2 text-natural-accent/40" />
+                  <p className="text-[11px] leading-relaxed mb-1 font-bold">
+                    {isArabic ? 'لا توجد تسجيلات مرئية مضافة حالياً' : 'Aucun contenu audio-visuel disponible'}
+                  </p>
+                  <p className="text-[9.5px] text-slate-450 leading-snug">
+                    {isArabic 
+                      ? 'يمكن للمشرفين المعتمدين إضافة روابط يوتيوب ومحاضرات سيرة من خلال لوحة الإدارة.' 
+                      : 'Les administrateurs peuvent associer des liens vidéo YouTube éducatifs depuis la de modération.'}
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-4 max-h-[340px] overflow-y-auto pr-1">
+                  {videos.map((vid: any) => {
+                    let ytId = '';
+                    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+                    const match = vid.youtubeUrl.match(regExp);
+                    if (match && match[2].length === 11) {
+                      ytId = match[2];
+                    } else {
+                      ytId = vid.youtubeUrl;
+                    }
+                    const embedUrl = ytId ? `https://www.youtube.com/embed/${ytId}` : '';
 
-                  {/* Draw key historic geographic hubs */}
-                  <g transform="translate(40, 90)">
-                    <circle r="3.5" fill="#8c6a46" />
-                    <text x="-15" y="-10" className={`text-[7.5px] ${isDarkMode ? 'fill-slate-400' : 'fill-natural-brand font-serif'}`}>{isArabic ? 'مكة المكرمة' : 'Mecca'}</text>
-                  </g>
-                  <g transform="translate(100, 40)">
-                    <circle r="4.5" fill="#BF7F4B" />
-                    <circle r="6" fill="none" stroke="#BF7F4B" strokeWidth="0.5" className="animate-pulse" />
-                    <text x="8" y="12" className="text-[7.5px] fill-natural-brand font-bold font-serif">{isArabic ? 'المدينة المنورة' : 'Medina'}</text>
-                  </g>
-                  <g transform="translate(180, 70)">
-                    <circle r="3" fill="#8c6a46" />
-                    <text x="6" y="-3" className="text-[7px] fill-neutral-600 font-serif">{isArabic ? 'البحرين/عُمان' : 'Eastern Arabia'}</text>
-                  </g>
-                  <g transform="translate(240, 30)">
-                    <circle r="3.5" fill={companion.cityEn.includes('Damascus') || companion.cityEn.includes('Homs') ? '#BF7F4B' : '#8c6a46'} />
-                    <text x="-5" y="-10" className="text-[7px] fill-neutral-600 font-serif">{isArabic ? 'شام دمشق' : 'Syria'}</text>
-                  </g>
-                  <g transform="translate(220, 60)">
-                    <circle r="3.5" fill={companion.cityEn.includes('Kufa') || companion.cityEn.includes('Basra') ? '#BF7F4B' : '#8c6a46'} />
-                    <text x="-5" y="12" className="text-[7px] fill-neutral-600 font-serif">{isArabic ? 'العراق (الكوفة)' : 'Iraq (Kufa)'}</text>
-                  </g>
-                </svg>
-              </div>
+                    return (
+                      <div key={vid.id} className={`p-3 border rounded-xl shadow-xs ${isDarkMode ? 'bg-[#181914] border-neutral-750' : 'bg-white border-neutral-200'}`}>
+                        {embedUrl ? (
+                          <div className="relative w-full aspect-video rounded-lg overflow-hidden border border-neutral-750/10 mb-2">
+                            <iframe
+                              className="absolute inset-0 w-full h-full"
+                              src={embedUrl}
+                              title={vid.titleAr || vid.titleFr}
+                              frameBorder="0"
+                              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                              allowFullScreen
+                              referrerPolicy="no-referrer"
+                            />
+                          </div>
+                        ) : (
+                          <div className="p-3 bg-red-500/5 text-red-500 text-[10px] font-mono rounded border border-red-500/10 mb-2">
+                            Invalid YouTube URL format
+                          </div>
+                        )}
+                        <div className="text-[11.5px] font-bold font-serif leading-tight mb-1 text-natural-brand">
+                          {isArabic ? vid.titleAr : (vid.titleFr || vid.titleAr)}
+                        </div>
+                        <div className="flex justify-between items-center text-[9px] font-mono text-slate-400">
+                          <span>YouTube Education</span>
+                          <span>{new Date(vid.createdAt).toLocaleDateString(isArabic ? 'ar-EG' : 'fr-FR')}</span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
 
             <div className={`mt-4 text-[10px] italic text-center ${isDarkMode ? 'text-slate-400' : 'text-neutral-500 font-serif'}`}>
               {isArabic
-                ? `الموقع الحالي للوفاة أو الدفن: رُصد رضي الله عنه في ${companion.cityAr}`
+                ? `الموقع الجغرافي للاستقرار والوفاة: رُصد رضي الله عنه في ${companion.cityAr}`
                 : `Verified place of final rest/death: ${companion.cityEn}`}
             </div>
           </div>

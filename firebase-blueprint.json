@@ -117,9 +117,50 @@
         }
       },
       "required": ["id", "userId", "companionId", "viewedAt"]
+    },
+    "Video": {
+      "title": "YouTube Video Link",
+      "description": "Educational YouTube video or audiovisual resource associated with a Companion",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique video ID or Firestore document key"
+        },
+        "companionId": {
+          "type": "string",
+          "description": "The ID of the companion this video relates to"
+        },
+        "titleAr": {
+          "type": "string",
+          "description": "Arabic title or caption of the video"
+        },
+        "titleFr": {
+          "type": "string",
+          "description": "French translation/title of the video"
+        },
+        "youtubeUrl": {
+          "type": "string",
+          "description": "Full YouTube URL or embed link"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp when this reference was added"
+        },
+        "addedBy": {
+          "type": "string",
+          "description": "The user ID of the moderator who added this link"
+        }
+      },
+      "required": ["id", "companionId", "titleAr", "youtubeUrl", "createdAt"]
     }
   },
   "firestore": {
+    "videos/{videoId}": {
+      "schema": "Video",
+      "description": "Global list of authorized educational audiovisual YouTube media assets"
+    },
     "users/{userId}": {
       "schema": "User",
       "description": "The collection of user accounts and profile documents"
