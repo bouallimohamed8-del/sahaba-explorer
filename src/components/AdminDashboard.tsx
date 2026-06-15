@@ -39,12 +39,18 @@ import AdminUsers from './AdminUsers';
 import FirebaseUsersManager from './FirebaseUsersManager';
 import AdminVideosModeration from './AdminVideosModeration';
 
+import { UserProfile } from '../context/AuthContext';
+import { db } from '../lib/firebase';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { Megaphone } from 'lucide-react';
+
 interface AdminDashboardProps {
   companions: Companion[];
   relationships: Relationship[];
   isArabic: boolean;
   isDarkMode?: boolean;
   onRefreshData: () => void;
+  firebaseProfile?: UserProfile | null;
 }
 
 export default function AdminDashboard({
@@ -52,7 +58,8 @@ export default function AdminDashboard({
   relationships,
   isArabic,
   isDarkMode = true,
-  onRefreshData
+  onRefreshData,
+  firebaseProfile
 }: AdminDashboardProps) {
   // Authentication & Persistent State
   const [token, setToken] = useState<string | null>(() => sessionStorage.getItem('admin_token'));
@@ -61,9 +68,79 @@ export default function AdminDashboard({
     return saved ? JSON.parse(saved) : null;
   });
 
+  // Auto-login if we are authenticated as Admin in Firebase
+  useEffect(() => {
+    if (firebaseProfile && firebaseProfile.role === 'admin') {
+      const fbToken = 'firebase_admin_token';
+      const fbUser = {
+        email: firebaseProfile.email,
+        name: firebaseProfile.fullName,
+        role: 'Super Admin'
+      };
+      setToken(fbToken);
+      setUser(fbUser);
+      sessionStorage.setItem('admin_token', fbToken);
+      sessionStorage.setItem('admin_user', JSON.stringify(fbUser));
+    }
+  }, [firebaseProfile]);
+
   // Navigation tab
-  const [activeTab, setActiveTab] = useState<'stats' | 'companion_form' | 'relation_form' | 'proposals' | 'maintenance' | 'import_export' | 'users' | 'videos'>('stats');
+  const [activeTab, setActiveTab] = useState<'stats' | 'companion_form' | 'relation_form' | 'proposals' | 'maintenance' | 'import_export' | 'users' | 'videos' | 'banner'>('stats');
   const [usersSubTab, setUsersSubTab] = useState<'firebase' | 'classic'>('firebase');
+
+  // Banner configuration state
+  const [bannerConfig, setBannerConfig] = useState<any>({
+    id: 'main',
+    enabled: true,
+    type: 'image',
+    titleAr: '',
+    titleEn: '',
+    contentAr: '',
+    contentEn: '',
+    mediaUrl: '',
+    linkUrl: '',
+    htmlContent: ''
+  });
+  const [bannerStatus, setBannerStatus] = useState({ success: false, message: '' });
+  const [isSavingBanner, setIsSavingBanner] = useState(false);
+
+  // Fetch banner config on load
+  useEffect(() => {
+    if (activeTab === 'banner') {
+      const fetchBannerConfig = async () => {
+        try {
+          const docSnap = await getDoc(doc(db, 'banners', 'main'));
+          if (docSnap.exists()) {
+            setBannerConfig(docSnap.data());
+          }
+        } catch (e) {
+          console.error("Error loading banner config inside AdminDashboard:", e);
+        }
+      };
+      fetchBannerConfig();
+    }
+  }, [activeTab]);
+
+  const handleBannerSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSavingBanner(true);
+    setBannerStatus({ success: false, message: '' });
+    try {
+      await setDoc(doc(db, 'banners', 'main'), bannerConfig);
+      setBannerStatus({
+        success: true,
+        message: isArabic ? 'تم حفظ وتحديث البانر الإعلاني بنجاح!' : 'Media banner configuration updated and lived successfully!'
+      });
+    } catch (err: any) {
+      console.error(err);
+      setBannerStatus({
+        success: false,
+        message: isArabic ? 'خطأ أثناء الحفظ في قاعدة البيانات.' : 'Failed saving to Database.'
+      });
+    } finally {
+      setIsSavingBanner(false);
+    }
+  };
 
   // Backend Stats
   const [stats, setStats] = useState<{ companionsCount: number; relationshipsCount: number; categoriesCount: Record<string, number> } | null>(null);
@@ -601,7 +678,8 @@ export default function AdminDashboard({
           { key: 'maintenance', label: isArabic ? 'مراقبة الجودة والدمج' : 'Quality checks & Merges', icon: AlertCircle },
           { key: 'import_export', label: isArabic ? 'استيراد وتصدير' : 'JSON/CSV Backups', icon: FileSpreadsheet },
           { key: 'users', label: isArabic ? 'المشرفون المنظمون' : 'Administrators manager', icon: Users, reqSuper: true },
-          { key: 'videos', label: isArabic ? 'إدارة اليوتيوب والوسائط' : 'Médiathèque (YouTube)', icon: Video }
+          { key: 'videos', label: isArabic ? 'إدارة اليوتيوب والوسائط' : 'Médiathèque (YouTube)', icon: Video },
+          { key: 'banner', label: isArabic ? 'إدارة البانر الجانبي' : 'Left Press Banner', icon: Megaphone }
         ].map((tab) => {
           if (tab.reqSuper && user.role !== 'Super Admin') return null;
           const Icon = tab.icon;
@@ -1443,6 +1521,160 @@ export default function AdminDashboard({
             isArabic={isArabic}
             isDarkMode={isDarkMode}
           />
+        )}
+
+        {activeTab === 'banner' && (
+          <form onSubmit={handleBannerSave} className="space-y-6 animate-fade-in text-slate-350">
+            <div>
+              <h3 className="text-sm font-bold text-slate-200">
+                {isArabic ? 'إدارة محتوى الوسائط والإعلانات للبانر الجانبي الأيسر' : 'Left press sidebar media banner contents'}
+              </h3>
+              <p className="text-[10px] text-slate-450">
+                {isArabic ? 'تحكم في ما يتم عرضه للمستخدمين من ميديا، يوتيوب، أو أكواد خرائط وعروض مخصصة' : 'Coordinate layout settings, images, videos, or raw programmatic embed cards'}
+              </p>
+            </div>
+
+            {bannerStatus.message && (
+              <div className={`p-3 rounded-xl text-xs flex items-center gap-2 ${bannerStatus.success ? 'bg-emerald-950/25 border border-emerald-950/40 text-emerald-400' : 'bg-red-950/25 border border-red-950/40 text-red-400'}`}>
+                {bannerStatus.success ? <CheckCircle className="w-4 h-4" /> : <AlertCircle className="w-4 h-4" />}
+                <span>{bannerStatus.message}</span>
+              </div>
+            )}
+
+            <div className="p-5 bg-slate-950/30 border border-slate-850 rounded-2xl space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="flex items-center gap-2 py-3">
+                  <input
+                    type="checkbox"
+                    id="banner-enabled"
+                    checked={bannerConfig.enabled}
+                    onChange={(e) => setBannerConfig({ ...bannerConfig, enabled: e.target.checked })}
+                    className="w-4 h-4 rounded text-amber-500 bg-slate-955 border-slate-800 accent-amber-500 focus:ring-0 cursor-pointer"
+                  />
+                  <label htmlFor="banner-enabled" className="text-xs text-slate-200 font-bold cursor-pointer select-none">
+                    {isArabic ? 'تفعيل وعرض البانر الجانبي' : 'Publicly Display Left Press Banner'}
+                  </label>
+                </div>
+
+                <div>
+                  <label className="block text-slate-400 text-xs mb-1 font-semibold">{isArabic ? 'نوع الميديا والوسيط' : 'Media Representation Model'}</label>
+                  <select
+                    value={bannerConfig.type}
+                    onChange={(e) => setBannerConfig({ ...bannerConfig, type: e.target.value })}
+                    className="w-full bg-slate-950 border border-slate-850 p-2 text-slate-200 text-xs rounded-xl focus:border-amber-500 focus:outline-none"
+                  >
+                    <option value="image">{isArabic ? 'صورة مع رابط تشعبي' : 'Standard Image & Redirect Link'}</option>
+                    <option value="video">{isArabic ? 'ملف فيديو مباشر (MP4)' : 'Video File Playback (.mp4)'}</option>
+                    <option value="youtube">{isArabic ? 'يوتيوب مدمج' : 'YouTube iframe Video Channel'}</option>
+                    <option value="text">{isArabic ? 'اقتباس وتصميم نصوص سيرة فقط' : 'Typeface Chronicle Block'}</option>
+                    <option value="html">{isArabic ? 'كود برمجيات مخصص (IFRAME/HTML/Embed)' : 'Raw Embed HTML/Script Content'}</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-slate-400 text-xs mb-1 font-semibold">{isArabic ? 'العنوان الرئيسي باللغة العربية' : 'Arabic Broad Heading'}</label>
+                  <input
+                    type="text"
+                    value={bannerConfig.titleAr || ''}
+                    onChange={(e) => setBannerConfig({ ...bannerConfig, titleAr: e.target.value })}
+                    placeholder="سورة الكهف والفضل الجلي"
+                    className="w-full bg-slate-950 border border-slate-850 p-2 text-slate-200 text-xs rounded-xl focus:border-amber-500 focus:outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-slate-400 text-xs mb-1 font-semibold">{isArabic ? 'العنوان الرئيسي بالإنجليزية' : 'English Transliteration Heading'}</label>
+                  <input
+                    type="text"
+                    value={bannerConfig.titleEn || ''}
+                    onChange={(e) => setBannerConfig({ ...bannerConfig, titleEn: e.target.value })}
+                    placeholder="Virtues of Dhikr & Seerah"
+                    className="w-full bg-slate-950 border border-slate-850 p-2 text-slate-200 text-xs rounded-xl focus:border-amber-500 focus:outline-none"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-slate-400 text-xs mb-1 font-semibold">{isArabic ? 'الوصف والنص التعريفي (عربي)' : 'Arabic Body Description text'}</label>
+                  <textarea
+                    rows={2}
+                    value={bannerConfig.contentAr || ''}
+                    onChange={(e) => setBannerConfig({ ...bannerConfig, contentAr: e.target.value })}
+                    placeholder="خرائط تفاعلية عن الفتوحات وسير أحباء الرسول المصطفى عليه الصلاة والسلام."
+                    className="w-full bg-slate-950 border border-slate-850 p-2 text-slate-200 text-xs rounded-xl focus:border-amber-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-slate-400 text-xs mb-1 font-semibold">{isArabic ? 'الوصف والنص التعريفي (إنجليزي)' : 'English Body Description text'}</label>
+                  <textarea
+                    rows={2}
+                    value={bannerConfig.contentEn || ''}
+                    onChange={(e) => setBannerConfig({ ...bannerConfig, contentEn: e.target.value })}
+                    placeholder="Experience rare ancient interactive charts, and chronicles of the blessed Sahabah."
+                    className="w-full bg-slate-950 border border-slate-850 p-2 text-slate-200 text-xs rounded-xl focus:border-amber-500"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-slate-400 text-xs mb-1 font-semibold">{isArabic ? 'رابط ملف أو فيديو أو كود يوتيوب' : 'Direct Media/YouTube URL Resource'}</label>
+                  <input
+                    type="text"
+                    value={bannerConfig.mediaUrl || ''}
+                    onChange={(e) => setBannerConfig({ ...bannerConfig, mediaUrl: e.target.value })}
+                    placeholder="e.g. https://images.unsplash.com/... or youtube watch URL"
+                    className="w-full bg-slate-950 border border-slate-850 p-2 text-slate-200 text-xs rounded-xl focus:border-amber-500 focus:outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-slate-400 text-xs mb-1 font-semibold">{isArabic ? 'الرابط عند ضغط الزر/البانر' : 'Redirect Hyperlink onClick Action'}</label>
+                  <input
+                    type="text"
+                    value={bannerConfig.linkUrl || ''}
+                    onChange={(e) => setBannerConfig({ ...bannerConfig, linkUrl: e.target.value })}
+                    placeholder="e.g. https://google.com/map"
+                    className="w-full bg-slate-950 border border-slate-850 p-2 text-slate-200 text-xs rounded-xl focus:border-amber-500 focus:outline-none"
+                  />
+                </div>
+              </div>
+
+              {bannerConfig.type === 'html' && (
+                <div>
+                  <label className="block text-slate-400 text-xs mb-1 font-semibold">{isArabic ? 'كود Embed HTML التعريفي المخصص' : 'Custom HTML/IFrame Embed raw instructions'}</label>
+                  <textarea
+                    rows={4}
+                    value={bannerConfig.htmlContent || ''}
+                    onChange={(e) => setBannerConfig({ ...bannerConfig, htmlContent: e.target.value })}
+                    placeholder='e.g. <iframe width="100%" height="166" scrolling="no" frameborder="no" allow="autoplay" src="https://w.soundcloud.com/player/?url=..."></iframe>'
+                    className="w-full bg-slate-950 border border-slate-850 p-2 text-cyan-400 font-mono text-xs rounded-xl focus:border-amber-500"
+                  />
+                </div>
+              )}
+
+              <div className="flex justify-end pt-2">
+                <button
+                  type="submit"
+                  disabled={isSavingBanner}
+                  className="bg-amber-500 hover:bg-amber-600 disabled:bg-slate-800 text-slate-950 disabled:text-slate-500 font-extrabold px-6 py-2.5 text-xs rounded-xl transition cursor-pointer flex items-center gap-1.5 shrink-0 active:scale-95"
+                >
+                  {isSavingBanner ? (
+                    <span className="w-3.5 h-3.5 border-2 border-slate-950 border-t-transparent animate-spin rounded-full" />
+                  ) : (
+                    <>
+                      <Save className="w-4.5 h-4.5" />
+                      <span>{isArabic ? 'حفظ وتطبيق البانر' : 'Save & Publish Banner'}</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </form>
         )}
       </div>
     </div>

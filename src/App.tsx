@@ -15,10 +15,10 @@ import { DEFAULT_COMPANIONS, DEFAULT_RELATIONSHIPS } from './data/defaultDataset
 import { Globe, Moon, Sun, Search, GitFork, User, ShieldAlert, Sparkles, RefreshCw, Layers, Compass, HelpCircle, ChevronRight, Info, LogOut, Shield, FileText, Printer } from 'lucide-react';
 import { useAuth } from './context/AuthContext';
 import AuthPages from './components/AuthPages';
-import PrintableReport from './components/PrintableReport';
 import { db } from './lib/firebase';
-import { doc, setDoc, collection, query, orderBy, getDocs } from 'firebase/firestore';
+import { doc, setDoc, collection, query, orderBy, getDocs, onSnapshot } from 'firebase/firestore';
 import { LanguageCode, UI_TRANSLATIONS } from './lib/i18n';
+import LeftMediaBanner, { BannerConfig } from './components/LeftMediaBanner';
 
 export default function App() {
   const { user, profile, loading: authLoading, logout } = useAuth();
@@ -42,39 +42,36 @@ export default function App() {
   const [isDarkMode, setIsDarkMode] = useState<boolean>(false);
   const [viewMode, setViewMode] = useState<'explorer' | 'admin' | 'profile'>('explorer');
   const [explorerViewType, setExplorerViewType] = useState<'graph' | 'directory' | 'classify'>('classify');
+
+  const DEFAULT_BANNER: BannerConfig = {
+    id: 'main',
+    enabled: true,
+    type: 'image',
+    titleAr: 'مستكشف سير الصحابة الأخيار والغزوات المأثورة',
+    titleEn: 'Biographical Chronicles & Ancient Gazawat Maps',
+    contentAr: 'تصفح الخرائط الجغرافية والوسائط المعتمدة للفتوحات الإسلامية وسير أحباء المصطفى عليه السلام برعاية المشرف السوبر.',
+    contentEn: 'Experience high-fidelity coordinate charts, detailed timeline loops, and biographical maps of the holy Sahabah.',
+    mediaUrl: 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&q=80&w=600',
+    linkUrl: '',
+    htmlContent: ''
+  };
+
+  const [bannerConfig, setBannerConfig] = useState<BannerConfig>(DEFAULT_BANNER);
+
+  // Load live banner from Firestore
+  useEffect(() => {
+    const unsub = onSnapshot(doc(db, 'banners', 'main'), (docSnap) => {
+      if (docSnap.exists()) {
+        setBannerConfig({ ...DEFAULT_BANNER, ...docSnap.data() } as BannerConfig);
+      }
+    }, (err) => {
+      console.warn("Banner config snapshot error:", err);
+    });
+    return () => unsub();
+  }, []);
   const [showAdvancedFilters, setShowAdvancedFilters] = useState<boolean>(false);
 
-  // Print Report States
-  const [showPrintReport, setShowPrintReport] = useState<boolean>(false);
-  const [reportNotes, setReportNotes] = useState<any[]>([]);
 
-  // Query User Study notes for the report
-  useEffect(() => {
-    if (showPrintReport && user) {
-      const fetchNotes = async () => {
-        try {
-          const q = query(
-            collection(db, 'users', user.uid, 'notes'),
-            orderBy('createdAt', 'desc')
-          );
-          const snap = await getDocs(q);
-          const list: any[] = [];
-          snap.forEach(docSnap => {
-            const data = docSnap.data();
-            if (!selectedCompanion || data.companionId === selectedCompanion.id) {
-              list.push({ id: docSnap.id, ...data });
-            }
-          });
-          setReportNotes(list);
-        } catch (e) {
-          console.error("Error loading report notes:", e);
-        }
-      };
-      fetchNotes();
-    } else {
-      setReportNotes([]);
-    }
-  }, [showPrintReport, user, selectedCompanion]);
 
   // Record browsed history in Firestore
   useEffect(() => {
@@ -318,16 +315,7 @@ export default function App() {
               </button>
             </div>
 
-            {/* Academic PDF Report Action */}
-            <button
-              id="btn-trigger-pdf-report"
-              onClick={() => setShowPrintReport(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-600 hover:bg-amber-500 text-white font-serif font-bold rounded-xl text-xs transition cursor-pointer active:scale-95 shadow-md border border-amber-500/30 no-print"
-              title={isArabic ? 'تصدير التقرير العلمي للبحث وتحميله كملف PDF متميز' : 'Generate and Export Academic Seerah Report PDF'}
-            >
-              <FileText className="w-3.5 h-3.5" />
-              <span>{isArabic ? 'التقرير العلمي PDF' : 'PDF Report'}</span>
-            </button>
+
 
             {/* Dark mode lights */}
             <button
@@ -485,8 +473,15 @@ export default function App() {
             )}
 
             {/* Dual split panel layout */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
-              {/* Left Column: Network Graph Board or Directory Card Grid */}
+            <div className={`grid grid-cols-1 ${bannerConfig.enabled ? 'lg:grid-cols-4' : 'lg:grid-cols-3'} gap-6 items-start`}>
+              {/* Left Column: Rectangular dynamic banner */}
+              {bannerConfig.enabled && (
+                <div className="lg:col-span-1 space-y-4">
+                  <LeftMediaBanner config={bannerConfig} isArabic={isArabic} isDarkMode={isDarkMode} />
+                </div>
+              )}
+
+              {/* Center/Main Column: Network Graph Board or Directory Card Grid */}
               <div id="explorer-main-column" className="lg:col-span-2 space-y-4">
                 {/* Visual Style Selection tab bar */}
                 <div className={`p-1.5 rounded-2xl border flex items-center justify-between ${isDarkMode ? 'bg-natural-dark-panel border-neutral-805' : 'bg-white border-natural-accent/30'} shadow-sm`}>
@@ -874,6 +869,8 @@ export default function App() {
                 relationships={relationships}
                 isArabic={isArabic}
                 onRefreshData={loadData}
+                firebaseProfile={profile}
+                isDarkMode={isDarkMode}
               />
             </div>
           )
@@ -893,18 +890,7 @@ export default function App() {
         </div>
       </footer>
 
-      {/* High Fidelity PDF Study report overlay modal */}
-      {showPrintReport && (
-        <PrintableReport
-          companion={selectedCompanion}
-          allCompanions={companions}
-          relationships={relationships}
-          profile={profile}
-          notes={reportNotes}
-          onClose={() => setShowPrintReport(false)}
-          isArabic={isArabic}
-        />
-      )}
+
     </div>
   );
 }
