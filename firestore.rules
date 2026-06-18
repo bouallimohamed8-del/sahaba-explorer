@@ -81,6 +81,12 @@ service cloud.firestore {
       allow delete: if isSignedIn() && isAdmin();
     }
 
+    // Global banners collection authorization
+    match /banners/{bannerId} {
+      allow read: if true;
+      allow write: if isSignedIn() && isAdmin();
+    }
+
     // Users resource authorization
     match /users/{userId} {
       allow read: if isSignedIn() && (request.auth.uid == userId || isAdmin());

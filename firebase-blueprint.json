@@ -154,9 +154,62 @@
         }
       },
       "required": ["id", "companionId", "titleAr", "youtubeUrl", "createdAt"]
+    },
+    "Banner": {
+      "title": "Left Media Banner",
+      "description": "Left press sidebar media banner contents",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Document ID"
+        },
+        "enabled": {
+          "type": "boolean",
+          "description": "Display switch status of the banner"
+        },
+        "type": {
+          "type": "string",
+          "enum": ["image", "video", "youtube", "text", "html"],
+          "description": "Representational theme model"
+        },
+        "titleAr": {
+          "type": "string",
+          "description": "Arabic header title"
+        },
+        "titleEn": {
+          "type": "string",
+          "description": "English header title"
+        },
+        "contentAr": {
+          "type": "string",
+          "description": "Arabic explanation paragraph"
+        },
+        "contentEn": {
+          "type": "string",
+          "description": "English explanation paragraph"
+        },
+        "mediaUrl": {
+          "type": "string",
+          "description": "Direct link or attachment stream URL of media source"
+        },
+        "linkUrl": {
+          "type": "string",
+          "description": "Anchor route target URL when clicked"
+        },
+        "htmlContent": {
+          "type": "string",
+          "description": "HTML layout script source"
+        }
+      },
+      "required": ["id", "enabled", "type"]
     }
   },
   "firestore": {
+    "banners/{bannerId}": {
+      "schema": "Banner",
+      "description": "Configuration metadata for the left media press banner"
+    },
     "videos/{videoId}": {
       "schema": "Video",
       "description": "Global list of authorized educational audiovisual YouTube media assets"
