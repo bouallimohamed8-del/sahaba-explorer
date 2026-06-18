@@ -250,20 +250,21 @@ export default function App() {
       <div className="h-2 bg-gradient-to-r from-natural-accent via-[#A88849] to-natural-brand opacity-90" />
 
       {/* Global Navbar */}
-      <header className={`border-b-4 border-natural-accent ${isDarkMode ? 'bg-natural-dark-header text-white' : 'bg-natural-brand text-white'} sticky top-0 z-50 px-4 py-3 shadow-md`}>
+      <header className={`border-b border-natural-accent/35 ${isDarkMode ? 'bg-natural-dark-header/90 backdrop-blur-md text-white' : 'bg-[#FAF8F5]/95 backdrop-blur-md text-[#3C3C2C]'} sticky top-0 z-50 px-4 py-3 shadow-[0_4px_30px_rgba(0,0,0,0.03)]`}>
         <div className="max-w-7xl mx-auto flex flex-wrap justify-between items-center gap-4">
           {/* Logo Identity */}
           <div className="flex items-center gap-4">
-            <div className="w-10 h-10 bg-natural-accent rounded-sm rotate-45 flex items-center justify-center shadow-md">
-              <div className="w-8 h-8 border border-white/50 rotate-45 flex items-center justify-center font-serif text-lg text-white">
+            <div className="w-10 h-10 bg-natural-accent rounded-xl rotate-12 flex items-center justify-center shadow-lg shadow-amber-500/10 transition hover:rotate-45 duration-500">
+              <div className="w-8 h-8 border border-white/50 rounded-lg flex items-center justify-center font-serif text-lg text-white">
                 ﷺ
               </div>
             </div>
             <div>
-              <h1 className="text-xl font-bold tracking-tight text-white font-serif">
-                {isArabic ? 'مستكشف الصحابة والتابعين ﷺ' : 'Sahaba Explorer'}
+              <h1 className="text-xl font-extrabold tracking-tight font-serif flex items-center gap-2">
+                <span className={isDarkMode ? 'text-white' : 'text-natural-bold font-black'}>{isArabic ? 'مستكشف الصحابة والتابعين ﷺ' : 'Sahaba Explorer'}</span>
+                <span className="text-[9px] px-2 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-500 font-mono tracking-widest uppercase animate-pulse">2026 Edition</span>
               </h1>
-              <p className="text-[10.5px] text-white/80 capitalize">
+              <p className={`text-[10px] ${isDarkMode ? 'text-slate-400' : 'text-slate-650'} font-sans leading-none mt-1`}>
                 {isArabic ? 'موسوعة تفاعلية مصورة للعلاقات التاريخية الفاضلة' : 'Interactive Encyclopedia of Companions\' Relationships'}
               </p>
             </div>
@@ -272,14 +273,18 @@ export default function App() {
           {/* Quick Config Toggles */}
           <div className="flex items-center gap-3">
             {/* Explorer vs Admin tab toggles */}
-            <div className={`flex p-1 rounded-xl border ${isDarkMode ? 'bg-natural-dark-panel border-natural-accent/15' : 'bg-white/10 border-white/20'}`}>
+            <div className={`flex p-1 rounded-xl border ${isDarkMode ? 'bg-natural-dark-panel border-neutral-800' : 'bg-stone-100 border-stone-200 shadow-sm'}`}>
               <button
                 id="btn-switch-explorer"
                 onClick={() => {
                   setViewMode('explorer');
                   setShowAuthScreen(false);
                 }}
-                className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer ${viewMode === 'explorer' && !showAuthScreen ? 'bg-natural-accent text-white shadow' : 'text-white/80 hover:text-white'}`}
+                className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+                  viewMode === 'explorer' && !showAuthScreen 
+                    ? 'bg-natural-accent text-white shadow-sm' 
+                    : isDarkMode ? 'text-slate-300 hover:text-white hover:bg-neutral-800/60' : 'text-slate-650 hover:text-slate-900 hover:bg-stone-200/50'
+                }`}
               >
                 {isArabic ? 'المستكشف المرئي' : 'Interactive Graph'}
               </button>
@@ -289,18 +294,26 @@ export default function App() {
                   setViewMode('admin');
                   setShowAuthScreen(false);
                 }}
-                className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer ${viewMode === 'admin' ? 'bg-natural-accent text-white shadow' : 'text-white/80 hover:text-white'}`}
+                className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+                  viewMode === 'admin' 
+                    ? 'bg-natural-accent text-white shadow-sm' 
+                    : isDarkMode ? 'text-slate-300 hover:text-white hover:bg-neutral-800/60' : 'text-slate-650 hover:text-slate-900 hover:bg-stone-200/50'
+                }`}
               >
                 {isArabic ? 'المشرف والمراجعة' : 'Admin Console'}
               </button>
             </div>
 
             {/* Language Selection Toggle Group */}
-            <div className={`flex p-1 rounded-xl border ${isDarkMode ? 'bg-natural-dark-panel border-natural-accent/15' : 'bg-white/10 border-white/20'}`}>
+            <div className={`flex p-1 rounded-xl border ${isDarkMode ? 'bg-natural-dark-panel border-neutral-800' : 'bg-stone-100 border-stone-200 shadow-sm'}`}>
               <button
                 id="btn-lang-ar"
                 onClick={() => setLang('ar')}
-                className={`px-2.5 py-1 text-[11px] font-bold rounded-lg transition-all cursor-pointer ${lang === 'ar' ? 'bg-natural-accent text-white shadow' : 'text-white/80 hover:text-white'}`}
+                className={`px-2.5 py-1 text-[11px] font-bold rounded-lg transition-all cursor-pointer ${
+                  lang === 'ar' 
+                    ? 'bg-natural-accent text-white shadow-sm' 
+                    : isDarkMode ? 'text-slate-350 hover:text-white' : 'text-slate-650 hover:text-slate-900'
+                }`}
                 title="العربية"
               >
                 AR
@@ -308,7 +321,11 @@ export default function App() {
               <button
                 id="btn-lang-en"
                 onClick={() => setLang('en')}
-                className={`px-2.5 py-1 text-[11px] font-bold rounded-lg transition-all cursor-pointer ${lang === 'en' ? 'bg-natural-accent text-white shadow' : 'text-white/80 hover:text-white'}`}
+                className={`px-2.5 py-1 text-[11px] font-bold rounded-lg transition-all cursor-pointer ${
+                  lang === 'en' 
+                    ? 'bg-natural-accent text-white shadow-sm' 
+                    : isDarkMode ? 'text-slate-350 hover:text-white' : 'text-slate-650 hover:text-slate-900'
+                }`}
                 title="English"
               >
                 EN
@@ -320,10 +337,14 @@ export default function App() {
             {/* Dark mode lights */}
             <button
               onClick={() => setIsDarkMode(!isDarkMode)}
-              className={`p-2 rounded-xl border transition cursor-pointer ${isDarkMode ? 'bg-natural-dark-panel border-natural-accent/20 text-natural-accent' : 'bg-white/10 border-white/20 text-white hover:bg-white/25'} no-print`}
+              className={`p-2 rounded-xl border transition cursor-pointer ${
+                isDarkMode 
+                  ? 'bg-natural-dark-panel border-neutral-800/70 text-amber-400 hover:bg-neutral-800' 
+                  : 'bg-stone-100 border-stone-200 text-slate-700 hover:bg-stone-200'
+              } no-print shadow-sm`}
               title={isArabic ? 'تغيير المظهر' : 'Toggle Theme'}
             >
-              {isDarkMode ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-white" />}
+              {isDarkMode ? <Sun className="w-4 h-4 text-amber-400 animate-spin-slow" /> : <Moon className="w-4 h-4 text-slate-705" />}
             </button>
 
             {/* User auth state indicators */}
