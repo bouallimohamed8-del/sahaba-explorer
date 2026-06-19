@@ -87,6 +87,38 @@ service cloud.firestore {
       allow write: if isSignedIn() && isAdmin();
     }
 
+    // Companions database collection authorization
+    match /companions/{companionId} {
+      allow read: if true;
+      allow write: if isSignedIn() && isAdmin();
+    }
+
+    // Relationships database collection authorization
+    match /relationships/{relationshipId} {
+      allow read: if true;
+      allow write: if isSignedIn() && isAdmin();
+    }
+
+    // Administrative accounts registry
+    match /admins/{adminEmail} {
+      allow read, write: if isSignedIn() && isAdmin();
+    }
+
+    // Pending change proposals workflow
+    match /pendingChanges/{proposalId} {
+      allow read, write: if isSignedIn() && isAdmin();
+    }
+
+    // Change execution logs history
+    match /history/{historyId} {
+      allow read, write: if isSignedIn() && isAdmin();
+    }
+
+    // Backend Session collection (Admin SDK handles this, client access denied for security)
+    match /sessions/{sessionId} {
+      allow read, write: if false;
+    }
+
     // Users resource authorization
     match /users/{userId} {
       allow read: if isSignedIn() && (request.auth.uid == userId || isAdmin());
