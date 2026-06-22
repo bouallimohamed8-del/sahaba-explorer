@@ -6,7 +6,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { Companion, Relationship, BattleInfo } from '../types';
 import { DEFAULT_BATTLES } from '../data/defaultDataset';
-import { BookOpen, Calendar, Award, Copy, Check, Users, ShieldAlert, ArrowRight, ArrowLeft, Landmark, History, Library, Compass, Save, Trash2, Edit3, Plus, FileText, Lock, Play, Tv, LayoutGrid, List, ExternalLink } from 'lucide-react';
+import { BookOpen, Calendar, Award, Copy, Check, Users, ShieldAlert, ArrowRight, ArrowLeft, Landmark, History, Library, Compass, Save, Trash2, Edit3, Plus, FileText, Lock, Play, Tv, LayoutGrid, List, ExternalLink, Youtube } from 'lucide-react';
 import { db } from '../lib/firebase';
 import { collection, query, orderBy, getDocs, doc, setDoc, deleteDoc, where } from 'firebase/firestore';
 
@@ -686,18 +686,25 @@ export default function CompanionDetail({
                 }
                 const thumbnailUrl = ytId ? `https://img.youtube.com/vi/${ytId}/mqdefault.jpg` : null;
 
+                const defaultDescAr = 'مقطع علمي مرئي لدراسة مآثر ومحطات سيرة هذا الصحابي الجليل عبر منصة يوتيوب التعليمية.';
+                const defaultDescEn = 'Educational overview and historical video lecture focused on the life, achievements, and legacy of this noble Companion on YouTube.';
+                const displayDesc = isArabic ? defaultDescAr : defaultDescEn;
+
                 if (videoViewMode === 'grid') {
                   return (
-                    <div 
+                    <a 
                       key={vid.id}
-                      className={`group border rounded-2xl overflow-hidden flex flex-col justify-between transition-all duration-300 hover:shadow-lg ${
+                      href={vid.youtubeUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className={`group border rounded-2xl overflow-hidden flex flex-col justify-between transition-all duration-300 hover:shadow-xl hover:scale-[1.02] cursor-pointer ${
                         isDarkMode 
-                          ? 'bg-[#181914] border-neutral-800/80 hover:border-amber-500/30' 
+                          ? 'bg-[#181914] border-neutral-800 hover:border-amber-500/35' 
                           : 'bg-white border-stone-200/90 shadow-sm hover:border-amber-500/25'
                       }`}
                     >
-                      {/* Thumbnail wrapper with play icon and duration */}
-                      <div className="relative aspect-video w-full overflow-hidden bg-slate-900 group-pointer">
+                      {/* Thumbnail wrapper */}
+                      <div className="relative aspect-video w-full overflow-hidden bg-slate-900">
                         {thumbnailUrl ? (
                           <img 
                             src={thumbnailUrl} 
@@ -711,22 +718,22 @@ export default function CompanionDetail({
                           </div>
                         )}
                         
-                        {/* Elegant Dark/Gold Glass Overlay */}
+                        {/* Red YouTube Play Hover Overlay (Professional & Distinctive) */}
                         <div className="absolute inset-0 bg-neutral-950/20 group-hover:bg-neutral-950/40 transition-colors duration-300 flex items-center justify-center">
-                          <div className="w-12 h-12 rounded-full bg-amber-500/90 border border-amber-300/30 text-slate-950 group-hover:scale-110 active:scale-95 transition-all flex items-center justify-center shadow-lg shadow-black/40">
-                            <Play className="w-5 h-5 fill-slate-950 text-slate-950 ml-0.5" />
+                          <div className="w-12 h-12 rounded-full bg-red-600 text-white flex items-center justify-center transition-all duration-305 group-hover:scale-110 shadow-lg shadow-black/40">
+                            <Play className="w-5 h-5 fill-white text-white ml-0.5" />
                           </div>
                         </div>
 
-                        {/* Top corner YouTube identity */}
-                        <div className="absolute top-3 left-3 px-2 py-0.5 rounded bg-red-650 border border-red-500 text-white font-mono text-[8.5px] font-black tracking-wider flex items-center gap-1 shadow-sm">
-                          <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
-                          YOUTUBE
+                        {/* Top corner YouTube identity with real Lucide Youtube Icon */}
+                        <div className="absolute top-3 left-3 px-2 py-0.5 rounded bg-red-600 border border-red-500 text-white font-mono text-[9px] font-bold tracking-wider flex items-center gap-1.5 shadow-sm">
+                          <Youtube className="w-3.5 h-3.5 text-white" />
+                          <span>YOUTUBE</span>
                         </div>
 
                         {/* Duration badge if available */}
                         {vid.duration && (
-                          <span className="absolute bottom-2.5 right-2.5 px-2 py-0.5 rounded bg-black/75 text-white font-mono text-[9px] font-bold">
+                          <span className="absolute bottom-2.5 right-2.5 px-2 py-0.5 rounded bg-black/80 text-white font-mono text-[9px] font-bold">
                             {vid.duration}
                           </span>
                         )}
@@ -734,46 +741,53 @@ export default function CompanionDetail({
 
                       {/* Video Texts */}
                       <div className="p-4 flex-1 flex flex-col justify-between">
-                        <div className="space-y-1.5 mb-4">
-                          <h4 className="text-[13px] font-bold tracking-tight text-slate-150 font-serif leading-snug group-hover:text-[#D9A752] transition-colors duration-300">
-                            {isArabic ? vid.titleAr : (vid.titleFr || vid.titleAr)}
-                          </h4>
-                          {vid.channelName && (
-                            <div className="text-[10px] text-[#D9A752] font-semibold flex items-center gap-1 font-sans">
-                              <span>🎥</span>
-                              <span>{vid.channelName}</span>
-                            </div>
-                          )}
+                        <div>
+                          <div className="space-y-1.5 mb-3">
+                            <h4 className="text-[13px] font-bold tracking-tight text-slate-100 font-serif leading-snug group-hover:text-[#D9A752] transition-colors duration-300">
+                              {isArabic ? vid.titleAr : (vid.titleFr || vid.titleAr)}
+                            </h4>
+                            
+                            {vid.channelName && (
+                              <div className="text-[10px] text-[#D9A752] font-semibold flex items-center gap-1 font-sans">
+                                <span>🎥</span>
+                                <span>{vid.channelName}</span>
+                              </div>
+                            )}
+                          </div>
+
+                          <p className={`text-[11px] leading-relaxed mb-4 line-clamp-2 ${isDarkMode ? 'text-slate-400' : 'text-neutral-500 font-serif'}`}>
+                            {displayDesc}
+                          </p>
                         </div>
 
                         {/* Watch button and action stats */}
-                        <div className="flex items-center justify-between border-t border-neutral-800/60 pt-3 text-[10px] text-slate-400 font-mono">
+                        <div className="flex items-center justify-between border-t border-neutral-800/40 pt-3 text-[10px] text-slate-400 font-mono">
                           <span>{new Date(vid.createdAt).toLocaleDateString(isArabic ? 'ar-EG' : 'en-US')}</span>
                           
-                          <button
-                            onClick={() => setPlayingVideo(vid)}
-                            className="px-3.5 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-455 text-slate-950 text-[10px] font-bold tracking-wider transition-all cursor-pointer flex items-center gap-1"
-                          >
-                            <span>{isArabic ? 'مشاهدة' : 'Watch'}</span>
+                          <span className="px-3.5 py-1.5 rounded-lg bg-red-600 hover:bg-red-750 text-white text-[10.5px] font-bold tracking-wider transition-all flex items-center gap-1.5 shadow">
+                            <span>{isArabic ? 'مشاهدة التسجيل' : 'Watch on YouTube'}</span>
                             <ExternalLink className="w-3 h-3" />
-                          </button>
+                          </span>
                         </div>
                       </div>
-                    </div>
+                    </a>
                   );
                 } else {
                   /* List View layout */
                   return (
-                    <div 
+                    <a 
                       key={vid.id}
-                      className={`p-4 border rounded-xl flex flex-col sm:flex-row items-center gap-4 transition-all duration-300 hover:shadow-md ${
+                      href={vid.youtubeUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className={`group p-4 border rounded-xl flex flex-col sm:flex-row items-center gap-4 transition-all duration-300 hover:shadow-lg hover:scale-[1.01] cursor-pointer ${
                         isDarkMode 
                           ? 'bg-[#181914] border-neutral-800 hover:border-amber-500/20' 
                           : 'bg-white border-stone-250 hover:border-amber-500/15'
                       }`}
                     >
                       {/* Left Side Thumbnail */}
-                      <div className="relative aspect-video w-full sm:w-40 shrink-0 rounded-lg overflow-hidden bg-slate-900 group-pointer">
+                      <div className="relative aspect-video w-full sm:w-40 shrink-0 rounded-lg overflow-hidden bg-slate-900">
                         {thumbnailUrl ? (
                           <img 
                             src={thumbnailUrl} 
@@ -787,12 +801,18 @@ export default function CompanionDetail({
                           </div>
                         )}
                         <div className="absolute inset-0 bg-neutral-950/20 hover:bg-neutral-950/30 flex items-center justify-center">
-                          <div className="w-9 h-9 rounded-full bg-amber-500 border border-amber-300/20 text-slate-950 flex items-center justify-center shadow">
-                            <Play className="w-3.5 h-3.5 fill-slate-950 text-slate-950 ml-0.5" />
+                          <div className="w-9 h-9 rounded-full bg-red-650 text-white flex items-center justify-center shadow">
+                            <Play className="w-3.5 h-3.5 fill-white text-white ml-0.5" />
                           </div>
                         </div>
 
-                        {/* Duration badge is absolutely set */}
+                        {/* Top corner YouTube icon badge */}
+                        <div className="absolute top-1.5 left-1.5 px-1.5 py-0.5 rounded bg-red-600 text-white font-mono text-[7.5px] font-bold tracking-wider flex items-center gap-1 shadow-sm">
+                          <Youtube className="w-2.5 h-2.5" />
+                          <span>YT</span>
+                        </div>
+
+                        {/* Duration badge */}
                         {vid.duration && (
                           <span className="absolute bottom-1 right-1 px-1.5 py-0.5 rounded bg-black/80 text-white font-mono text-[8px] font-bold">
                             {vid.duration}
@@ -803,9 +823,12 @@ export default function CompanionDetail({
                       {/* Right side textual notes */}
                       <div className="flex-1 w-full flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                         <div className="space-y-1">
-                          <h4 className="text-xs sm:text-sm font-bold text-slate-100 font-serif">
+                          <h4 className="text-xs sm:text-sm font-bold text-slate-100 font-serif leading-snug group-hover:text-[#D9A752] transition-colors duration-300">
                             {isArabic ? vid.titleAr : (vid.titleFr || vid.titleAr)}
                           </h4>
+                          <p className={`text-[11px] line-clamp-1 ${isDarkMode ? 'text-slate-400' : 'text-neutral-500 font-serif'}`}>
+                            {displayDesc}
+                          </p>
                           <div className="flex flex-wrap items-center gap-3 text-[10px] text-slate-400 font-mono">
                             {vid.channelName && (
                               <span className="text-[#D9A752] font-semibold">{vid.channelName}</span>
@@ -815,85 +838,18 @@ export default function CompanionDetail({
                           </div>
                         </div>
 
-                        <button
-                          onClick={() => setPlayingVideo(vid)}
-                          className="px-3.5 py-2 rounded-lg bg-[#D9A752]/10 border border-[#D9A752]/30 text-[#D9A752] hover:bg-[#D9A752] hover:text-slate-950 text-[10px] font-bold font-serif transition-colors cursor-pointer self-start sm:self-center flex items-center gap-1"
-                        >
-                          <span>{isArabic ? 'مشاهدة التسجيل' : 'Watch Lecture'}</span>
+                        <span className="px-3.5 py-2 rounded-lg bg-red-600/10 border border-red-500/30 text-red-500 hover:bg-red-650 hover:text-white hover:border-transparent text-[10px] font-bold font-serif transition-colors self-start sm:self-center flex items-center gap-1.5 shadow-sm">
+                          <span>{isArabic ? 'مشاهدة الآن' : 'Watch on YouTube'}</span>
                           <ExternalLink className="w-3 h-3" />
-                        </button>
+                        </span>
                       </div>
-                    </div>
+                    </a>
                   );
                 }
               })}
           </div>
         )}
       </div>
-
-      {/* ========================================== */}
-      {/* 3C. THEATER LIGHTBOX PLAYER MODAL OVERLAY */}
-      {/* ========================================== */}
-      {playingVideo && (
-        <div className="fixed inset-0 bg-black/90 backdrop-blur-md z-[1000] flex items-center justify-center p-4">
-          <div className="bg-[#031410] border-2 border-[#D9A752]/45 rounded-3xl overflow-hidden w-full max-w-4xl shadow-2xl relative">
-            
-            {/* Header Identity banner */}
-            <div className="p-4 border-b border-neutral-850 flex justify-between items-center bg-[#020d0ad9]">
-              <div className="flex items-center gap-2">
-                <span className="w-2.5 h-2.5 rounded-full bg-red-650 animate-pulse" />
-                <h4 className="text-xs md:text-sm font-bold text-slate-200 font-serif leading-none">
-                  {playingVideo.channelName ? `${playingVideo.channelName}: ` : ''} 
-                  {isArabic ? playingVideo.titleAr : (playingVideo.titleFr || playingVideo.titleAr)}
-                </h4>
-              </div>
-              <button
-                onClick={() => setPlayingVideo(null)}
-                className="p-1 px-3 rounded-full bg-red-650/10 hover:bg-red-600 border border-red-500/20 hover:border-red-500 text-red-500 hover:text-white font-bold text-xs font-mono transition-all cursor-pointer"
-              >
-                {isArabic ? 'إغلاق' : 'Close ✕'}
-              </button>
-            </div>
-
-            {/* Video Canvas aspect player */}
-            <div className="relative aspect-video bg-black w-full">
-              <iframe
-                className="absolute inset-0 w-full h-full"
-                src={`https://www.youtube.com/embed/${
-                  playingVideo.youtubeUrl.match(/^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/)?.[2] || playingVideo.youtubeUrl
-                }?autoplay=1`}
-                title={playingVideo.titleAr}
-                frameBorder="0"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-                referrerPolicy="no-referrer"
-              />
-            </div>
-
-            {/* Bottom meta */}
-            <div className="p-4 bg-[#0d0f0c] text-[11px] text-slate-400 font-mono flex flex-col sm:flex-row justify-between gap-3">
-              <div className="flex items-center gap-2">
-                <span>🔗 URL: </span>
-                <a 
-                  href={playingVideo.youtubeUrl} 
-                  target="_blank" 
-                  rel="noreferrer" 
-                  className="hover:underline text-amber-500 truncate max-w-xs md:max-w-md"
-                >
-                  {playingVideo.youtubeUrl}
-                </a>
-              </div>
-              <div className="flex gap-4">
-                {playingVideo.duration && (
-                  <span>⏱ {playingVideo.duration}</span>
-                )}
-                <span>📅 {new Date(playingVideo.createdAt).toLocaleDateString()}</span>
-              </div>
-            </div>
-
-          </div>
-        </div>
-      )}
 
       {/* 4. PRIVATE STUDY REFLECTIONS & NOTES FOR THIS COMPANION BLOCK */}
       <div className={`mt-8 pt-6 border-t-2 ${isDarkMode ? 'border-neutral-800' : 'border-natural-accent/15'}`} id="companion-private-notes-container">

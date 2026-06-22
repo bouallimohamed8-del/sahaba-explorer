@@ -20,8 +20,6 @@ import { doc, setDoc, collection, query, orderBy, getDocs, onSnapshot, updateDoc
 import { LanguageCode, UI_TRANSLATIONS, SEERAH_QCM_QUESTIONS, QCMQuestion } from './lib/i18n';
 import LeftMediaBanner, { BannerConfig } from './components/LeftMediaBanner';
 import { motion, AnimatePresence } from 'motion/react';
-import CustomCursor from './components/CustomCursor';
-import Magnetic from './components/Magnetic';
 import InteractiveCompanionCard from './components/InteractiveCompanionCard';
 
 export default function App() {
@@ -287,7 +285,6 @@ export default function App() {
 
   return (
     <div className={`min-h-screen font-sans ${isDarkMode ? 'bg-[#031410] text-slate-100 natural-dotted-bg-dark' : 'bg-[#F2EFE9] text-stone-900 natural-dotted-bg'} transition-all duration-300 relative pb-16`}>
-      <CustomCursor />
       {/* Decorative Top Islamic Arch Geometric Grid Border */}
       <div className="h-2 bg-gradient-to-r from-emerald-500 via-[#C5A059] to-emerald-800 opacity-95" />
 
@@ -583,36 +580,32 @@ export default function App() {
 
                 {/* CTA operations */}
                 <div className="flex flex-col sm:flex-row gap-4 items-center justify-center w-full max-w-md mx-auto">
-                  <Magnetic>
-                    <button
-                      onClick={() => setActiveTab('directory')}
-                      className="w-full sm:w-auto px-8 py-3.5 rounded-full bg-[#10B981] hover:bg-[#0f9f72] text-white font-bold text-sm tracking-wide cursor-pointer shadow-md shadow-emerald-950/40 hover:-translate-y-0.5 active:translate-y-0 transition flex items-center justify-center gap-2"
-                    >
-                      <Compass className="w-4 h-4" />
-                      <span>Explore Sahaba</span>
-                    </button>
-                  </Magnetic>
-                  <Magnetic>
-                    <button
-                      onClick={() => {
-                        if (companions.length > 0) {
-                          const randomComp = companions[Math.floor(Math.random() * companions.length)];
-                          setSelectedCompanion(randomComp);
-                          setActiveTab('directory');
-                          setTimeout(() => {
-                            const detailAnchor = document.getElementById('sahaba-detail-container-anchor');
-                            if (detailAnchor) {
-                              detailAnchor.scrollIntoView({ behavior: 'smooth' });
-                            }
-                          }, 100);
-                        }
-                      }}
-                      className="w-full sm:w-auto px-8 py-3.5 rounded-full bg-[#06221A] border border-emerald-900/60 hover:bg-emerald-900/10 text-white font-bold text-sm tracking-wide cursor-pointer hover:-translate-y-0.5 active:translate-y-0 transition flex items-center justify-center gap-2"
-                    >
-                      <Sparkles className="w-4 h-4 text-[#D9A752]" />
-                      <span>Random Companion</span>
-                    </button>
-                  </Magnetic>
+                  <button
+                    onClick={() => setActiveTab('directory')}
+                    className="w-full sm:w-auto px-8 py-3.5 rounded-full bg-[#10B981] hover:bg-[#0f9f72] text-white font-bold text-sm tracking-wide cursor-pointer shadow-md hover:shadow-lg hover:scale-[1.03] active:scale-[0.98] transition-all duration-300 flex items-center justify-center gap-2"
+                  >
+                    <Compass className="w-4 h-4 animate-spin-slow" />
+                    <span>Explore Sahaba</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (companions.length > 0) {
+                        const randomComp = companions[Math.floor(Math.random() * companions.length)];
+                        setSelectedCompanion(randomComp);
+                        setActiveTab('directory');
+                        setTimeout(() => {
+                          const detailAnchor = document.getElementById('sahaba-detail-container-anchor');
+                          if (detailAnchor) {
+                            detailAnchor.scrollIntoView({ behavior: 'smooth' });
+                          }
+                        }, 100);
+                      }
+                    }}
+                    className="w-full sm:w-auto px-8 py-3.5 rounded-full bg-[#06221A] border border-emerald-900/60 hover:bg-[#0a3528]/80 text-white font-bold text-sm tracking-wide cursor-pointer hover:shadow-lg hover:scale-[1.03] active:scale-[0.98] transition-all duration-300 flex items-center justify-center gap-2"
+                  >
+                    <Sparkles className="w-4 h-4 text-[#D9A752]" />
+                    <span>Random Companion</span>
+                  </button>
                 </div>
 
                 {/* Counters / Stats Grid */}
