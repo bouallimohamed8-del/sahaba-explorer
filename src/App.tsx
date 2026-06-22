@@ -20,6 +20,9 @@ import { doc, setDoc, collection, query, orderBy, getDocs, onSnapshot, updateDoc
 import { LanguageCode, UI_TRANSLATIONS, SEERAH_QCM_QUESTIONS, QCMQuestion } from './lib/i18n';
 import LeftMediaBanner, { BannerConfig } from './components/LeftMediaBanner';
 import { motion, AnimatePresence } from 'motion/react';
+import CustomCursor from './components/CustomCursor';
+import Magnetic from './components/Magnetic';
+import InteractiveCompanionCard from './components/InteractiveCompanionCard';
 
 export default function App() {
   const { user, profile, loading: authLoading, logout } = useAuth();
@@ -284,6 +287,7 @@ export default function App() {
 
   return (
     <div className={`min-h-screen font-sans ${isDarkMode ? 'bg-[#031410] text-slate-100 natural-dotted-bg-dark' : 'bg-[#F2EFE9] text-stone-900 natural-dotted-bg'} transition-all duration-300 relative pb-16`}>
+      <CustomCursor />
       {/* Decorative Top Islamic Arch Geometric Grid Border */}
       <div className="h-2 bg-gradient-to-r from-emerald-500 via-[#C5A059] to-emerald-800 opacity-95" />
 
@@ -579,32 +583,36 @@ export default function App() {
 
                 {/* CTA operations */}
                 <div className="flex flex-col sm:flex-row gap-4 items-center justify-center w-full max-w-md mx-auto">
-                  <button
-                    onClick={() => setActiveTab('directory')}
-                    className="w-full sm:w-auto px-8 py-3.5 rounded-full bg-[#10B981] hover:bg-[#0f9f72] text-white font-bold text-sm tracking-wide cursor-pointer shadow-md shadow-emerald-950/40 hover:-translate-y-0.5 active:translate-y-0 transition flex items-center justify-center gap-2"
-                  >
-                    <Compass className="w-4 h-4" />
-                    <span>Explore Sahaba</span>
-                  </button>
-                  <button
-                    onClick={() => {
-                      if (companions.length > 0) {
-                        const randomComp = companions[Math.floor(Math.random() * companions.length)];
-                        setSelectedCompanion(randomComp);
-                        setActiveTab('directory');
-                        setTimeout(() => {
-                          const detailAnchor = document.getElementById('sahaba-detail-container-anchor');
-                          if (detailAnchor) {
-                            detailAnchor.scrollIntoView({ behavior: 'smooth' });
-                          }
-                        }, 100);
-                      }
-                    }}
-                    className="w-full sm:w-auto px-8 py-3.5 rounded-full bg-[#06221A] border border-emerald-900/60 hover:bg-emerald-900/10 text-white font-bold text-sm tracking-wide cursor-pointer hover:-translate-y-0.5 active:translate-y-0 transition flex items-center justify-center gap-2"
-                  >
-                    <Sparkles className="w-4 h-4 text-[#D9A752]" />
-                    <span>Random Companion</span>
-                  </button>
+                  <Magnetic>
+                    <button
+                      onClick={() => setActiveTab('directory')}
+                      className="w-full sm:w-auto px-8 py-3.5 rounded-full bg-[#10B981] hover:bg-[#0f9f72] text-white font-bold text-sm tracking-wide cursor-pointer shadow-md shadow-emerald-950/40 hover:-translate-y-0.5 active:translate-y-0 transition flex items-center justify-center gap-2"
+                    >
+                      <Compass className="w-4 h-4" />
+                      <span>Explore Sahaba</span>
+                    </button>
+                  </Magnetic>
+                  <Magnetic>
+                    <button
+                      onClick={() => {
+                        if (companions.length > 0) {
+                          const randomComp = companions[Math.floor(Math.random() * companions.length)];
+                          setSelectedCompanion(randomComp);
+                          setActiveTab('directory');
+                          setTimeout(() => {
+                            const detailAnchor = document.getElementById('sahaba-detail-container-anchor');
+                            if (detailAnchor) {
+                              detailAnchor.scrollIntoView({ behavior: 'smooth' });
+                            }
+                          }, 100);
+                        }
+                      }}
+                      className="w-full sm:w-auto px-8 py-3.5 rounded-full bg-[#06221A] border border-emerald-900/60 hover:bg-emerald-900/10 text-white font-bold text-sm tracking-wide cursor-pointer hover:-translate-y-0.5 active:translate-y-0 transition flex items-center justify-center gap-2"
+                    >
+                      <Sparkles className="w-4 h-4 text-[#D9A752]" />
+                      <span>Random Companion</span>
+                    </button>
+                  </Magnetic>
                 </div>
 
                 {/* Counters / Stats Grid */}
@@ -756,90 +764,24 @@ export default function App() {
                         </div>
                       ) : (
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                          {filteredCompanions.map((comp) => {
-                            const cat = CATEGORY_CONFIG[comp.category] || CATEGORY_CONFIG.Other;
-                            const isSelected = selectedCompanion?.id === comp.id;
-                            const isFav = favorites.includes(comp.id);
-                            
-                            // Watermark generation: extracting first main Arabic letter
-                            const initialWatermark = comp.nameAr?.trim().replace(/^ال/, '').charAt(0) || '';
-
-                            return (
-                              <div
-                                key={comp.id}
-                                onClick={() => {
-                                  setSelectedCompanion(comp);
-                                  const detailAnchor = document.getElementById('sahaba-detail-container-anchor');
-                                  if (detailAnchor) {
-                                    detailAnchor.scrollIntoView({ behavior: 'smooth' });
-                                  }
-                                }}
-                                className={`group p-6 rounded-2xl border transition-all duration-300 flex flex-col justify-between cursor-pointer relative overflow-hidden shadow-sm h-72 ${
-                                  isSelected
-                                    ? 'bg-[#06221A] border-[#D9A752] text-white ring-1 ring-[#D9A752]/20'
-                                    : 'bg-[#06221A] border-emerald-950 hover:bg-[#082a21] text-slate-100 hover:border-emerald-900/40'
-                                }`}
-                              >
-                                {/* Category top line */}
-                                <div className="absolute top-0 left-0 right-0 h-1.5" style={{ backgroundColor: cat.color }} />
-
-                                {/* Large initial watermark background */}
-                                <div className="absolute -top-3 right-4 text-[13rem] font-serif font-black text-[#D9A752]/[0.05] group-hover:text-[#D9A752]/[0.09] select-none pointer-events-none transition-all duration-500">
-                                  {initialWatermark}
-                                </div>
-
-                                {/* Bookmark button absolute placement */}
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    toggleFavorite(comp.id);
-                                  }}
-                                  className="absolute top-5 left-5 p-1 z-30 transition cursor-pointer hover:scale-110 active:scale-95"
-                                  title="Add to Favorites"
-                                >
-                                  <Heart className={`w-4 h-4 ${isFav ? 'text-red-500 fill-red-500' : 'text-slate-500 hover:text-white'}`} />
-                                </button>
-
-                                <div className="space-y-4 pt-2 relative z-10">
-                                  {/* Head labels */}
-                                  <div className="flex justify-between items-center text-[10px] pl-6">
-                                    <span className="px-2 py-0.5 rounded bg-[#031410] text-[#D9A752] border border-[#D9A752]/20 font-serif font-bold">
-                                      {isArabic ? cat.labelAr : cat.labelEn}
-                                    </span>
-                                    <span className="font-mono text-emerald-500 font-bold">
-                                      {comp.deathYearAH} AH ({comp.ageAtDeath} {isArabic ? 'سنة' : 'yrs'})
-                                    </span>
-                                  </div>
-
-                                  {/* Names block */}
-                                  <div className="space-y-1">
-                                    <h3 className="text-xl font-bold text-[#D9A752] font-serif tracking-wide group-hover:text-white transition-colors">
-                                      {comp.nameAr}
-                                    </h3>
-                                    <p className="text-xs text-white font-serif font-bold tracking-tight">
-                                      {comp.nameEn}
-                                    </p>
-                                    <p className="text-[10px] text-slate-400 font-mono italic">
-                                      {isArabic ? comp.kunyaAr : comp.kunyaEn} &bull; {isArabic ? comp.tribeAr : comp.tribeEn}
-                                    </p>
-                                  </div>
-
-                                  {/* Bio snip */}
-                                  <p className="text-xs text-slate-350 line-clamp-3 leading-relaxed font-light">
-                                    {isArabic ? comp.shortBioAr : comp.shortBioEn}
-                                  </p>
-                                </div>
-
-                                {/* Narrations Footer */}
-                                <div className="border-t border-emerald-900/20 pt-3 mt-4 flex justify-between items-center text-[11px] text-slate-400 relative z-10 font-mono">
-                                  <span>📚 {comp.hadithCount} narrations</span>
-                                  <span className="text-[#D9A752] font-bold hover:underline flex items-center gap-1">
-                                    {isArabic ? 'تصفح السيرة' : 'View Seerah'} &rarr;
-                                  </span>
-                                </div>
-                              </div>
-                            );
-                          })}
+                          {filteredCompanions.map((comp) => (
+                            <InteractiveCompanionCard
+                              key={comp.id}
+                              comp={comp}
+                              isSelected={selectedCompanion?.id === comp.id}
+                              isFav={favorites.includes(comp.id)}
+                              isArabic={isArabic}
+                              onFavoriteToggle={toggleFavorite}
+                              onClick={() => {
+                                setSelectedCompanion(comp);
+                                const detailAnchor = document.getElementById('sahaba-detail-container-anchor');
+                                if (detailAnchor) {
+                                  detailAnchor.scrollIntoView({ behavior: 'smooth' });
+                                }
+                              }}
+                              isDarkMode={isDarkMode}
+                            />
+                          ))}
                         </div>
                       )
                     ) : explorerViewType === 'graph' ? (

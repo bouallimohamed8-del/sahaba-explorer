@@ -29,6 +29,8 @@ export default function AdminVideosModeration({
   const [titleAr, setTitleAr] = useState('');
   const [titleFr, setTitleFr] = useState('');
   const [youtubeUrl, setYoutubeUrl] = useState('');
+  const [channelName, setChannelName] = useState('');
+  const [duration, setDuration] = useState('');
 
   const fetchVideos = async () => {
     setLoading(true);
@@ -81,7 +83,9 @@ export default function AdminVideosModeration({
       titleFr: titleFr.trim() || titleAr.trim(),
       youtubeUrl: cleanUrl,
       createdAt: new Date().toISOString(),
-      addedBy: 'bouallimohamed8@gmail.com' // Auth admin placeholder matching rules securely
+      addedBy: 'bouallimohamed8@gmail.com', // Auth admin placeholder matching rules securely
+      channelName: channelName.trim(),
+      duration: duration.trim()
     };
 
     try {
@@ -92,6 +96,8 @@ export default function AdminVideosModeration({
       setTitleAr('');
       setTitleFr('');
       setYoutubeUrl('');
+      setChannelName('');
+      setDuration('');
       
       // Refresh
       fetchVideos();
@@ -220,6 +226,30 @@ export default function AdminVideosModeration({
               value={titleFr}
               onChange={e => setTitleFr(e.target.value)}
               placeholder="e.g. Bilal ibn Rabah documentary, Yaqeen series"
+              className="w-full bg-slate-900 border border-slate-800 rounded-xl p-2.5 text-xs text-slate-100 focus:border-amber-500 outline-none"
+            />
+          </div>
+
+          {/* YouTube Channel Name */}
+          <div className="space-y-1.5">
+            <label className="block text-[11px] font-bold text-slate-400">{isArabic ? 'اسم القناة (اختياري) :' : 'Channel Name (Optional) :'}</label>
+            <input
+              type="text"
+              value={channelName}
+              onChange={e => setChannelName(e.target.value)}
+              placeholder="e.g. Yaqeen Institute"
+              className="w-full bg-slate-900 border border-slate-800 rounded-xl p-2.5 text-xs text-slate-100 focus:border-amber-500 outline-none"
+            />
+          </div>
+
+          {/* Video Duration */}
+          <div className="space-y-1.5">
+            <label className="block text-[11px] font-bold text-slate-400">{isArabic ? 'مدة الفيديو (اختياري، مثلاً 12:45) :' : 'Duration (Optional, e.g. 12:45) :'}</label>
+            <input
+              type="text"
+              value={duration}
+              onChange={e => setDuration(e.target.value)}
+              placeholder="e.g. 15:30"
               className="w-full bg-slate-900 border border-slate-800 rounded-xl p-2.5 text-xs text-slate-100 focus:border-amber-500 outline-none"
             />
           </div>
