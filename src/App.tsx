@@ -11,14 +11,15 @@ import ClassificationTool from './components/ClassificationTool';
 import FilterControls from './components/FilterControls';
 import AdminDashboard from './components/AdminDashboard';
 import UserProfilePage from './components/UserProfilePage';
-import { DEFAULT_COMPANIONS, DEFAULT_RELATIONSHIPS } from './data/defaultDataset';
-import { Globe, Moon, Sun, Search, GitFork, User, ShieldAlert, Sparkles, RefreshCw, Layers, Compass, HelpCircle, ChevronRight, Info, LogOut, Shield, FileText, Printer } from 'lucide-react';
+import { DEFAULT_COMPANIONS, DEFAULT_RELATIONSHIPS, DEFAULT_BATTLES } from './data/defaultDataset';
+import { Globe, Moon, Sun, Search, GitFork, User, ShieldAlert, Sparkles, RefreshCw, Layers, Compass, HelpCircle, ChevronRight, Info, LogOut, Shield, FileText, Printer, Heart, BookOpen, Award, Check, X, Calendar, Activity, GraduationCap, Trophy } from 'lucide-react';
 import { useAuth } from './context/AuthContext';
 import AuthPages from './components/AuthPages';
 import { db } from './lib/firebase';
-import { doc, setDoc, collection, query, orderBy, getDocs, onSnapshot } from 'firebase/firestore';
-import { LanguageCode, UI_TRANSLATIONS } from './lib/i18n';
+import { doc, setDoc, collection, query, orderBy, getDocs, onSnapshot, updateDoc } from 'firebase/firestore';
+import { LanguageCode, UI_TRANSLATIONS, SEERAH_QCM_QUESTIONS, QCMQuestion } from './lib/i18n';
 import LeftMediaBanner, { BannerConfig } from './components/LeftMediaBanner';
+import { motion, AnimatePresence } from 'motion/react';
 
 export default function App() {
   const { user, profile, loading: authLoading, logout } = useAuth();
@@ -31,7 +32,44 @@ export default function App() {
     tribe: '',
     city: '',
     battle: '',
-    relationshipType: ''
+    relationshipType: '',
+    minHadiths: 0
+  });
+
+  // Main UI Navigation tab
+  const [activeTab, setActiveTab] = useState<'home' | 'directory' | 'timeline' | 'learning' | 'quiz' | 'leaderboard' | 'favorites'>('home');
+
+  // Favorites bookmarked IDs state (cached locally)
+  const [favorites, setFavorites] = useState<string[]>(() => {
+    try {
+      const saved = localStorage.getItem('sahaba_favorites');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  const toggleFavorite = (id: string) => {
+    setFavorites(prev => {
+      const next = prev.includes(id) ? prev.filter(f => f !== id) : [...prev, id];
+      localStorage.setItem('sahaba_favorites', JSON.stringify(next));
+      return next;
+    });
+  };
+
+  // Interactive Quiz State
+  const [quizQuestion, setQuizQuestion] = useState<QCMQuestion | null>(null);
+  const [quizSelected, setQuizSelected] = useState<number | null>(null);
+  const [quizAnswered, setQuizAnswered] = useState<boolean>(false);
+  const [quizPoints, setQuizPoints] = useState<number>(0);
+  const [quizFeedback, setQuizFeedback] = useState<{ isCorrect: boolean; points: number } | null>(null);
+  const [quizOverallScore, setQuizOverallScore] = useState<number>(() => {
+    try {
+      const saved = localStorage.getItem('sahaba_quiz_score');
+      return saved ? parseInt(saved, 10) : 0;
+    } catch {
+      return 0;
+    }
   });
 
   // UI state
@@ -39,9 +77,9 @@ export default function App() {
   const [hoveredCompanion, setHoveredCompanion] = useState<Companion | null>(null);
   const [lang, setLang] = useState<LanguageCode>('ar');
   const isArabic = lang === 'ar';
-  const [isDarkMode, setIsDarkMode] = useState<boolean>(false);
+  const [isDarkMode, setIsDarkMode] = useState<boolean>(true);
   const [viewMode, setViewMode] = useState<'explorer' | 'admin' | 'profile'>('explorer');
-  const [explorerViewType, setExplorerViewType] = useState<'graph' | 'directory' | 'classify'>('classify');
+  const [explorerViewType, setExplorerViewType] = useState<'graph' | 'directory' | 'classify'>('directory');
 
   const DEFAULT_BANNER: BannerConfig = {
     id: 'main',
@@ -245,109 +283,114 @@ export default function App() {
   };
 
   return (
-    <div className={`min-h-screen font-sans ${isDarkMode ? 'bg-natural-dark-bg text-slate-100 natural-dotted-bg-dark' : 'bg-natural-bg text-natural-text natural-dotted-bg'} transition-all duration-300 relative pb-16`}>
+    <div className={`min-h-screen font-sans ${isDarkMode ? 'bg-[#031410] text-slate-100 natural-dotted-bg-dark' : 'bg-[#F2EFE9] text-stone-900 natural-dotted-bg'} transition-all duration-300 relative pb-16`}>
       {/* Decorative Top Islamic Arch Geometric Grid Border */}
-      <div className="h-2 bg-gradient-to-r from-natural-accent via-[#A88849] to-natural-brand opacity-90" />
+      <div className="h-2 bg-gradient-to-r from-emerald-500 via-[#C5A059] to-emerald-800 opacity-95" />
 
-      {/* Global Navbar */}
-      <header className={`border-b border-natural-accent/35 ${isDarkMode ? 'bg-natural-dark-header/90 backdrop-blur-md text-white' : 'bg-[#FAF8F5]/95 backdrop-blur-md text-[#3C3C2C]'} sticky top-0 z-50 px-4 py-3 shadow-[0_4px_30px_rgba(0,0,0,0.03)]`}>
+      {/* Global Navbar - Premium Dark Green & Amber Accentuation */}
+      <header className={`border-b ${isDarkMode ? 'bg-[#020d0af2] border-emerald-950/40 text-white' : 'bg-[#FAF8F5]/95 border-emerald-800/10 text-stone-900'} sticky top-0 z-50 px-4 py-3 shadow-lg backdrop-blur-md`}>
         <div className="max-w-7xl mx-auto flex flex-wrap justify-between items-center gap-4">
+          
           {/* Logo Identity */}
-          <div className="flex items-center gap-4">
-            <div className="w-10 h-10 bg-natural-accent rounded-xl rotate-12 flex items-center justify-center shadow-lg shadow-amber-500/10 transition hover:rotate-45 duration-500">
-              <div className="w-8 h-8 border border-white/50 rounded-lg flex items-center justify-center font-serif text-lg text-white">
-                ﷺ
-              </div>
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-emerald-700/90 border border-emerald-500/20 flex items-center justify-center font-serif text-white font-bold text-lg select-none shadow hover:rotate-12 transition-transform duration-300">
+              ص
             </div>
             <div>
-              <h1 className="text-xl font-extrabold tracking-tight font-serif flex items-center gap-2">
-                <span className={isDarkMode ? 'text-white' : 'text-natural-bold font-black'}>{isArabic ? 'مستكشف الصحابة والتابعين ﷺ' : 'Sahaba Explorer'}</span>
-                <span className="text-[9px] px-2 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-500 font-mono tracking-widest uppercase animate-pulse">2026 Edition</span>
-              </h1>
-              <p className={`text-[10px] ${isDarkMode ? 'text-slate-400' : 'text-slate-650'} font-sans leading-none mt-1`}>
-                {isArabic ? 'موسوعة تفاعلية مصورة للعلاقات التاريخية الفاضلة' : 'Interactive Encyclopedia of Companions\' Relationships'}
-              </p>
+              <div className="text-sm font-black tracking-tight text-white font-serif flex items-center gap-1.5 leading-none">
+                {isArabic ? 'مستكشف الصحابة والتابعين ﷺ' : 'Sahaba Explorer'}
+              </div>
+              <div className="text-[10px] text-emerald-500 font-mono tracking-wider leading-none mt-1">
+                V 0.0.2
+              </div>
             </div>
           </div>
 
-          {/* Quick Config Toggles */}
-          <div className="flex items-center gap-3">
-            {/* Explorer vs Admin tab toggles */}
-            <div className={`flex p-1 rounded-xl border ${isDarkMode ? 'bg-natural-dark-panel border-neutral-800' : 'bg-stone-100 border-stone-200 shadow-sm'}`}>
-              <button
-                id="btn-switch-explorer"
-                onClick={() => {
-                  setViewMode('explorer');
-                  setShowAuthScreen(false);
-                }}
-                className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer ${
-                  viewMode === 'explorer' && !showAuthScreen 
-                    ? 'bg-natural-accent text-white shadow-sm' 
-                    : isDarkMode ? 'text-slate-300 hover:text-white hover:bg-neutral-800/60' : 'text-slate-650 hover:text-slate-900 hover:bg-stone-200/50'
-                }`}
-              >
-                {isArabic ? 'المستكشف المرئي' : 'Interactive Graph'}
-              </button>
-              <button
-                id="btn-switch-admin"
-                onClick={() => {
-                  setViewMode('admin');
-                  setShowAuthScreen(false);
-                }}
-                className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer ${
-                  viewMode === 'admin' 
-                    ? 'bg-natural-accent text-white shadow-sm' 
-                    : isDarkMode ? 'text-slate-300 hover:text-white hover:bg-neutral-800/60' : 'text-slate-650 hover:text-slate-900 hover:bg-stone-200/50'
-                }`}
-              >
-                {isArabic ? 'المشرف والمراجعة' : 'Admin Console'}
-              </button>
-            </div>
+          {/* Center: Premium Tab-Selector */}
+          <nav className="hidden md:flex items-center gap-1">
+            {(['home', 'directory', 'timeline', 'learning', 'quiz', 'leaderboard', 'favorites'] as const).map((tab) => {
+              const active = activeTab === tab && viewMode === 'explorer';
+              const label = {
+                home: isArabic ? 'الرئيسية' : 'Home',
+                directory: isArabic ? 'البطاقات والمستكشف' : 'Directory',
+                timeline: isArabic ? 'الخط الزمني' : 'Timeline',
+                learning: isArabic ? 'التعليم والعلوم' : 'Learning',
+                quiz: isArabic ? 'الاختبارات' : 'Quiz',
+                leaderboard: isArabic ? 'المتصدرون' : 'Leaderboard',
+                favorites: isArabic ? 'المفضلة' : 'Favorites',
+              }[tab];
+              return (
+                <button
+                  key={tab}
+                  onClick={() => {
+                    setActiveTab(tab);
+                    setViewMode('explorer');
+                    setShowAuthScreen(false);
+                  }}
+                  className={`relative px-3.5 py-2 text-xs font-bold font-serif transition-colors cursor-pointer rounded-lg ${
+                    active 
+                      ? 'text-[#D9A752] bg-emerald-950/20' 
+                      : isDarkMode ? 'text-slate-400 hover:text-white' : 'text-stone-650 hover:text-stone-900 hover:bg-stone-100'
+                  }`}
+                >
+                  {label}
+                  {active && (
+                    <span className="absolute bottom-0 left-2 right-2 h-0.5 bg-[#D9A752] rounded-full" />
+                  )}
+                </button>
+              );
+            })}
+          </nav>
 
-            {/* Language Selection Toggle Group */}
-            <div className={`flex p-1 rounded-xl border ${isDarkMode ? 'bg-natural-dark-panel border-neutral-800' : 'bg-stone-100 border-stone-200 shadow-sm'}`}>
+          {/* Right Action Widgets */}
+          <div className="flex items-center gap-2.5">
+            {/* Quick Go-To Admin button for supervisor */}
+            <button
+              onClick={() => {
+                setViewMode(viewMode === 'admin' ? 'explorer' : 'admin');
+                setShowAuthScreen(false);
+              }}
+              className={`p-1.5 rounded-lg border transition cursor-pointer text-xs ${
+                viewMode === 'admin'
+                  ? 'bg-[#D9A752]/20 border-[#D9A752]/40 text-[#D9A752]'
+                  : isDarkMode ? 'bg-emerald-950/10 border-emerald-950 text-slate-300 hover:bg-emerald-950/30' : 'bg-stone-100 border-stone-200 text-stone-700 hover:bg-stone-205'
+              }`}
+              title={isArabic ? 'وحدة الإشراف والتحكم' : 'Supervisor Admin Desk'}
+            >
+              <Shield className="w-4 h-4" />
+            </button>
+
+            {/* Language Toggle */}
+            <div className={`flex p-0.5 rounded-lg border ${isDarkMode ? 'bg-[#06221A] border-emerald-950/45' : 'bg-stone-100 border-stone-200'}`}>
               <button
-                id="btn-lang-ar"
                 onClick={() => setLang('ar')}
-                className={`px-2.5 py-1 text-[11px] font-bold rounded-lg transition-all cursor-pointer ${
-                  lang === 'ar' 
-                    ? 'bg-natural-accent text-white shadow-sm' 
-                    : isDarkMode ? 'text-slate-350 hover:text-white' : 'text-slate-650 hover:text-slate-900'
+                className={`px-2 py-1 text-[10px] font-bold rounded-md cursor-pointer transition ${
+                  lang === 'ar' ? 'bg-[#D9A752] text-white font-serif' : 'text-slate-400'
                 }`}
-                title="العربية"
               >
                 AR
               </button>
               <button
-                id="btn-lang-en"
                 onClick={() => setLang('en')}
-                className={`px-2.5 py-1 text-[11px] font-bold rounded-lg transition-all cursor-pointer ${
-                  lang === 'en' 
-                    ? 'bg-natural-accent text-white shadow-sm' 
-                    : isDarkMode ? 'text-slate-350 hover:text-white' : 'text-slate-650 hover:text-slate-900'
+                className={`px-2 py-1 text-[10px] font-bold rounded-md cursor-pointer transition ${
+                  lang === 'en' ? 'bg-[#D9A752] text-white font-serif' : 'text-slate-400'
                 }`}
-                title="English"
               >
                 EN
               </button>
             </div>
 
-
-
-            {/* Dark mode lights */}
+            {/* Theme Toggle */}
             <button
               onClick={() => setIsDarkMode(!isDarkMode)}
-              className={`p-2 rounded-xl border transition cursor-pointer ${
-                isDarkMode 
-                  ? 'bg-natural-dark-panel border-neutral-800/70 text-amber-400 hover:bg-neutral-800' 
-                  : 'bg-stone-100 border-stone-200 text-slate-700 hover:bg-stone-200'
-              } no-print shadow-sm`}
-              title={isArabic ? 'تغيير المظهر' : 'Toggle Theme'}
+              className={`p-1.5 rounded-lg border transition cursor-pointer ${
+                isDarkMode ? 'bg-[#06221A] border-emerald-950 text-amber-400 hover:bg-emerald-900/30' : 'bg-stone-100 border-stone-200 text-stone-700 hover:bg-stone-200'
+              }`}
             >
-              {isDarkMode ? <Sun className="w-4 h-4 text-amber-400 animate-spin-slow" /> : <Moon className="w-4 h-4 text-slate-705" />}
+              {isDarkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
             </button>
 
-            {/* User auth state indicators */}
+            {/* User Account / Profile */}
             {!authLoading && (
               profile ? (
                 <div
@@ -355,28 +398,27 @@ export default function App() {
                     setViewMode('profile');
                     setShowAuthScreen(false);
                   }}
-                  className={`flex items-center gap-2 px-2.5 py-1.5 rounded-xl border text-xs text-white max-w-[170px] cursor-pointer hover:bg-white/10 transition-all ${
+                  className={`flex items-center gap-2 px-2.5 py-1 rounded-lg border text-xs max-w-[150px] cursor-pointer hover:bg-emerald-950/30 transition-all ${
                     viewMode === 'profile'
-                      ? 'bg-natural-accent border-natural-accent shadow-inner'
-                      : isDarkMode ? 'bg-natural-dark-panel border-natural-accent/20' : 'bg-white/10 border-white/20'
+                      ? 'bg-[#D9A752] border-[#D9A752] shadow-inner text-white'
+                      : isDarkMode ? 'bg-[#06221A] border-[#06221A] text-slate-300' : 'bg-white border-stone-200 text-stone-700'
                   }`}
-                  title={isArabic ? 'عرض سجل القراءة الفخيم ومذكرات المذاكرة' : 'Open study log and notes'}
                 >
-                  <div className="w-5 h-5 rounded-full bg-natural-accent flex items-center justify-center font-bold text-[10px] text-white overflow-hidden shrink-0">
+                  <div className="w-5 h-5 rounded-full bg-emerald-600 flex items-center justify-center font-bold text-[10px] text-white overflow-hidden shrink-0">
                     {profile.photoURL ? (
                       <img src={profile.photoURL} alt={profile.fullName} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                     ) : (
                       profile.fullName.charAt(0)
                     )}
                   </div>
-                  <span className="font-bold truncate max-w-[70px] text-white" title={profile.fullName}>{profile.fullName}</span>
+                  <span className="font-bold truncate max-w-[60px]" title={profile.fullName}>{profile.fullName}</span>
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
                       logout();
                       setViewMode('explorer');
                     }}
-                    className="p-1 hover:text-red-350 transition cursor-pointer shrink-0"
+                    className="p-0.5 hover:text-red-500 cursor-pointer shrink-0"
                     title={isArabic ? 'تسجيل الخروج' : 'Log Out'}
                   >
                     <LogOut className="w-3.5 h-3.5" />
@@ -387,455 +429,67 @@ export default function App() {
                   onClick={() => {
                     setShowAuthScreen(!showAuthScreen);
                   }}
-                  className={`flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-xl border transition-all cursor-pointer ${
+                  className={`flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-lg border transition-all cursor-pointer ${
                     showAuthScreen 
-                      ? 'bg-natural-accent text-white border-natural-accent' 
-                      : 'text-white bg-white/10 border-white/20 hover:bg-white/20'
+                      ? 'bg-[#D9A752] text-white border-[#D9A752]' 
+                      : 'text-slate-300 bg-[#06221A]/80 border-emerald-950 hover:bg-[#06221A]'
                   }`}
                 >
-                  <User className="w-3.5 h-3.5" />
+                  <User className="w-3.5 h-3.5 text-[#D9A752]" />
                   <span>{isArabic ? 'دخول' : 'Login'}</span>
                 </button>
               )
             )}
           </div>
         </div>
+
+        {/* Mobile Subnavbar */}
+        <div className="flex md:hidden items-center justify-center gap-1 mt-2 py-1 overflow-x-auto border-t border-emerald-950/20">
+          {(['home', 'directory', 'timeline', 'quiz', 'leaderboard', 'favorites'] as const).map((tab) => {
+            const active = activeTab === tab && viewMode === 'explorer';
+            const label = {
+              home: isArabic ? 'الرئيسية' : 'Home',
+              directory: isArabic ? 'البطاقات' : 'Sira',
+              timeline: isArabic ? 'التاريخ' : 'Time',
+              quiz: isArabic ? 'اختبر' : 'Quiz',
+              leaderboard: isArabic ? 'القمة' : 'Top',
+              favorites: isArabic ? 'المحفوظة' : 'Favs',
+            }[tab];
+            return (
+              <button
+                key={tab}
+                onClick={() => {
+                  setActiveTab(tab);
+                  setViewMode('explorer');
+                  setShowAuthScreen(false);
+                }}
+                className={`px-3 py-1 text-[11px] font-bold font-serif whitespace-nowrap rounded ${
+                  active ? 'text-[#D9A752] bg-emerald-950/40' : 'text-slate-400'
+                }`}
+              >
+                {label}
+              </button>
+            );
+          })}
+        </div>
       </header>
 
-      {/* Primary body view content */}
+      {/* Primary Body Workspace */}
       <main className="max-w-7xl mx-auto px-4 mt-6">
         {isLoading ? (
           <div className="flex flex-col items-center justify-center py-24 gap-4">
-            <RefreshCw className="w-10 h-10 text-natural-accent animate-spin" />
-            <p className="text-xs text-natural-brand/80 font-serif">{isArabic ? 'يُحمّل سجلاّت التاريخ والفضائل العطرة...' : 'Retrieving prestigious companions histories...'}</p>
+            <RefreshCw className="w-8 h-8 text-[#D9A752] animate-spin" />
+            <p className="text-xs text-[#D9A752] font-serif tracking-widest">{isArabic ? 'يُحمّل سجلاّت التاريخ والفضائل العطرة...' : 'Retrieving prestigious companions histories...'}</p>
           </div>
         ) : showAuthScreen ? (
           <AuthPages isArabic={isArabic} isDarkMode={isDarkMode} lang={lang} onSuccess={() => setShowAuthScreen(false)} />
-        ) : viewMode === 'explorer' ? (
-          // EXPLORER WORKSPACE
-          <div className="space-y-6 animate-fade-in">
-            {/* Slim Header & Filter Toggles */}
-            <div className={`p-4 rounded-3xl border flex flex-col md:flex-row gap-4 items-center justify-between ${
-              isDarkMode ? 'bg-natural-dark-panel border-neutral-800' : 'bg-white border-natural-accent/30'
-            } shadow`}>
-              {/* Left search bar */}
-              <div className="relative w-full md:w-96">
-                <input
-                  type="text"
-                  value={filter.searchQuery}
-                  onChange={(e) => setFilter(prev => ({ ...prev, searchQuery: e.target.value }))}
-                  placeholder={isArabic ? 'بحث سريع باسم الصحابي...' : 'Search sahaba instantly by name...'}
-                  className={`w-full border rounded-2xl py-2.5 pl-3.5 pr-10 focus:outline-none text-xs transition duration-150 ${
-                    isDarkMode 
-                      ? 'bg-natural-dark-bg border-neutral-750 text-slate-100 focus:border-natural-accent' 
-                      : 'bg-white border-natural-accent/30 text-natural-text focus:border-natural-brand'
-                  }`}
-                />
-                <Search className={`w-4 h-4 text-natural-accent absolute top-3 ${isArabic ? 'left-3' : 'right-3'}`} />
-              </div>
-
-              {/* Right buttons row */}
-              <div className="flex flex-wrap gap-2 items-center w-full md:w-auto justify-end">
-                {/* Advanced filter toggle */}
-                <button
-                  id="btn-toggle-filters"
-                  onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
-                  className={`px-4 py-2.5 rounded-2xl text-xs font-serif font-bold cursor-pointer transition flex items-center gap-2 active:scale-95 border ${
-                    showAdvancedFilters
-                      ? 'bg-natural-accent text-white border-natural-accent shadow-sm'
-                      : isDarkMode
-                        ? 'bg-natural-dark-bg/40 border-neutral-850 hover:bg-[#20211B] text-slate-300'
-                        : 'bg-[#FDFCFB] border-natural-accent/25 hover:bg-[#F5F2ED] text-natural-brand'
-                  }`}
-                >
-                  <span>🎛️</span>
-                  <span>{isArabic ? 'خيارات الفرز والبحث المتقدم' : 'Advanced Search Criteria'}</span>
-                </button>
-
-                {/* Reset button */}
-                {(filter.category || filter.tribe || filter.city || filter.battle || filter.relationshipType || filter.searchQuery) && (
-                  <button
-                    onClick={() => {
-                      setFilter({ searchQuery: '', category: '', tribe: '', city: '', battle: '', relationshipType: '' });
-                      setSelectedCompanion(null);
-                      setHoveredCompanion(null);
-                      clearHighlightedPath();
-                    }}
-                    className={`px-3 py-2.5 rounded-2xl text-xs font-serif font-bold transition flex items-center gap-1.5 cursor-pointer active:scale-95 border ${
-                      isDarkMode
-                        ? 'bg-neutral-800 text-stone-300 hover:bg-neutral-700/80'
-                        : 'bg-stone-100 hover:bg-stone-200 text-stone-700'
-                    }`}
-                  >
-                    <span>🔄</span>
-                    <span>{isArabic ? 'إعادة تعيين' : 'ResetAll'}</span>
-                  </button>
-                )}
-              </div>
-            </div>
-
-            {/* Collapsed Advanced Filters panel container drawer */}
-            {showAdvancedFilters && (
-              <div className="animate-fade-in">
-                <FilterControls
-                  companions={companions}
-                  filter={filter}
-                  onFilterChange={setFilter}
-                  isArabic={isArabic}
-                  isDarkMode={isDarkMode}
-                  onReset={() => {
-                    setFilter({ searchQuery: '', category: '', tribe: '', city: '', battle: '', relationshipType: '' });
-                    setSelectedCompanion(null);
-                    setHoveredCompanion(null);
-                    clearHighlightedPath();
-                  }}
-                />
-              </div>
-            )}
-
-            {/* Dual split panel layout */}
-            <div className={`grid grid-cols-1 ${bannerConfig.enabled ? 'lg:grid-cols-4' : 'lg:grid-cols-3'} gap-6 items-start`}>
-              {/* Left Column: Rectangular dynamic banner */}
-              {bannerConfig.enabled && (
-                <div className="lg:col-span-1 space-y-4">
-                  <LeftMediaBanner config={bannerConfig} isArabic={isArabic} isDarkMode={isDarkMode} />
-                </div>
-              )}
-
-              {/* Center/Main Column: Network Graph Board or Directory Card Grid */}
-              <div id="explorer-main-column" className="lg:col-span-2 space-y-4">
-                {/* Visual Style Selection tab bar */}
-                <div className={`p-1.5 rounded-2xl border flex items-center justify-between ${isDarkMode ? 'bg-natural-dark-panel border-neutral-805' : 'bg-white border-natural-accent/30'} shadow-sm`}>
-                  <div className="flex gap-2 items-center px-2">
-                    <Layers className="w-4 h-4 text-natural-accent" />
-                    <span className="text-xs font-bold font-serif text-natural-brand">{isArabic ? 'طريقة العرض المعتمدة:' : 'Explorer Display Layout:'}</span>
-                  </div>
-                   <div className="flex gap-1" id="view-mode-toggle-group">
-                    <button
-                      id="view-type-classify"
-                      onClick={() => setExplorerViewType('classify')}
-                      className={`px-3 py-1.5 rounded-xl text-xs font-serif font-bold transition flex items-center gap-1.5 cursor-pointer active:scale-95 ${
-                        explorerViewType === 'classify'
-                          ? 'bg-natural-brand text-white shadow'
-                          : isDarkMode
-                            ? 'text-slate-400 hover:bg-neutral-800 hover:text-white'
-                            : 'text-neutral-600 hover:bg-[#F5F2ED] hover:text-natural-accent'
-                      }`}
-                    >
-                      <span>🗂️</span>
-                      <span>{isArabic ? 'أداة التصنيف القيمة' : 'Classification'}</span>
-                    </button>
-                    <button
-                      id="view-type-grid"
-                      onClick={() => setExplorerViewType('directory')}
-                      className={`px-3 py-1.5 rounded-xl text-xs font-serif font-bold transition flex items-center gap-1.5 cursor-pointer active:scale-95 ${
-                        explorerViewType === 'directory'
-                          ? 'bg-natural-brand text-white shadow'
-                          : isDarkMode
-                            ? 'text-slate-400 hover:bg-neutral-800 hover:text-white'
-                            : 'text-neutral-600 hover:bg-[#F5F2ED] hover:text-natural-accent'
-                      }`}
-                    >
-                      <span>📑</span>
-                      <span>{isArabic ? 'بطاقات السيرة' : 'Sira cards'}</span>
-                    </button>
-                    <button
-                      id="view-type-graph"
-                      onClick={() => setExplorerViewType('graph')}
-                      className={`px-3 py-1.5 rounded-xl text-xs font-serif font-bold transition flex items-center gap-1.5 cursor-pointer active:scale-95 ${
-                        explorerViewType === 'graph'
-                          ? 'bg-natural-brand text-white shadow'
-                          : isDarkMode
-                            ? 'text-slate-400 hover:bg-neutral-800 hover:text-white'
-                            : 'text-neutral-600 hover:bg-[#F5F2ED] hover:text-natural-accent'
-                      }`}
-                    >
-                      <span>🕸️</span>
-                      <span>{isArabic ? 'شبكة العلاقات' : 'Relations Map'}</span>
-                    </button>
-                  </div>
-                </div>
-
-                {explorerViewType === 'classify' ? (
-                  <ClassificationTool
-                    companions={filteredCompanions}
-                    onSelectCompanion={setSelectedCompanion}
-                    selectedCompanion={selectedCompanion}
-                    isArabic={isArabic}
-                    lang={lang}
-                    isDarkMode={isDarkMode}
-                  />
-                ) : explorerViewType === 'graph' ? (
-                  <NetworkGraph
-                    companions={filteredCompanions}
-                    relationships={relationships}
-                    selectedCompanion={selectedCompanion}
-                    onSelectCompanion={setSelectedCompanion}
-                    hoveredCompanion={hoveredCompanion}
-                    onHoverCompanion={setHoveredCompanion}
-                    isArabic={isArabic}
-                    lang={lang}
-                    highlightedPath={highlightedPath}
-                    isDarkMode={isDarkMode}
-                  />
-                ) : (
-                  /* Directory Card Grid */
-                  <div className="space-y-4">
-                    {filteredCompanions.length === 0 ? (
-                      <div className={`border border-dashed rounded-3xl p-12 text-center ${isDarkMode ? 'bg-natural-dark-panel/20 border-neutral-800 text-slate-500' : 'bg-white/40 border-natural-accent/20 text-neutral-500'}`}>
-                        <Search className="w-8 h-8 text-neutral-400 mx-auto mb-2" />
-                        <p className="text-xs font-serif leading-relaxed text-natural-brand/80">
-                          {isArabic
-                            ? 'عذراً، لم نجد صحابة يتوافقون مع شروط البحث والفلترة المطبقة.'
-                            : 'No companions match your current search/filtering selection.'}
-                        </p>
-                      </div>
-                    ) : (
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        {filteredCompanions.map((comp) => {
-                          const cat = CATEGORY_CONFIG[comp.category] || CATEGORY_CONFIG.Other;
-                          const isSelected = selectedCompanion?.id === comp.id;
-
-                          return (
-                            <div
-                              key={comp.id}
-                              id={`companion-card-${comp.id}`}
-                              onClick={() => {
-                                setSelectedCompanion(comp);
-                                // Scroll nicely to companion detail anchor if open
-                                const detailAnchor = document.getElementById('sahaba-detail-container-anchor');
-                                if (detailAnchor) {
-                                  detailAnchor.scrollIntoView({ behavior: 'smooth' });
-                                }
-                              }}
-                              className={`group p-5 rounded-3xl border transition-all duration-300 flex flex-col justify-between cursor-pointer translate-y-0 hover:-translate-y-1 relative overflow-hidden shadow-sm hover:shadow-md ${
-                                isSelected
-                                  ? isDarkMode
-                                    ? 'bg-natural-dark-panel border-natural-accent text-slate-100 ring-1 ring-natural-accent/20'
-                                    : 'bg-[#F9F7F2] border-natural-accent text-natural-text ring-1 ring-natural-accent/25'
-                                  : isDarkMode
-                                    ? 'bg-natural-dark-panel/40 border-neutral-800 hover:border-neutral-700/80 hover:bg-natural-dark-panel/60 text-slate-200'
-                                    : 'bg-white border-natural-accent/15 hover:border-natural-accent/35 hover:bg-[#FDFCF9] text-natural-text'
-                              }`}
-                            >
-                              {/* Left Category Accent Pill */}
-                              <div className="absolute top-0 left-0 right-0 h-1.5" style={{ backgroundColor: cat.color }} />
-
-                              <div className="space-y-3.5">
-                                <div className="flex justify-between items-start pt-1">
-                                  <span className={`text-[9.5px] px-2 py-0.5 rounded-full font-serif font-bold ${
-                                    isDarkMode ? 'bg-neutral-800 text-stone-300' : 'bg-natural-brand/5 border border-natural-brand/10 text-natural-brand/90'
-                                  }`}>
-                                    {isArabic ? cat.labelAr : cat.labelEn}
-                                  </span>
-                                  <span className="text-[10px] font-mono text-stone-500">
-                                    {comp.deathYearAH} AH ({comp.ageAtDeath} {isArabic ? 'عاماً' : 'yrs'})
-                                  </span>
-                                </div>
-
-                                <div className="space-y-1">
-                                  <h4 className="text-base font-serif font-bold text-natural-brand group-hover:text-natural-accent transition-colors" lang="ar" dir="rtl">
-                                    {comp.nameAr}
-                                  </h4>
-                                  <p className="text-[11px] font-mono text-stone-500 truncate">
-                                    {isArabic ? comp.tribeAr : comp.tribeEn}
-                                  </p>
-                                </div>
-
-                                <p className={`text-[12px] leading-relaxed font-serif ${isDarkMode ? 'text-slate-300' : 'text-neutral-700'} line-clamp-3`}>
-                                  {isArabic ? comp.shortBioAr : comp.shortBioEn}
-                                </p>
-                              </div>
-
-                              <div className="mt-4 pt-3.5 border-t border-stone-205/50 dark:border-stone-850/40 flex justify-between items-center text-[10.5px]">
-                                <span className="font-mono text-stone-500">
-                                  📚 {comp.hadithCount} {isArabic ? 'حديث مروي' : 'narrations'}
-                                </span>
-                                <span className="font-bold text-natural-accent flex items-center gap-0.5 group-hover:underline">
-                                  {isArabic ? 'عرض التفاصيل والنسب' : 'View Seerah'}
-                                  <ChevronRight className={`w-3 h-3 transform transition-transform group-hover:translate-x-0.5 ${isArabic ? 'rotate-180' : ''}`} />
-                                </span>
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {/* Floating Interactive Hover Card beneath/over graph */}
-                {hoveredCompanion && explorerViewType === 'graph' && (
-                  <div className={`p-4 rounded-2xl border ${isDarkMode ? 'bg-natural-dark-panel border-neutral-800 text-slate-100' : 'bg-white border-natural-accent/30 text-natural-text'} shadow-xl transition duration-300 flex gap-4 animate-fade-in`}>
-                    <div className="w-12 h-12 rounded-xl bg-natural-brand/10 border border-natural-brand/25 flex items-center justify-center text-3xl font-extrabold font-serif text-natural-brand">
-                      {hoveredCompanion.nameAr.charAt(0)}
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center gap-1.5 mb-1">
-                        <h4 className="text-sm font-bold text-natural-brand font-serif" lang="ar" dir="rtl">{hoveredCompanion.nameAr}</h4>
-                        <span className="text-[10px] bg-natural-accent/15 border border-natural-accent/30 rounded px-1.5 font-bold text-natural-brand font-mono">
-                          {hoveredCompanion.ageAtDeath} {isArabic ? 'سنة' : 'yrs'}
-                        </span>
-                      </div>
-                      <p className={`text-[11.5px] leading-relaxed line-clamp-2 ${isDarkMode ? 'text-slate-300' : 'text-neutral-700'}`}>
-                        {isArabic ? hoveredCompanion.shortBioAr : hoveredCompanion.shortBioEn}
-                      </p>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Right Column: Pathfinder tool & Node detail preview */}
-              <div className="space-y-6">
-                {/* 1. PATHFINDER TOOL */}
-                <div className={`border rounded-3xl p-5 shadow-lg ${isDarkMode ? 'bg-natural-dark-panel border-neutral-800' : 'bg-white/90 border-natural-accent/30'}`}>
-                  <h3 className="text-xs font-bold border-b pb-2 mb-3 flex items-center gap-1.5 uppercase font-serif text-natural-brand border-natural-accent/25">
-                    <GitFork className="w-4 h-4 text-natural-accent" />
-                    <span>{isArabic ? 'تقصي خطوط ومسارات النسب والصلة' : 'Relationship Path Finder'}</span>
-                  </h3>
-                  <p className={`text-[11px] mb-4 leading-relaxed ${isDarkMode ? 'text-slate-450' : 'text-neutral-600'}`}>
-                    {isArabic
-                      ? 'حدد صحابيين شريفين لمعرفة سلسلة الروابط والعلاقات المباشرة والمركبة التي تجمع بينهما:'
-                      : 'Choose two companions of the Prophet ﷺ to trace their mutual lineage or historic alliance chain:'}
-                  </p>
-
-                  <div className="space-y-3 text-xs">
-                    <div>
-                      <label className="block text-natural-brand/80 mb-1 font-bold">{isArabic ? 'الصحابي الأول (البداية)' : 'Start Companion'}</label>
-                      <select
-                        id="pathfinder-start-select"
-                        value={pathStartId}
-                        onChange={(e) => setPathStartId(e.target.value)}
-                        className={`w-full border rounded-xl p-2.5 focus:outline-none text-xs transition duration-200 ${isDarkMode ? 'bg-natural-dark-bg border-neutral-750 text-slate-200' : 'bg-white border-natural-accent/40 text-natural-text focus:border-natural-brand'}`}
-                      >
-                        <option value="">-- {isArabic ? 'اختر البداية' : 'Select Start Node'} --</option>
-                        {companions.map(c => (
-                          <option key={c.id} value={c.id}>{c.nameAr} ({c.nameEn})</option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="block text-natural-brand/80 mb-1 font-bold">{isArabic ? 'الصحابي الثاني (الهدف)' : 'Target Companion'}</label>
-                      <select
-                        id="pathfinder-end-select"
-                        value={pathEndId}
-                        onChange={(e) => setPathEndId(e.target.value)}
-                        className={`w-full border rounded-xl p-2.5 focus:outline-none text-xs transition duration-200 ${isDarkMode ? 'bg-natural-dark-bg border-neutral-750 text-slate-200' : 'bg-white border-natural-accent/40 text-natural-text focus:border-natural-brand'}`}
-                      >
-                        <option value="">-- {isArabic ? 'اختر الهدف' : 'Select Target Node'} --</option>
-                        {companions.map(c => (
-                          <option key={c.id} value={c.id}>{c.nameAr} ({c.nameEn})</option>
-                        ))}
-                      </select>
-                    </div>
-
-                    {pathError && (
-                      <p className="text-[10.5px] text-red-500 italic bg-red-500/5 border border-red-500/20 p-2.5 rounded-xl text-center">{pathError}</p>
-                    )}
-
-                    <div className="flex gap-2 pt-1">
-                      <button
-                        id="btn-trace-path"
-                        onClick={findShortestRelationshipPath}
-                        className="flex-1 bg-natural-brand hover:bg-natural-brand/90 text-white font-bold p-2.5 rounded-xl text-xs flex items-center justify-center gap-1.5 cursor-pointer transition active:scale-95 shadow-md"
-                      >
-                        <span>{isArabic ? 'كشف خط الاتصال' : 'Trace Connection Path'}</span>
-                      </button>
-                      {highlightedPath && (
-                        <button
-                          onClick={clearHighlightedPath}
-                          className={`border px-3 py-2 rounded-xl text-xs cursor-pointer ${isDarkMode ? 'bg-natural-dark-bg border-neutral-700 text-slate-300' : 'bg-white border-neutral-300 text-natural-text hover:bg-slate-100'}`}
-                        >
-                          {isArabic ? 'مسح' : 'Clear'}
-                        </button>
-                      )}
-                    </div>
-
-                    {/* Render Highlighted path details chain */}
-                    {highlightedPath && (
-                      <div className={`p-3.5 rounded-2xl space-y-2 mt-4 border ${isDarkMode ? 'bg-natural-dark-bg/60 border-neutral-850' : 'bg-natural-brand/5 border-natural-brand/10'}`}>
-                        <span className="font-bold text-[10px] text-natural-accent uppercase block font-serif">{isArabic ? 'مسار الوصل التاريخي المكتشف' : 'Discovered Historic Hops:'}</span>
-                        <div className="space-y-1">
-                          {highlightedPath.map((nodeId, idx) => {
-                            const node = companions.find(c => c.id === nodeId);
-                            if (!node) return null;
-                            return (
-                              <div key={nodeId} className="flex items-center gap-1.5 text-[11.5px]">
-                                <span className="w-5 h-5 rounded bg-natural-accent/20 text-natural-brand text-[10.5px] font-bold flex items-center justify-center border border-natural-accent/30 font-mono">
-                                  {idx + 1}
-                                </span>
-                                <span className={`font-serif font-bold ${isDarkMode ? 'text-slate-100' : 'text-natural-brand'}`} lang="ar" dir="rtl">{node.nameAr}</span>
-                                {idx < highlightedPath.length - 1 && (
-                                  <span className="text-natural-accent text-[11px]">&larr;</span>
-                                )}
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* 2. COMPANION SELECTION PROFILE SIDEBAR BRIEF */}
-                {selectedCompanion ? (
-                  <div className={`border rounded-3xl p-5 shadow-lg relative ${isDarkMode ? 'bg-natural-dark-panel border-neutral-800' : 'bg-white/90 border-natural-accent/30 animate-fade-in'}`}>
-                    <span className="text-[9px] uppercase font-bold text-natural-accent block mb-1">SELECTED COMPANION</span>
-                    <h2 className="text-lg font-bold text-natural-brand font-serif mb-0.5" lang="ar" dir="rtl">{selectedCompanion.nameAr}</h2>
-                    <p className={`text-[11.5px] leading-relaxed mt-2 italic mb-4 ${isDarkMode ? 'text-slate-300' : 'text-neutral-700 font-serif'}`}>
-                      "{isArabic ? selectedCompanion.shortBioAr : selectedCompanion.shortBioEn}"
-                    </p>
-
-                    <button
-                      id="btn-trigger-explore-detail"
-                      onClick={() => {
-                        // Scroll nicely down to detail board
-                        const t = document.getElementById('sahaba-detail-container-anchor');
-                        if (t) t.scrollIntoView({ behavior: 'smooth' });
-                      }}
-                      className="w-full bg-natural-accent hover:bg-natural-accent/90 text-white font-bold p-2.5 rounded-xl text-xs flex items-center justify-center gap-1.5 transition cursor-pointer active:scale-95 shadow"
-                    >
-                      <Info className="w-3.5 h-3.5" />
-                      <span>{isArabic ? 'فتح السيرة والتفاصيل الكاملة' : 'View Complete Seerah & Legacy'}</span>
-                    </button>
-                  </div>
-                ) : (
-                  <div className={`border border-dashed rounded-3xl p-10 text-center ${isDarkMode ? 'bg-natural-dark-panel/30 border-neutral-800 text-slate-500' : 'bg-white/40 border-natural-accent/30 text-neutral-500'}`}>
-                    <User className="w-8 h-8 text-natural-brand/50 mx-auto mb-2" />
-                    <p className="text-xs leading-relaxed font-serif text-natural-brand/80">{isArabic ? 'انقر على أحد الصحابة في المخطط لقراءة خط النسب والسيرة العطرة الكبرى.' : 'Click any companion node inside the relationship map to read their timeline.'}</p>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Anchor point and details page wrapper */}
-            <div id="sahaba-detail-container-anchor" className="pt-2">
-              {selectedCompanion && (
-                <CompanionDetail
-                  companion={selectedCompanion}
-                  relationships={relationships}
-                  allCompanions={companions}
-                  onSelectCompanion={setSelectedCompanion}
-                  isArabic={isArabic}
-                  isDarkMode={isDarkMode}
-                  onBack={() => {
-                    setSelectedCompanion(null);
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
-                  }}
-                  user={user}
-                  profile={profile}
-                />
-              )}
-            </div>
-          </div>
         ) : viewMode === 'profile' ? (
           <UserProfilePage
             allCompanions={companions}
             onSelectCompanion={(comp) => {
               setSelectedCompanion(comp);
               setViewMode('explorer');
-              // Wait for render layout, then smoothly target anchor
+              setActiveTab('directory');
               setTimeout(() => {
                 const detailAnchor = document.getElementById('sahaba-detail-container-anchor');
                 if (detailAnchor) {
@@ -846,42 +500,41 @@ export default function App() {
             isArabic={isArabic}
             lang={lang}
             isDarkMode={isDarkMode}
-            onNavigateHome={() => setViewMode('explorer')}
+            onNavigateHome={() => {
+              setViewMode('explorer');
+              setActiveTab('home');
+            }}
           />
-        ) : (
-          // ADMIN SECTION
+        ) : viewMode === 'admin' ? (
+          /* ADMIN PORTAL */
           !user ? (
-            <div className="space-y-4">
-              <div className="p-4 rounded-2xl border border-amber-500/20 bg-amber-500/5 text-xs text-amber-600 font-sans text-center max-w-sm mx-auto">
+            <div className="space-y-4 max-w-sm mx-auto my-12">
+              <div className="p-4 rounded-2xl border border-amber-500/20 bg-amber-500/5 text-xs text-amber-600 font-sans text-center">
                 {isArabic 
                   ? 'يتطلب دخول هذا القسم تسجيل الدخول بحساب مشرف معتمد.' 
                   : 'Accessing this environment requires signing in with an authorized collaborator account.'}
               </div>
-              <AuthPages isArabic={isArabic} isDarkMode={isDarkMode} />
+              <AuthPages isArabic={isArabic} isDarkMode={isDarkMode} lang={lang} onSuccess={() => {}} />
             </div>
           ) : !profile || profile.role !== 'admin' ? (
-            <div className="max-w-md mx-auto my-12 animate-fade-in" dir={isArabic ? 'rtl' : 'ltr'}>
-              <div className={`p-8 border rounded-3xl shadow-xl text-center space-y-5 ${
-                isDarkMode ? 'bg-natural-dark-panel border-neutral-800 text-slate-100' : 'bg-white border-natural-accent/30 text-natural-text'
-              }`}>
-                <ShieldAlert className="w-12 h-12 text-rose-500 mx-auto animate-pulse" />
-                <div className="space-y-2">
-                  <h3 className="text-lg font-serif font-bold text-natural-brand">
-                    {isArabic ? 'صلاحيات غير كافية' : 'Restricted Admin Console Access'}
-                  </h3>
-                  <p className="text-xs text-gray-500 font-sans leading-relaxed">
-                    {isArabic 
-                      ? 'عذراً، بروفايل حسابك الحالي لا يمتلك صلاحيات المشرفين. للقيام بعمليات الإدخال والمراجعة، تفضل بالانتقال للمستكشف المرئي أو تسجيل الدخول بحساب مشرف معتمد.' 
-                      : 'Sorry, your registered account profile is not appointed with administrator privileges. Go back to browse the interactive graph explorer or authenticate with an authorized credentials.'}
-                  </p>
-                </div>
-                <button
-                  onClick={() => logout()}
-                  className="w-full bg-natural-brand hover:bg-natural-brand/90 text-white font-bold p-3 rounded-xl cursor-pointer text-xs"
-                >
-                  {isArabic ? 'تسجيل الخروج والتبديل' : 'Sign Out and Switch'}
-                </button>
+            <div className="max-w-md mx-auto my-12 animate-fade-in text-center p-8 border rounded-3xl bg-[#06221A] border-emerald-900/60 shadow-xl space-y-5">
+              <ShieldAlert className="w-12 h-12 text-[#D9A752] mx-auto animate-pulse" />
+              <div className="space-y-2">
+                <h3 className="text-lg font-serif font-bold text-[#D9A752]">
+                  {isArabic ? 'صلاحيات غير كافية' : 'Restricted Admin Console Access'}
+                </h3>
+                <p className="text-xs text-slate-400 font-sans leading-relaxed">
+                  {isArabic 
+                    ? 'عذراً، بروفايل حسابك الحالي لا يمتلك صلاحيات المشرفين. للقيام بعمليات الإدخال والمراجعة، تفضل بالانتقال للمستكشف المرئي أو تسجيل الدخول بحساب مشرف معتمد.' 
+                    : 'Sorry, your registered account profile is not appointed with administrator privileges. Go back to browse the interactive graph explorer or authenticate with an authorized credentials.'}
+                </p>
               </div>
+              <button
+                onClick={() => logout()}
+                className="w-full bg-[#D9A752] hover:bg-[#D9A752]/80 text-[#031410] font-bold py-2.5 rounded-xl text-xs transition cursor-pointer"
+              >
+                {isArabic ? 'تسجيل الخروج والتبديل' : 'Sign Out and Switch'}
+              </button>
             </div>
           ) : (
             <div className="animate-fade-in">
@@ -895,22 +548,927 @@ export default function App() {
               />
             </div>
           )
+        ) : (
+          /* STANDARD EXPLORER SPACE with gorgeous tab routing */
+          <div className="space-y-8 animate-fade-in">
+            
+            {/* 1. HOME TAB */}
+            {activeTab === 'home' && (
+              <div className="flex flex-col items-center justify-center py-20 text-center max-w-4xl mx-auto space-y-12 animate-fade-in relative z-10">
+                {/* Sparkle badge */}
+                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/15 border border-emerald-500/25 text-emerald-400 font-mono text-[10px] uppercase tracking-wider shadow-sm">
+                  <Sparkles className="w-3.5 h-3.5 text-[#D9A752]" />
+                  <span>V 0.0.2 • Islamic Encyclopedia</span>
+                </div>
+
+                {/* Main Titles */}
+                <div className="space-y-4">
+                  <h1 className="text-7xl font-sans tracking-tight leading-none font-black flex flex-col sm:flex-row items-center justify-center gap-3">
+                    <span className="text-white">Sahaba</span>
+                    <span className="text-[#D9A752] font-serif italic text-6xl">Explorer</span>
+                  </h1>
+                  <p className="text-lg font-sans text-emerald-100/70 max-w-xl mx-auto font-light leading-relaxed">
+                    Discover the lives of the Companions of Prophet Muhammad ﷺ
+                  </p>
+                  
+                  {/* Caligraphy snippet */}
+                  <div className="text-3xl font-serif text-[#D9A752]/90 font-medium py-3 tracking-wider block" lang="ar" dir="rtl">
+                    رضي الله عنهم وأرضاهم
+                  </div>
+                </div>
+
+                {/* CTA operations */}
+                <div className="flex flex-col sm:flex-row gap-4 items-center justify-center w-full max-w-md mx-auto">
+                  <button
+                    onClick={() => setActiveTab('directory')}
+                    className="w-full sm:w-auto px-8 py-3.5 rounded-full bg-[#10B981] hover:bg-[#0f9f72] text-white font-bold text-sm tracking-wide cursor-pointer shadow-md shadow-emerald-950/40 hover:-translate-y-0.5 active:translate-y-0 transition flex items-center justify-center gap-2"
+                  >
+                    <Compass className="w-4 h-4" />
+                    <span>Explore Sahaba</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (companions.length > 0) {
+                        const randomComp = companions[Math.floor(Math.random() * companions.length)];
+                        setSelectedCompanion(randomComp);
+                        setActiveTab('directory');
+                        setTimeout(() => {
+                          const detailAnchor = document.getElementById('sahaba-detail-container-anchor');
+                          if (detailAnchor) {
+                            detailAnchor.scrollIntoView({ behavior: 'smooth' });
+                          }
+                        }, 100);
+                      }
+                    }}
+                    className="w-full sm:w-auto px-8 py-3.5 rounded-full bg-[#06221A] border border-emerald-900/60 hover:bg-emerald-900/10 text-white font-bold text-sm tracking-wide cursor-pointer hover:-translate-y-0.5 active:translate-y-0 transition flex items-center justify-center gap-2"
+                  >
+                    <Sparkles className="w-4 h-4 text-[#D9A752]" />
+                    <span>Random Companion</span>
+                  </button>
+                </div>
+
+                {/* Counters / Stats Grid */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-6 pt-12 border-t border-emerald-950/20 w-full">
+                  <div className="flex flex-col items-center p-5 bg-[#06221A] rounded-2xl border border-emerald-500/10 shadow-sm">
+                    <User className="w-6 h-6 text-[#D9A752] mb-2" />
+                    <span className="text-4xl font-sans font-black text-white">{companions.length || '10'}</span>
+                    <span className="text-[11px] text-slate-400 tracking-wider font-mono mt-1">Sahaba Profiles</span>
+                  </div>
+                  <div className="flex flex-col items-center p-5 bg-[#06221A] rounded-2xl border border-emerald-500/10 shadow-sm">
+                    <Layers className="w-6 h-6 text-[#D9A752] mb-2" />
+                    <span className="text-4xl font-sans font-black text-white">7+</span>
+                    <span className="text-[11px] text-slate-400 tracking-wider font-mono mt-1">Categories</span>
+                  </div>
+                  <div className="flex flex-col items-center p-5 bg-[#06221A] rounded-2xl border border-emerald-500/10 shadow-sm">
+                    <Calendar className="w-6 h-6 text-[#D9A752] mb-2" />
+                    <span className="text-4xl font-sans font-black text-white">45+</span>
+                    <span className="text-[11px] text-slate-400 tracking-wider font-mono mt-1">Historical Events</span>
+                  </div>
+                  <div className="flex flex-col items-center p-5 bg-[#06221A] rounded-2xl border border-emerald-500/10 shadow-sm">
+                    <Award className="w-6 h-6 text-[#D9A752] mb-2" />
+                    <span className="text-4xl font-sans font-black text-white">{DEFAULT_BATTLES.length || '23'}+</span>
+                    <span className="text-[11px] text-slate-400 tracking-wider font-mono mt-1">Battles Documented</span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* 2. DIRECTORY TAB - BEAUTIFUL CARDS WITH WATERMARK & NESTED GRAPH MAP */}
+            {activeTab === 'directory' && (
+              <div className="space-y-6">
+                
+                {/* Header title */}
+                <div className="space-y-2 border-b border-emerald-950/20 pb-4">
+                  <h2 className="text-3xl font-extrabold font-serif text-white tracking-tight flex items-center gap-2">
+                    <Compass className="w-7 h-7 text-[#D9A752]" />
+                    <span>{isArabic ? 'بطاقات وأطلس السير الشريفة' : 'Sahaba Directory'}</span>
+                  </h2>
+                  <p className="text-sm text-slate-400 max-w-xl leading-relaxed">
+                    {isArabic 
+                      ? 'ابحث واستكشف تراث السير العطرة لجيل الصحابة الأبرار، مدعوماً بخرائط الربط التفاعلية والتصنيف القيمي.' 
+                      : 'Search and explore companions categorized by their role in Islamic history with watermarks and relations.'}
+                  </p>
+                </div>
+
+                {/* Consolidated Search & View Toggles block */}
+                <div className="p-4 rounded-3xl bg-[#06221A] border border-emerald-950/60 shadow flex flex-col md:flex-row gap-4 items-center justify-between">
+                  {/* Left search bar */}
+                  <div className="relative w-full md:w-96">
+                    <input
+                      type="text"
+                      value={filter.searchQuery}
+                      onChange={(e) => setFilter(prev => ({ ...prev, searchQuery: e.target.value }))}
+                      placeholder={isArabic ? 'البحث بالاسم في العربية، الإنجليزية أو الفرنسية...' : 'Search by name in Arabic, English or French...'}
+                      className="w-full border rounded-2xl py-2.5 pl-3.5 pr-10 focus:outline-none text-xs transition bg-[#031410] border-emerald-950 text-slate-100 focus:border-[#D9A752]"
+                    />
+                    <Search className="w-4 h-4 text-[#D9A752] absolute top-3.5 right-3.5" />
+                  </div>
+
+                  {/* Switch Sub-Display Modes */}
+                  <div className="flex gap-2 p-1 bg-[#031410] border border-emerald-950/60 rounded-xl">
+                    <button
+                      onClick={() => setExplorerViewType('directory')}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
+                        explorerViewType === 'directory' 
+                          ? 'bg-emerald-800 text-white shadow' 
+                          : 'text-slate-400 hover:text-white'
+                      }`}
+                    >
+                      <Layers className="w-3.5 h-3.5" />
+                      <span>{isArabic ? 'بطاقات السيرة' : 'Sira Cards'}</span>
+                    </button>
+                    <button
+                      onClick={() => setExplorerViewType('graph')}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
+                        explorerViewType === 'graph' 
+                          ? 'bg-emerald-800 text-white shadow' 
+                          : 'text-slate-400 hover:text-white'
+                      }`}
+                    >
+                      <GitFork className="w-3.5 h-3.5" />
+                      <span>{isArabic ? 'شبكة العلاقات' : 'Relations Map'}</span>
+                    </button>
+                    <button
+                      onClick={() => setExplorerViewType('classify')}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
+                        explorerViewType === 'classify' 
+                          ? 'bg-emerald-800 text-white shadow' 
+                          : 'text-slate-400 hover:text-white'
+                      }`}
+                    >
+                      <Award className="w-3.5 h-3.5" />
+                      <span>{isArabic ? 'أداة التصنيف القيمة' : 'Classification'}</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Sub-Filters based on Categories with Counts */}
+                <div className="flex flex-wrap gap-2 py-2 overflow-x-auto select-none">
+                  {[
+                    { value: '', labelEn: 'All', labelAr: 'الكل' },
+                    { value: 'Khulafa_Rashidun', labelEn: 'Rashidun Caliphs', labelAr: 'الخلفاء الراشدون' },
+                    { value: 'Muhajirun', labelEn: 'Muhajirun', labelAr: 'المهاجرون' },
+                    { value: 'Ansar', labelEn: 'Ansar', labelAr: 'الأنصار' },
+                    { value: 'Ahl_al_Bayt', labelEn: 'Ahl Al Bayt', labelAr: 'آل البيت الأطهار' },
+                    { value: 'Military', labelEn: 'Military Leaders', labelAr: 'القادة العسكريون' },
+                    { value: 'Scholars', labelEn: 'Scholars', labelAr: 'العلماء والفقهاء' },
+                    { value: 'Wives', labelEn: 'Wives of Prophet', labelAr: 'أمهات المؤمنين' },
+                  ].map((chip) => {
+                    const isSelected = filter.category === chip.value;
+                    const count = chip.value === '' 
+                      ? companions.length 
+                      : companions.filter(c => c.category === chip.value).length;
+
+                    return (
+                      <button
+                        key={chip.value}
+                        onClick={() => setFilter(prev => ({ ...prev, category: chip.value }))}
+                        className={`px-3 py-1.5 rounded-full text-xs font-bold border transition cursor-pointer flex items-center gap-2 ${
+                          isSelected
+                            ? 'bg-[#10B981] text-white border-[#10B981]'
+                            : 'bg-[#06221A] text-slate-350 border-emerald-950/65 hover:bg-emerald-900/35 hover:text-white'
+                        }`}
+                      >
+                        <span>{isArabic ? chip.labelAr : chip.labelEn}</span>
+                        <span className={`text-[9px] px-1.5 py-0.5 rounded-full ${isSelected ? 'bg-emerald-950/40 text-emerald-100' : 'bg-emerald-950 text-emerald-400'}`}>
+                          {count}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Primary Content Panel columns */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+                  
+                  {/* Left Column: List/Grid workspace */}
+                  <div className="lg:col-span-2 space-y-4">
+                    {explorerViewType === 'directory' ? (
+                      /* BEAUTIFUL DIRECTORY CARD GRID WITH ARABIC WATERMARKS */
+                      filteredCompanions.length === 0 ? (
+                        <div className="border border-dashed border-emerald-900/30 rounded-3xl p-12 text-center bg-[#06221A]/30">
+                          <Search className="w-7 h-7 text-emerald-600 mx-auto mb-2" />
+                          <p className="text-xs font-serif text-slate-400 leading-relaxed">
+                            {isArabic 
+                              ? 'عذراً، لم يتم العثور على أي صحابة يطابقون خيارات البحث المتاحة.' 
+                              : 'No companions match your search parameters. Try resetting your query.'}
+                          </p>
+                        </div>
+                      ) : (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          {filteredCompanions.map((comp) => {
+                            const cat = CATEGORY_CONFIG[comp.category] || CATEGORY_CONFIG.Other;
+                            const isSelected = selectedCompanion?.id === comp.id;
+                            const isFav = favorites.includes(comp.id);
+                            
+                            // Watermark generation: extracting first main Arabic letter
+                            const initialWatermark = comp.nameAr?.trim().replace(/^ال/, '').charAt(0) || '';
+
+                            return (
+                              <div
+                                key={comp.id}
+                                onClick={() => {
+                                  setSelectedCompanion(comp);
+                                  const detailAnchor = document.getElementById('sahaba-detail-container-anchor');
+                                  if (detailAnchor) {
+                                    detailAnchor.scrollIntoView({ behavior: 'smooth' });
+                                  }
+                                }}
+                                className={`group p-6 rounded-2xl border transition-all duration-300 flex flex-col justify-between cursor-pointer relative overflow-hidden shadow-sm h-72 ${
+                                  isSelected
+                                    ? 'bg-[#06221A] border-[#D9A752] text-white ring-1 ring-[#D9A752]/20'
+                                    : 'bg-[#06221A] border-emerald-950 hover:bg-[#082a21] text-slate-100 hover:border-emerald-900/40'
+                                }`}
+                              >
+                                {/* Category top line */}
+                                <div className="absolute top-0 left-0 right-0 h-1.5" style={{ backgroundColor: cat.color }} />
+
+                                {/* Large initial watermark background */}
+                                <div className="absolute -top-3 right-4 text-[13rem] font-serif font-black text-[#D9A752]/[0.05] group-hover:text-[#D9A752]/[0.09] select-none pointer-events-none transition-all duration-500">
+                                  {initialWatermark}
+                                </div>
+
+                                {/* Bookmark button absolute placement */}
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    toggleFavorite(comp.id);
+                                  }}
+                                  className="absolute top-5 left-5 p-1 z-30 transition cursor-pointer hover:scale-110 active:scale-95"
+                                  title="Add to Favorites"
+                                >
+                                  <Heart className={`w-4 h-4 ${isFav ? 'text-red-500 fill-red-500' : 'text-slate-500 hover:text-white'}`} />
+                                </button>
+
+                                <div className="space-y-4 pt-2 relative z-10">
+                                  {/* Head labels */}
+                                  <div className="flex justify-between items-center text-[10px] pl-6">
+                                    <span className="px-2 py-0.5 rounded bg-[#031410] text-[#D9A752] border border-[#D9A752]/20 font-serif font-bold">
+                                      {isArabic ? cat.labelAr : cat.labelEn}
+                                    </span>
+                                    <span className="font-mono text-emerald-500 font-bold">
+                                      {comp.deathYearAH} AH ({comp.ageAtDeath} {isArabic ? 'سنة' : 'yrs'})
+                                    </span>
+                                  </div>
+
+                                  {/* Names block */}
+                                  <div className="space-y-1">
+                                    <h3 className="text-xl font-bold text-[#D9A752] font-serif tracking-wide group-hover:text-white transition-colors">
+                                      {comp.nameAr}
+                                    </h3>
+                                    <p className="text-xs text-white font-serif font-bold tracking-tight">
+                                      {comp.nameEn}
+                                    </p>
+                                    <p className="text-[10px] text-slate-400 font-mono italic">
+                                      {isArabic ? comp.kunyaAr : comp.kunyaEn} &bull; {isArabic ? comp.tribeAr : comp.tribeEn}
+                                    </p>
+                                  </div>
+
+                                  {/* Bio snip */}
+                                  <p className="text-xs text-slate-350 line-clamp-3 leading-relaxed font-light">
+                                    {isArabic ? comp.shortBioAr : comp.shortBioEn}
+                                  </p>
+                                </div>
+
+                                {/* Narrations Footer */}
+                                <div className="border-t border-emerald-900/20 pt-3 mt-4 flex justify-between items-center text-[11px] text-slate-400 relative z-10 font-mono">
+                                  <span>📚 {comp.hadithCount} narrations</span>
+                                  <span className="text-[#D9A752] font-bold hover:underline flex items-center gap-1">
+                                    {isArabic ? 'تصفح السيرة' : 'View Seerah'} &rarr;
+                                  </span>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )
+                    ) : explorerViewType === 'graph' ? (
+                      <NetworkGraph
+                        companions={filteredCompanions}
+                        relationships={relationships}
+                        selectedCompanion={selectedCompanion}
+                        onSelectCompanion={setSelectedCompanion}
+                        hoveredCompanion={hoveredCompanion}
+                        onHoverCompanion={setHoveredCompanion}
+                        isArabic={isArabic}
+                        lang={lang}
+                        highlightedPath={highlightedPath}
+                        isDarkMode={isDarkMode}
+                      />
+                    ) : (
+                      <ClassificationTool
+                        companions={filteredCompanions}
+                        onSelectCompanion={setSelectedCompanion}
+                        selectedCompanion={selectedCompanion}
+                        isArabic={isArabic}
+                        lang={lang}
+                        isDarkMode={isDarkMode}
+                      />
+                    )}
+                  </div>
+
+                  {/* Right Column: Mini Pathfinder / Quick selection review */}
+                  <div className="space-y-6">
+                    {/* Pathfinder tool */}
+                    <div className="p-5 rounded-2xl bg-[#06221A] border border-emerald-950/60 shadow">
+                      <h3 className="text-sm font-bold border-b border-emerald-950 pb-2 mb-3 flex items-center gap-1.5 font-serif text-[#D9A752]">
+                        <GitFork className="w-4 h-4" />
+                        <span>{isArabic ? 'تقصي خطوط ومسارات النسب والصلة' : 'Relationship Path Finder'}</span>
+                      </h3>
+                      <p className="text-[11px] text-slate-400 leading-relaxed mb-4">
+                        {isArabic 
+                          ? 'حدد صحابيين لإيجاد أقصر مسار روابط تاريخية أو مصاهرة تجمع بينهما:' 
+                          : 'Choose two companions of the Prophet ﷺ to trace their mutual lineage or historic alliance chain:'}
+                      </p>
+
+                      <div className="space-y-4">
+                        <div>
+                          <label className="block text-[10px] text-slate-400 font-bold mb-1">{isArabic ? 'الصحابي الأول (البداية)' : 'Start Companion'}</label>
+                          <select
+                            value={pathStartId}
+                            onChange={(e) => setPathStartId(e.target.value)}
+                            className="w-full bg-[#031410] border border-emerald-950 text-slate-200 text-xs rounded-lg p-2.5 outline-none focus:border-[#D9A752]"
+                          >
+                            <option value="">-- {isArabic ? 'اختر البداية' : 'Select Start Node'} --</option>
+                            {companions.map(c => (
+                              <option key={c.id} value={c.id}>{c.nameAr} ({c.nameEn})</option>
+                            ))}
+                          </select>
+                        </div>
+
+                        <div>
+                          <label className="block text-[10px] text-slate-400 font-bold mb-1">{isArabic ? 'الصحابي الثاني (الهدف)' : 'Target Companion'}</label>
+                          <select
+                            value={pathEndId}
+                            onChange={(e) => setPathEndId(e.target.value)}
+                            className="w-full bg-[#031410] border border-emerald-950 text-slate-200 text-xs rounded-lg p-2.5 outline-none focus:border-[#D9A752]"
+                          >
+                            <option value="">-- {isArabic ? 'اختر الهدف' : 'Select Target Node'} --</option>
+                            {companions.map(c => (
+                              <option key={c.id} value={c.id}>{c.nameAr} ({c.nameEn})</option>
+                            ))}
+                          </select>
+                        </div>
+
+                        {pathError && (
+                          <div className="p-2 border border-red-500/10 bg-red-500/5 text-red-400 text-[10px] text-center rounded-lg">{pathError}</div>
+                        )}
+
+                        <div className="flex gap-2">
+                          <button
+                            onClick={findShortestRelationshipPath}
+                            className="flex-1 bg-emerald-700 hover:bg-emerald-600 text-white font-bold p-2.5 rounded-lg text-xs cursor-pointer transition active:scale-95 shadow-md flex justify-center gap-1"
+                          >
+                            <span>{isArabic ? 'كشف خط الاتصال' : 'Trace Connection Path'}</span>
+                          </button>
+                          {highlightedPath && (
+                            <button
+                              onClick={clearHighlightedPath}
+                              className="px-3 py-2 bg-[#031410] border border-slate-700 text-slate-300 rounded-lg text-xs"
+                            >
+                              {isArabic ? 'مسح' : 'Clear'}
+                            </button>
+                          )}
+                        </div>
+
+                        {/* Pathfinder Render display */}
+                        {highlightedPath && (
+                          <div className="p-3 bg-[#031410] border border-emerald-950 rounded-lg space-y-2 mt-4 animate-fade-in text-xs text-slate-300">
+                            <span className="font-bold text-[10px] text-[#D9A752] uppercase block">{isArabic ? 'مسار الوصل المكتشف:' : 'Discovered Historic Hops:'}</span>
+                            <div className="space-y-1">
+                              {highlightedPath.map((nodeId, idx) => {
+                                const node = companions.find(c => c.id === nodeId);
+                                if (!node) return null;
+                                return (
+                                  <div key={nodeId} className="flex items-center gap-2">
+                                    <span className="w-5 h-5 rounded-full bg-emerald-900 border border-emerald-600/30 text-white text-[10px] font-bold flex items-center justify-center">
+                                      {idx + 1}
+                                    </span>
+                                    <span className="font-serif font-bold text-white leading-none">{node.nameAr}</span>
+                                    {idx < highlightedPath.length - 1 && (
+                                      <span className="text-[#D9A752] font-mono text-[10px]">&rarr;</span>
+                                    )}
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Left Banner Media config support */}
+                    {bannerConfig.enabled && (
+                      <LeftMediaBanner config={bannerConfig} isArabic={isArabic} isDarkMode={isDarkMode} />
+                    )}
+                  </div>
+
+                </div>
+
+                {/* Companion detailed profile cards section wrapper */}
+                <div id="sahaba-detail-container-anchor" className="pt-2">
+                  {selectedCompanion && (
+                    <CompanionDetail
+                      companion={selectedCompanion}
+                      relationships={relationships}
+                      allCompanions={companions}
+                      onSelectCompanion={setSelectedCompanion}
+                      isArabic={isArabic}
+                      isDarkMode={isDarkMode}
+                      onBack={() => {
+                        setSelectedCompanion(null);
+                      }}
+                      user={user}
+                      profile={profile}
+                    />
+                  )}
+                </div>
+
+              </div>
+            )}
+
+            {/* 3. TIMELINE TAB - BEAUTIFULLY STYLED HISTORICAL MILESTONES */}
+            {activeTab === 'timeline' && (
+              <div className="space-y-6 max-w-3xl mx-auto">
+                <div className="space-y-2 text-center pb-6 border-b border-emerald-950/20">
+                  <h2 className="text-3xl font-extrabold font-serif text-white tracking-tight flex items-center justify-center gap-2">
+                    <Calendar className="w-7 h-7 text-[#D9A752]" />
+                    <span>{isArabic ? 'الخط الزمني للتاريخ والسير العطرة' : 'Historical Timeline'}</span>
+                  </h2>
+                  <p className="text-sm text-slate-400 font-sans max-w-md mx-auto">
+                    {isArabic 
+                      ? 'مخطط كبرى الغزوات والتحولات الفضلى في عهد النبوة والخلافة الراشدة.' 
+                      : 'Step through pivotal milestones, sacred battles and historical turnpoints in Sahaba chronicles.'}
+                  </p>
+                </div>
+
+                {/* Timeline loops */}
+                <div className="relative border-l border-emerald-900/60 ml-6 pl-8 space-y-12 py-4">
+                  {[
+                    { yearAH: -53, yearCE: 570, titleAr: 'ولادة النبي محمد ﷺ', titleEn: 'Birth of Prophet Muhammad ﷺ', descAr: 'ولادة سيد ولد آدم ﷺ في مكة في عام الفيل.', descEn: 'The Prophetic light illumines the world in Mecca, in the Year of Elephant.' },
+                    { yearAH: -13, yearCE: 610, titleAr: 'نزول الوحي البعثة الكريمة', titleEn: 'First Revelation (The Call)', descAr: 'نزول جبريل عليه السلام بغار حراء، وبدء الدعوة وإسلام أبي بكر وعلي خديجة.', descEn: 'Dawah begins; Abu Bakr al-Siddiq, Ali, Khadija, and other early stalwarts proclaim their faith.' },
+                    { yearAH: 1, yearCE: 622, titleAr: 'الهجرة النبوية المباركة', titleEn: 'The Great Migration (Hijra)', descAr: 'هجرة الرسول وصاحبه أبي بكر ليلاً للمدينة المنورة وحلف المؤاخاة العظيم بين المهاجرين والأنصار.', descEn: 'The Prophet and Abu Bakr construct the holy fraternal bond between Muhajirun and Madinah\'s Ansar.' },
+                    { yearAH: 2, yearCE: 624, titleAr: 'غزوة بدر الكبرى العظيمة', titleEn: 'The Battle of Badr', descAr: 'معركة الفرقان الأولى الحاسمة، وانتصار ٣١٣ مؤمن على جيش قريش.', descEn: 'The absolute clash of standards where 313 believers, guided by divine mercy, routed Quraish.' },
+                    { yearAH: 3, yearCE: 625, titleAr: 'غزوة أحد وشهادة حمزة', titleEn: 'The Battle of Uhud', descAr: 'اختبار الرماة وثبات القادة واستشهاد حمزة بن عبد المطلب رضي الله عنه.', descEn: 'The critical trial of archers, resulting in core leadership lessons and martyrdom of Hamza.' },
+                    { yearAH: 5, yearCE: 627, titleAr: 'غزوة الخندق وتأمين المدينة', titleEn: 'The Battle of the Trench', descAr: 'حصار قريش والأحزاب واستعمال فكرة خندق سلمان الفارسي رضي الله عنه.', descEn: 'The majestic Coalition Siege defeated through the defensive trench engineered by Salman al-Farsi.' },
+                    { yearAH: 8, yearCE: 630, titleAr: 'فتح مكة الكبرى الفاتحة', titleEn: 'The Liberation of Mecca', descAr: 'دخول مكة فاتحين وتطهير الكعبة من الأوثان مع عفو عام ورحمة مطلقة.', descEn: 'The triumphant non-violent entry of 10,000 believers cleanses the Kaaba under general amnesty.' },
+                    { yearAH: 11, yearCE: 632, titleAr: 'الوفاة النبوية وخلافة الصديق', titleEn: 'Passing of Prophet ﷺ & 1st Caliph', descAr: 'وفاة خاتم المرسلين عليه السلام، وبيعة أبي بكر الصديق خليفة أول وثبات الأمة.', descEn: 'The passing of the Prophet ﷺ; Abu Bakr is elected Caliph, preserving the early Islamic State.' },
+                    { yearAH: 13, yearCE: 634, titleAr: 'وفاة أبي بكر وخلافة الفاروق', titleEn: 'Passing of Abu Bakr & 2nd Caliph', descAr: 'وفاة الصديق وتولي أمير المؤمنين عمر بن الخطاب الخلافة وتأسيس الدواوين وعقد العدالة.', descEn: 'Umar ibn al-Khattab assumes office, charting administrative structures, land offices, and judicial codes.' },
+                    { yearAH: 23, yearCE: 644, titleAr: 'استشهاد عمر وخلافة ذي النورين', titleEn: 'Passing of Umar & 3rd Caliph', descAr: 'استشهاد الفاروق على يد أبي لؤلؤة وتولي عثمان بن عفان الخلافة وتعميم جمع القرآن.', descEn: 'Uthman ibn Affan succeeds Umar, standardizing the written text of the Holy Quran Mushaf compilation.' },
+                    { yearAH: 35, yearCE: 656, titleAr: 'استشهاد عثمان وخلافة علي', titleEn: 'Passing of Uthman & 4th Caliph', descAr: 'استشهاد عثمان بفتنة بغيضة، ومبايعة أمير المؤمنين علي بن أبي طالب رابع الخلفاء الراشدين.', descEn: 'Ali ibn Abi Talib assumes the caliphate, piloting civil justice and governance during immense internal trials.' }
+                  ].map((evt) => (
+                    <div key={evt.yearAH} className="relative group">
+                      
+                      {/* Interactive Year Indicator Accent bubble */}
+                      <div className="absolute -left-[54px] top-1.5 w-10 h-10 rounded-full bg-[#031410] border-2 border-[#D9A752]/70 group-hover:bg-[#D9A752] group-hover:border-[#D9A752] transition flex items-center justify-center font-serif text-white font-bold text-xs select-none">
+                        {evt.yearAH > 0 ? `${evt.yearAH}هـ` : `${Math.abs(evt.yearAH)}ق.هـ`}
+                      </div>
+
+                      {/* Info Card Content */}
+                      <div className="p-6 rounded-2xl bg-[#06221A] border border-emerald-950 shadow hover:border-[#D9A752]/30 transition-all duration-300">
+                        <div className="flex justify-between items-center text-xs text-[#D9A752] mb-2 font-mono">
+                          <span>AH {evt.yearAH} &bull; CE {evt.yearCE}</span>
+                          <span className="px-2 py-0.5 rounded bg-emerald-950 text-[10px] text-emerald-400">Chronicle</span>
+                        </div>
+                        <h3 className="text-lg font-bold font-serif text-white group-hover:text-[#D9A752] transition-colors mb-2">
+                          {isArabic ? evt.titleAr : evt.titleEn}
+                        </h3>
+                        <p className="text-xs text-slate-350 leading-relaxed font-light">
+                          {isArabic ? evt.descAr : evt.descEn}
+                        </p>
+                      </div>
+
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* 4. LEARNING TAB - SCHOLASTIC DATASET LIBRARY */}
+            {activeTab === 'learning' && (
+              <div className="space-y-6 max-w-5xl mx-auto">
+                <div className="space-y-2 text-center pb-6 border-b border-emerald-950/20">
+                  <h2 className="text-3xl font-extrabold font-serif text-white tracking-tight flex items-center justify-center gap-2">
+                    <GraduationCap className="w-8 h-8 text-[#D9A752]" />
+                    <span>{isArabic ? 'صرح العلوم والتعلم التاريخي الموثق' : 'Scholastic Learning Center'}</span>
+                  </h2>
+                  <p className="text-sm text-slate-400 max-w-md mx-auto">
+                    {isArabic 
+                      ? 'اقرأ وثائق الغزوات، تصفح المصادر التاريخية المعتمدة واحصل على دروس السير العطرة.' 
+                      : 'Explore historical battles, examine verified references, and study Prophetic biographies.'}
+                  </p>
+                </div>
+
+                {/* Subsections: Battles Index */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
+                  {/* Item 1: Detailed Battles directory */}
+                  <div className="space-y-4">
+                    <h3 className="text-sm font-bold text-[#D9A752] uppercase font-serif tracking-widest border-b border-emerald-950 pb-2 flex items-center gap-2">
+                      <Award className="w-4 h-4" />
+                      <span>{isArabic ? 'سجلات ودواوين الغزوات النبوية' : 'Chronicled Prophetic Battles'}</span>
+                    </h3>
+                    
+                    <div className="space-y-3">
+                      {DEFAULT_BATTLES.map((btl) => (
+                        <div key={btl.id} className="p-4 rounded-xl bg-[#06221A] border border-emerald-950 hover:border-emerald-900 transition-all text-xs">
+                          <div className="flex justify-between items-center mb-1 font-mono text-emerald-500 font-bold">
+                            <span>AH {btl.yearAH}</span>
+                            <span>{isArabic ? btl.locationAr : btl.locationEn}</span>
+                          </div>
+                          <h4 className="text-sm font-serif font-bold text-[#D9A752] mb-1.5">{isArabic ? btl.nameAr : btl.nameEn}</h4>
+                          <p className="text-slate-350 leading-relaxed font-light">{isArabic ? btl.summaryAr : btl.summaryEn}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Item 2: Verified Sources & Daily lesson */}
+                  <div className="space-y-6">
+                    <div className="space-y-4">
+                      <h3 className="text-sm font-bold text-[#D9A752] uppercase font-serif tracking-widest border-b border-emerald-950 pb-2 flex items-center gap-2">
+                        <BookOpen className="w-4 h-4" />
+                        <span>{isArabic ? 'المراجع والمصادر التفتيشية المعتمدة' : 'Verified Academic Sources'}</span>
+                      </h3>
+                      <div className="p-5 rounded-2xl bg-[#06221A] border border-emerald-950 space-y-4 text-xs">
+                        <p className="text-slate-400 leading-relaxed">
+                          {isArabic 
+                            ? 'نعتمد في فحص السير والأعمار والتواريخ الكودية لقاعدة مستكشف الصحابة على المصادر التاريخية الإسلامية الكلاسيكية المعتدلة:' 
+                            : 'This digital resource relies exclusively on primary classical references verified by historical major scholars.'}
+                        </p>
+                        <div className="grid grid-cols-2 gap-3 font-serif">
+                          <div className="p-3 bg-[#031410] border border-emerald-950 rounded-lg text-white font-bold">
+                            📖 صحيح البخاري
+                          </div>
+                          <div className="p-3 bg-[#031410] border border-emerald-950 rounded-lg text-white font-bold">
+                            📖 أسد الغابة - ابن الأثير
+                          </div>
+                          <div className="p-3 bg-[#031410] border border-emerald-950 rounded-lg text-white font-bold">
+                            📖 الإصابة - ابن حجر العسقلاني
+                          </div>
+                          <div className="p-3 bg-[#031410] border border-emerald-950 rounded-lg text-white font-bold">
+                            📖 طبقات ابن سعد الكبرى
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Daily Seerah Reflection block */}
+                    <div className="p-5 rounded-2xl bg-gradient-to-br from-[#06221A] to-[#043326] border border-emerald-950 text-xs text-center space-y-3.5 shadow">
+                      <Sparkles className="w-6 h-6 text-[#D9A752] mx-auto animate-pulse" />
+                      <h4 className="text-[#D9A752] font-serif font-black text-sm">{isArabic ? 'حكمة ودرس اليوم' : 'Daily Reflection'}</h4>
+                      <p className="italic text-slate-205 leading-relaxed max-w-sm mx-auto font-serif">
+                        {isArabic 
+                          ? '"إن الأخوة الإسلامية الحقة التي رسخها المعصوم ﷺ بين المهاجرين والأنصار كانت المعجزة الاجتماعية الكبرى التي قامت عليها أركان الدولة المباركة والمدينة المنورة."' 
+                          : '"The bond of brotherhood established in Medina remains history\'s most noble civic fusion, proving that shared virtue can bridge any lineage gap."'}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* 5. QUIZ TAB - INTERACTIVE BILINGUAL QCM FOR STUDENTS */}
+            {activeTab === 'quiz' && (
+              <div className="max-w-2xl mx-auto space-y-6">
+                <div className="space-y-2 text-center pb-6 border-b border-emerald-950/20">
+                  <h2 className="text-3xl font-extrabold font-serif text-white tracking-tight flex items-center justify-center gap-2">
+                    <Trophy className="w-7 h-7 text-[#D9A752]" />
+                    <span>{isArabic ? 'اختبار السيرة العطرة الكبرى' : 'Prophetic Seerah Quiz'}</span>
+                  </h2>
+                  <p className="text-sm text-slate-400 font-sans max-w-md mx-auto">
+                    {isArabic 
+                      ? 'اختبر حصيلتك وسعة اطلاعك في قصص الصحابة وحروب الدفاع الشامخة، واكسب نقاط ترقية!' 
+                      : 'Test your understanding, earn scholarly reward scores, and review detailed seerah explanations.'}
+                  </p>
+                </div>
+
+                {quizQuestion ? (
+                  /* Active Question Game box */
+                  <div className="p-6 rounded-2xl bg-[#06221A] border border-emerald-950 shadow-xl space-y-6">
+                    
+                    {/* Header stats info */}
+                    <div className="flex justify-between items-center text-xs font-mono">
+                      <span className="px-2.5 py-1 bg-[#10B981]/15 text-[#10B981] border border-[#10B981]/20 rounded-full font-bold uppercase tracking-wider text-[9px]">
+                        Difficulty: {quizQuestion.difficulty}
+                      </span>
+                      <span className="text-slate-400 font-bold">
+                        Scholarly Score: <span className="text-[#D9A752] font-black underline">{quizOverallScore} pts</span>
+                      </span>
+                    </div>
+
+                    {/* Question text */}
+                    <h3 className="text-lg font-serif font-bold text-white leading-relaxed pt-2">
+                      {isArabic ? quizQuestion.question.ar : quizQuestion.question.en || quizQuestion.question.fr}
+                    </h3>
+
+                    {/* Options list */}
+                    <div className="space-y-3 pt-2">
+                      {(isArabic ? quizQuestion.choices.ar : quizQuestion.choices.en || quizQuestion.choices.fr).map((choice, idx) => {
+                        const isCorrectAnswer = idx === quizQuestion.correctIndex;
+                        const isThisSelected = quizSelected === idx;
+                        
+                        let choiceClass = 'bg-[#031410] hover:bg-emerald-950 border-emerald-950 text-slate-200';
+                        if (quizAnswered) {
+                          if (isCorrectAnswer) {
+                            choiceClass = 'bg-emerald-900/30 border-emerald-650 text-emerald-300';
+                          } else if (isThisSelected) {
+                            choiceClass = 'bg-rose-950/20 border-rose-800 text-rose-300';
+                          } else {
+                            choiceClass = 'bg-[#031410]/50 border-emerald-950/30 text-slate-500 opacity-60';
+                          }
+                        }
+
+                        return (
+                          <button
+                            key={idx}
+                            disabled={quizAnswered}
+                            onClick={async () => {
+                              if (quizAnswered) return;
+                              setQuizSelected(idx);
+                              setQuizAnswered(true);
+                              const isCorrect = idx === quizQuestion.correctIndex;
+                              const pts = isCorrect ? (quizQuestion.difficulty === 'easy' ? 10 : quizQuestion.difficulty === 'medium' ? 15 : 20) : -5;
+                              setQuizFeedback({ isCorrect, points: pts });
+                              
+                              const newScr = Math.max(0, quizOverallScore + pts);
+                              setQuizOverallScore(newScr);
+                              localStorage.setItem('sahaba_quiz_score', newScr.toString());
+
+                              // Also sync to logged-in Firebase Profile
+                              if (user) {
+                                try {
+                                  const userDocRef = doc(db, 'users', user.uid);
+                                  await updateDoc(userDocRef, { score: newScr });
+                                } catch (e) {
+                                  console.warn("Quiz Firebase sync error:", e);
+                                }
+                              }
+                            }}
+                            className={`w-full text-left p-4 rounded-xl border text-xs font-bold transition flex items-center justify-between cursor-pointer ${choiceClass}`}
+                          >
+                            <span>{choice}</span>
+                            {quizAnswered && isCorrectAnswer && <Check className="w-4 h-4 text-emerald-400 shrink-0 ml-2" />}
+                            {quizAnswered && isThisSelected && !isCorrectAnswer && <X className="w-4 h-4 text-rose-400 shrink-0 ml-2" />}
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    {/* Explanatory feedback */}
+                    {quizAnswered && quizFeedback && (
+                      <div className="p-4 bg-[#031410] border border-emerald-950 rounded-xl space-y-3 text-xs animate-fade-in relative z-10">
+                        <div className="flex items-center gap-2">
+                          {quizFeedback.isCorrect ? (
+                            <span className="text-emerald-400 font-bold font-serif">✓ Correct (+{quizFeedback.points} pts!)</span>
+                          ) : (
+                            <span className="text-rose-400 font-bold font-serif">✗ Incorrect ({quizFeedback.points} pts)</span>
+                          )}
+                        </div>
+                        <p className="text-slate-350 leading-relaxed font-light">
+                          <span className="font-bold text-[#D9A752] block mb-1">{isArabic ? 'البيان والتوضيح التاريخي:' : 'Historical Detail & Biography Context:'}</span>
+                          {isArabic ? quizQuestion.explanation.ar : quizQuestion.explanation.en || quizQuestion.explanation.fr || ''}
+                        </p>
+                        
+                        {/* Next question operation button */}
+                        <button
+                          onClick={() => {
+                            const remain = SEERAH_QCM_QUESTIONS.filter(q => q.id !== quizQuestion.id);
+                            const pool = remain.length > 0 ? remain : SEERAH_QCM_QUESTIONS;
+                            const nextQ = pool[Math.floor(Math.random() * pool.length)];
+                            setQuizQuestion(nextQ);
+                            setQuizSelected(null);
+                            setQuizAnswered(false);
+                            setQuizFeedback(null);
+                          }}
+                          className="w-full bg-[#D9A752] text-[#031410] font-sans font-black py-2.5 rounded-lg text-xs mt-4 transition hover:bg-[#D9A752]/90 cursor-pointer shadow-md shadow-emerald-950/20 flex justify-center gap-1.5"
+                        >
+                          <span>{isArabic ? 'السؤال التالي والمذاكرة' : 'Next Lesson Question'}</span>
+                          <ChevronRight className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  /* Start Banner default */
+                  <div className="p-8 rounded-3xl bg-[#06221A] border border-emerald-950 text-center space-y-6">
+                    <Trophy className="w-12 h-12 text-[#D9A752] mx-auto animate-bounce" />
+                    <div className="space-y-2">
+                      <h3 className="text-xl font-serif font-black text-white">{isArabic ? 'مستعد لبدء تحدي السير العطرة؟' : 'Ready to begin the Seerah Challenge?'}</h3>
+                      <p className="text-xs text-slate-400 max-w-sm mx-auto leading-relaxed">
+                        {isArabic 
+                          ? 'جاوب على أسئلة الاختيار من متعدد لترقية بروفايلك المنهجي وتتبع تقدم مهاراتك العلمية.' 
+                          : 'Solve verified study questions with historical commentary, accummulate points, and compete on the scholars scoreboard.'}
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => {
+                        const randomQ = SEERAH_QCM_QUESTIONS[Math.floor(Math.random() * SEERAH_QCM_QUESTIONS.length)];
+                        setQuizQuestion(randomQ);
+                        setQuizSelected(null);
+                        setQuizAnswered(false);
+                        setQuizFeedback(null);
+                      }}
+                      className="px-8 py-3.5 rounded-full bg-[#10B981] hover:bg-[#0f9f72] text-[#031410] font-sans font-black text-xs cursor-pointer shadow-md shadow-emerald-900/10"
+                    >
+                      {isArabic ? 'بدء اللعب والاختبار' : 'Launch New Quiz Board'}
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* 6. LEADERBOARD TAB */}
+            {activeTab === 'leaderboard' && (
+              <div className="max-w-xl mx-auto space-y-6">
+                <div className="space-y-2 text-center pb-6 border-b border-emerald-950/20">
+                  <h2 className="text-3xl font-extrabold font-serif text-white tracking-tight flex items-center justify-center gap-2">
+                    <Trophy className="w-7 h-7 text-[#D9A752] animate-spin-slow" />
+                    <span>{isArabic ? 'شُرفة فرسان الدراية والمتصدرين' : 'Scholarly Leaderboard'}</span>
+                  </h2>
+                  <p className="text-sm text-slate-400 font-sans max-w-sm mx-auto">
+                    {isArabic 
+                      ? 'قائمة العلماء والطلبة الحاصلين على أعلى النقاط في اختبارات الأرشفة والتقصي.' 
+                      : 'The hall of knowledge honoring the highly-rated scholars based on completed seerah challenges.'}
+                  </p>
+                </div>
+
+                {/* Score listing board card */}
+                <div className="p-5 rounded-2xl bg-[#06221A] border border-emerald-950 shadow-xl divide-y divide-emerald-950/40 text-xs">
+                  {[
+                    { rank: 1, name: 'Boualli Mohamed (Super)', role: 'Administrator', score: 980, avatar: 'M' },
+                    { rank: 2, name: 'Abu Bakr Shura Student', role: 'Collaborator', score: 720, avatar: 'A' },
+                    { rank: 3, name: 'Hafiz Scholar', role: 'Moderator', score: 650, avatar: 'H' },
+                    { rank: 4, name: 'Ummah Study Guide', role: 'Premium Reader', score: 540, avatar: 'U' },
+                    { rank: 5, name: profile?.fullName || (isArabic ? 'أنت (مذاكر محلي)' : 'You (Offline Scholar)'), role: profile?.role ? profile.role.toUpperCase() : 'Guest Student', score: quizOverallScore, avatar: 'Y', isUser: true }
+                  ]
+                    .sort((a,b) => b.score - a.score)
+                    .map((item, idx) => {
+                      const isMe = item.isUser;
+                      return (
+                        <div key={idx} className={`p-4 flex items-center justify-between gap-4 transition ${isMe ? 'bg-[#D9A752]/5 border-y border-[#D9A752]/10' : ''}`}>
+                          <div className="flex items-center gap-3">
+                            {/* Rank circle */}
+                            <span className={`w-6 h-6 rounded-full font-bold flex items-center justify-center text-[11px] ${
+                              idx === 0 ? 'bg-amber-400 text-[#031410] shadow' :
+                              idx === 1 ? 'bg-slate-300 text-[#031410] shadow' :
+                              idx === 2 ? 'bg-[#C59E50] text-white shadow' : 'bg-emerald-950 text-slate-400'
+                            }`}>
+                              {idx + 1}
+                            </span>
+
+                            {/* Avatar */}
+                            <div className="w-8 h-8 rounded-full bg-emerald-800 text-white font-serif flex items-center justify-center font-bold">
+                              {item.avatar}
+                            </div>
+
+                            {/* Meta info */}
+                            <div>
+                              <h4 className={`font-serif font-bold text-sm ${isMe ? 'text-[#D9A752]' : 'text-white'}`}>
+                                {item.name} {isMe && '⭐'}
+                              </h4>
+                              <p className="text-[10px] text-slate-500 font-mono tracking-tight">{item.role}</p>
+                            </div>
+                          </div>
+
+                          {/* Score output */}
+                          <div className="text-right">
+                            <span className="font-mono text-base font-extrabold text-[#D9A752]">
+                              {item.score}
+                            </span>
+                            <span className="text-[9px] text-slate-500 block">pts</span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                </div>
+              </div>
+            )}
+
+            {/* 7. FAVORITES TAB - SAVED STATIONS */}
+            {activeTab === 'favorites' && (
+              <div className="space-y-6">
+                <div className="space-y-2 text-center pb-6 border-b border-emerald-950/20 max-w-md mx-auto">
+                  <Heart className="w-10 h-10 text-red-500 mx-auto fill-red-500 animate-pulse" />
+                  <h2 className="text-3xl font-extrabold font-serif text-white tracking-tight">
+                    {isArabic ? 'رف المفضلة والدروس المحفوظة' : 'My Favorites Shelf'}
+                  </h2>
+                  <p className="text-sm text-slate-400 font-sans leading-relaxed">
+                    {isArabic 
+                      ? 'قائمة الصحابة الأخيار الذين قمت بوضع علامة القلب عليهم لمذاكرتهم ومراجعتهم السريعة.' 
+                      : 'Your curated list of beloved companions bookmarked to your favorites bar.'}
+                  </p>
+                </div>
+
+                {favorites.length === 0 ? (
+                  /* Empty state advice */
+                  <div className="p-8 rounded-3xl bg-[#06221A] border border-dashed border-emerald-900/30 text-center max-w-md mx-auto space-y-4">
+                    <User className="w-10 h-10 text-emerald-600 mx-auto" />
+                    <p className="text-xs text-slate-400 font-serif leading-relaxed">
+                      {isArabic 
+                        ? 'رف المحفوظات الخاص بك فارغ حالياً! تصفح دليل الصحابة واضغط على علامة القلب لتضيفهم هنا للبحث السريع.' 
+                        : 'Your bookmarks shelf is offline. Tap the heart symbol on companion cards to add them to your shelf.'}
+                    </p>
+                    <button
+                      onClick={() => setActiveTab('directory')}
+                      className="px-6 py-2.5 rounded-full bg-[#10B981] hover:bg-[#0f9f72] text-[#031410] font-sans font-black text-xs cursor-pointer shadow"
+                    >
+                      {isArabic ? 'تصفح باقة دليل الصحابة' : 'Explore Companion Directory'}
+                    </button>
+                  </div>
+                ) : (
+                  /* Render favorited cards */
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+                    {companions
+                      .filter((comp) => favorites.includes(comp.id))
+                      .map((comp) => {
+                        const cat = CATEGORY_CONFIG[comp.category] || CATEGORY_CONFIG.Other;
+                        const initialWatermark = comp.nameAr?.trim().replace(/^ال/, '').charAt(0) || '';
+                        
+                        return (
+                          <div
+                            key={comp.id}
+                            onClick={() => {
+                              setSelectedCompanion(comp);
+                              setActiveTab('directory');
+                              setTimeout(() => {
+                                const detailAnchor = document.getElementById('sahaba-detail-container-anchor');
+                                if (detailAnchor) {
+                                  detailAnchor.scrollIntoView({ behavior: 'smooth' });
+                                }
+                              }, 100);
+                            }}
+                            className="group p-6 rounded-2xl border bg-[#06221A] border-emerald-950 hover:bg-[#0a3529] hover:border-[#D9A752]/40 transition-all duration-300 flex flex-col justify-between cursor-pointer relative overflow-hidden h-72 h-72 text-white shadow-md shadow-emerald-950/50"
+                          >
+                            <div className="absolute top-0 left-0 right-0 h-1.5" style={{ backgroundColor: cat.color }} />
+                            
+                            <div className="absolute -top-3 right-4 text-[13rem] font-serif font-black text-[#D9A752]/[0.05] group-hover:text-[#D9A752]/[0.08] select-none pointer-events-none transition-all duration-500">
+                              {initialWatermark}
+                            </div>
+
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                toggleFavorite(comp.id);
+                              }}
+                              className="absolute top-5 left-5 p-1 z-30 opacity-80 hover:opacity-100 transition cursor-pointer"
+                            >
+                              <Heart className="w-4 h-4 text-red-500 fill-red-500" />
+                            </button>
+
+                            <div className="space-y-4 pt-1 relative z-10">
+                              <div className="flex justify-between items-center text-[10px]">
+                                <span className="px-2 py-0.5 rounded bg-[#031410] border border-[#D9A752]/20 text-[#D9A752] font-serif font-bold">
+                                  {isArabic ? cat.labelAr : cat.labelEn}
+                                </span>
+                                <span className="font-mono text-emerald-500 font-bold">
+                                  {comp.deathYearAH} AH
+                                </span>
+                              </div>
+
+                              <div className="space-y-1">
+                                <h3 className="text-xl font-bold font-serif text-[#D9A752] tracking-wide group-hover:text-white-light transition-colors">
+                                  {comp.nameAr}
+                                </h3>
+                                <p className="text-xs text-white-90 font-serif font-bold tracking-tight">
+                                  {comp.nameEn}
+                                </p>
+                              </div>
+
+                              <p className="text-xs text-slate-350 line-clamp-3 leading-relaxed font-light">
+                                {isArabic ? comp.shortBioAr : comp.shortBioEn}
+                              </p>
+                            </div>
+
+                            <div className="border-t border-emerald-900/20 pt-3 flex justify-between items-center text-[11px] text-slate-400 relative z-10 font-mono">
+                              <span>📚 {comp.hadithCount} narrations</span>
+                              <span className="text-[#D9A752] font-bold">
+                                {isArabic ? 'فتح السيرة' : 'View Seerah'} &rarr;
+                              </span>
+                            </div>
+                          </div>
+                        );
+                      })}
+                  </div>
+                )}
+              </div>
+            )}
+
+          </div>
         )}
       </main>
 
       {/* Modern footer with Islamic and educational quotes */}
-      <footer className={`mt-20 border-t py-12 ${isDarkMode ? 'bg-natural-dark-header border-neutral-800 text-slate-400' : 'bg-[#E8E4D9] border-natural-accent/20 text-[#5A5A40]'}`}>
-        <p className="font-serif italic leading-relaxed max-w-2xl mx-auto mb-5 text-center px-6 text-sm">
+      <footer className={`mt-24 border-t py-12 ${isDarkMode ? 'bg-[#020D0A] border-emerald-950/40 text-slate-400' : 'bg-[#E8E4D9] border-emerald-800/10 text-stone-700'}`}>
+        <p className="font-serif italic leading-relaxed max-w-2xl mx-auto mb-5 text-center px-6 text-sm text-[#D9A752]">
           {isArabic
             ? 'قال رسول الله ﷺ: «أَصْحَابِي كَالنُّجُومِ بِأَيِّهِمُ اقْتَدَيْتُمُ اهْتَدَيْتُمْ» - روايات الأثر الشريف هادية لطريق التوحيد والصفاء.'
             : '"My companions are like stars; whichever of them you follow, you will be rightly guided." — Prophetic tradition regarding the prestigious companions.'}
         </p>
-        <div className={`pt-6 max-w-7xl mx-auto px-8 border-t flex flex-col sm:flex-row justify-between items-center text-[11px] font-mono gap-3 ${isDarkMode ? 'border-neutral-800/60 text-slate-550' : 'border-[#C5A059]/20 text-[#5A5A40]/60'}`}>
+        <div className={`pt-6 max-w-7xl mx-auto px-8 border-t flex flex-col sm:flex-row justify-between items-center text-[11px] font-mono gap-3 ${isDarkMode ? 'border-emerald-950/20 text-slate-500' : 'border-stone-400/25 text-stone-500'}`}>
           <span>{isArabic ? '© مستكشف الصحابة - موسوعة تعليمية تفاعلية' : '© Sahaba Explorer - Interactive Educational Platform'}</span>
           <span>{isArabic ? 'صُنع بدقة وإخلاص لدعاة المعرفة' : 'Crafted with absolute historical precision'}</span>
         </div>
       </footer>
-
 
     </div>
   );
